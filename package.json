@@ -9,7 +9,8 @@
     "web": "expo start --web",
     "lint": "prettier --check .",
     "format": "prettier --write .",
-    "prepare": "husky && git config --unset-all core.hooksPath && pre-commit install"
+    "prepare": "husky",
+    "postinstall": "node --eval \"require('fs').writeFileSync('.husky/pre-commit', 'npm run format && git add -A .\\n')\""
   },
   "husky": {
     "hooks": {
