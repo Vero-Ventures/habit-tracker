@@ -9,7 +9,7 @@
     "web": "expo start --web",
     "lint": "prettier --check .",
     "format": "prettier --write .",
-    "prepare": "husky",
+    "prepare": "npm install husky && npx husky init",
     "postinstall": "node --eval \"require('fs').writeFileSync('.husky/pre-commit', 'npm run format && git add -A .\\n')\""
   },
   "husky": {
