@@ -18,8 +18,6 @@ import user from '../../assets/icons/user.png';
 
 const Tab = createBottomTabNavigator();
 
-// testing eslint with a comment
-
 export default function Navigator() {
   const icons = (route, focused) => {
     const sizeStyle = { width: 24, height: 24 };
