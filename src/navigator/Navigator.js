@@ -49,7 +49,7 @@ export default function Navigator() {
       >
         <Tab.Screen name="Home" component={() => <></>} />
         <Tab.Screen name="Stakes" component={() => <></>} />
-        // Commented line below is to be uncommented if you want to navigation to credit card input screen, AKA checkoutScreen.js
+        {/* Commented line below is to be uncommented if you want to navigation to credit card input screen, AKA checkoutScreen.js */}
         {/* <Tab.Screen name="Stakes" component={CheckoutScreen} />  */}
         <Tab.Screen name="My Habits" component={() => <></>} />
         <Tab.Screen name="Community" component={() => <></>} />
