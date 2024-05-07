@@ -18,10 +18,14 @@
     }
   },
   "dependencies": {
+    "@react-navigation/bottom-tabs": "^6.5.20",
+    "@react-navigation/stack": "^6.3.29",
+    "@stripe/stripe-react-native": "^0.37.3",
     "expo": "~50.0.17",
     "expo-status-bar": "~1.11.1",
     "react": "18.2.0",
-    "react-native": "0.73.6"
+    "react-native": "0.73.6",
+    "stripe": "^15.5.0"
   },
   "devDependencies": {
     "@babel/plugin-transform-numeric-separator": "^7.18.6",

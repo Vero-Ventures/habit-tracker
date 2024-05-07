@@ -3,6 +3,7 @@ import { Image } from "react-native";
 import Colors from "../../assets/styles/Colors";
 import { NavigationContainer } from "@react-navigation/native";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
+import CheckoutScreen from "./components/CheckoutScreen";
 
 const Tab = createBottomTabNavigator();
 
@@ -47,7 +48,8 @@ export default function Navigator() {
         })}
       >
         <Tab.Screen name="Home" component={() => <></>} />
-        <Tab.Screen name="Stakes" component={() => <></>} />
+        {/* <Tab.Screen name="Stakes" component={() => <></>} /> */}
+        <Tab.Screen name="Stakes" component={CheckoutScreen} /> 
         <Tab.Screen name="My Habits" component={() => <></>} />
         <Tab.Screen name="Community" component={() => <></>} />
         <Tab.Screen name="Profile" component={() => <></>} />
