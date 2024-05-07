@@ -53,7 +53,7 @@ const CheckoutScreen = () => {
                     console.log('Card Details: ', cardDetails);
                 }}
             />
-            {/* <Button onPress={onSubmit} title="Pay" /> */}
+            {/* <Button onPress={onSubmit} title="Pay" /> */} //Uses onSubmit function instead of handlePayment function
             <Button title="Pay Now" onPress={handlePaymentPress} />
         </>
     );
