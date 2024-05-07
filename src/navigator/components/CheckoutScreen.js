@@ -53,7 +53,7 @@ const CheckoutScreen = () => {
                     console.log('Card Details: ', cardDetails);
                 }}
             />
-            // Commented command uses onSubmit function instead of handlePayment function
+            {/* Commented command uses onSubmit function instead of handlePayment function */}
             {/* <Button onPress={onSubmit} title="Pay" /> */}
             <Button title="Pay Now" onPress={handlePaymentPress} />
         </>
