@@ -3,6 +3,18 @@ import { Image } from 'react-native';
 import Colors from '../../assets/styles/Colors';
 import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import homeSelected from '../../assets/icons/home-selected.png';
+import home from '../../assets/icons/home.png';
+import infoSelected from '../../assets/icons/info-selected.png';
+import info from '../../assets/icons/info.png';
+import stakesSelected from '../../assets/icons/stakes-selected.png';
+import stakes from '../../assets/icons/stakes.png';
+import activitySelected from '../../assets/icons/activity-selected.png';
+import activity from '../../assets/icons/activity.png';
+import usersSelected from '../../assets/icons/users-selected.png';
+import users from '../../assets/icons/users.png';
+import userSelected from '../../assets/icons/user-selected.png';
+import user from '../../assets/icons/user.png';
 
 const Tab = createBottomTabNavigator();
 
@@ -14,73 +26,67 @@ export default function Navigator() {
 
     switch (route.name) {
       case 'Home':
-        // return <Image source={focused ? require("../../assets/icons/home-selected.png") : require("../../assets/icons/home.png")} style={sizeStyle} />;
         return (
           <Image
             source={
               focused
-                ? '../../assets/icons/home-selected.png'
-                : '../../assets/icons/home.png'
+                ? { uri: Image.resolveAssetSource(homeSelected).uri }
+                : { uri: Image.resolveAssetSource(home).uri }
             }
             style={sizeStyle}
           />
         );
       case 'ExtraTips':
-        // return <Image source={focused ? require("../../assets/icons/info-selected.png") : require("../../assets/icons/info.png")} style={sizeStyle} />;
         return (
           <Image
             source={
               focused
-                ? '../../assets/icons/info-selected.png'
-                : '../../assets/icons/info.png'
+                ? { uri: Image.resolveAssetSource(infoSelected) }
+                : { uri: Image.resolveAssetSource(info) }
             }
             style={sizeStyle}
           />
         );
       case 'Stakes':
-        // return <Image source={focused ? require("../../assets/icons/stakes-selected.png") : require("../../assets/icons/stakes.png")} style={sizeStyle} />;
         return (
           <Image
             source={
               focused
-                ? '../../assets/icons/stakes-selected.png'
-                : '../../assets/icons/stakes.png'
+                ? { uri: Image.resolveAssetSource(stakesSelected).uri }
+                : { uri: Image.resolveAssetSource(stakes).uri }
             }
             style={sizeStyle}
           />
         );
       case 'My Habits':
-        // return <Image source={focused ? require("../../assets/icons/activity-selected.png") : require("../../assets/icons/activity.png")} style={focused ? { width: 22, height: 20 } : sizeStyle} />;
         return (
           <Image
             source={
               focused
-                ? '../../assets/icons/activity-selected.png'
-                : '../../assets/icons/activity.png'
+                ? { uri: Image.resolveAssetSource(activitySelected).uri }
+                : { uri: Image.resolveAssetSource(activity).uri }
             }
             style={focused ? { width: 22, height: 20 } : sizeStyle}
           />
         );
       case 'Community':
-        // return <Image source={focused ? require("../../assets/icons/users-selected.png") : require("../../assets/icons/users.png")} style={sizeStyle} />;
         return (
           <Image
             source={
               focused
-                ? '../../assets/icons/users-selected.png'
-                : '../../assets/icons/users.png'
+                ? { uri: Image.resolveAssetSource(usersSelected).uri }
+                : { uri: Image.resolveAssetSource(users).uri }
             }
             style={sizeStyle}
           />
         );
       case 'Profile':
-        // return <Image source={focused ? require("../../assets/icons/user-selected.png") : require("../../assets/icons/user.png")} style={sizeStyle} />;
         return (
           <Image
             source={
               focused
-                ? '../../assets/icons/user-selected.png'
-                : '../../assets/icons/user.png'
+                ? { uri: Image.resolveAssetSource(userSelected).uri }
+                : { uri: Image.resolveAssetSource(user).uri }
             }
             style={sizeStyle}
           />
