@@ -48,8 +48,8 @@ export default function Navigator() {
         })}
       >
         <Tab.Screen name="Home" component={() => <></>} />
-        {/* <Tab.Screen name="Stakes" component={() => <></>} /> */}
-        <Tab.Screen name="Stakes" component={CheckoutScreen} /> 
+        <Tab.Screen name="Stakes" component={() => <></>} />
+        {/* <Tab.Screen name="Stakes" component={CheckoutScreen} />  */}
         <Tab.Screen name="My Habits" component={() => <></>} />
         <Tab.Screen name="Community" component={() => <></>} />
         <Tab.Screen name="Profile" component={() => <></>} />
