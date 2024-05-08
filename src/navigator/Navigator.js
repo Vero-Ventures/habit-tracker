@@ -3,6 +3,7 @@ import { Image } from 'react-native';
 import Colors from '../../assets/styles/Colors';
 import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import Habits from '../screens/habits/Habits';
 import homeSelected from '../../assets/icons/home-selected.png';
 import home from '../../assets/icons/home.png';
 import infoSelected from '../../assets/icons/info-selected.png';
@@ -39,8 +40,8 @@ export default function Navigator() {
           <Image
             source={
               focused
-                ? { uri: Image.resolveAssetSource(infoSelected) }
-                : { uri: Image.resolveAssetSource(info) }
+                ? { uri: Image.resolveAssetSource(infoSelected).uri }
+                : { uri: Image.resolveAssetSource(info).uri }
             }
             style={sizeStyle}
           />
@@ -97,7 +98,7 @@ export default function Navigator() {
   return (
     <NavigationContainer>
       <Tab.Navigator
-        initialRouteName="Habits"
+        initialRouteName="My Habits"
         screenOptions={({ route }) => ({
           tabBarIcon: ({ focused }) => icons(route, focused),
           tabBarShowLabel: true,
@@ -113,7 +114,7 @@ export default function Navigator() {
         })}>
         <Tab.Screen name="Home" component={() => <></>} />
         <Tab.Screen name="Stakes" component={() => <></>} />
-        <Tab.Screen name="My Habits" component={() => <></>} />
+        <Tab.Screen name="My Habits" component={Habits} />
         <Tab.Screen name="Community" component={() => <></>} />
         <Tab.Screen name="Profile" component={() => <></>} />
       </Tab.Navigator>
