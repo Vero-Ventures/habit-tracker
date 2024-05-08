@@ -16,6 +16,7 @@ import usersSelected from '../../assets/icons/users-selected.png';
 import users from '../../assets/icons/users.png';
 import userSelected from '../../assets/icons/user-selected.png';
 import user from '../../assets/icons/user.png';
+import CheckoutScreen from "../components/CheckoutScreen";
 
 const Tab = createBottomTabNavigator();
 
@@ -113,7 +114,8 @@ export default function Navigator() {
           },
         })}>
         <Tab.Screen name="Home" component={() => <></>} />
-        <Tab.Screen name="Stakes" component={() => <></>} />
+        {/* <Tab.Screen name="Stakes" component={() => <></>} /> */}
+        <Tab.Screen name="Stakes" component={CheckoutScreen} />
         <Tab.Screen name="My Habits" component={Habits} />
         <Tab.Screen name="Community" component={() => <></>} />
         <Tab.Screen name="Profile" component={() => <></>} />
