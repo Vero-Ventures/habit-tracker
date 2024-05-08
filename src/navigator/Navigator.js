@@ -16,6 +16,7 @@ import usersSelected from '../../assets/icons/users-selected.png';
 import users from '../../assets/icons/users.png';
 import userSelected from '../../assets/icons/user-selected.png';
 import user from '../../assets/icons/user.png';
+import Timeline from '../screens/timeline/Timeline';
 
 const Tab = createBottomTabNavigator();
 
@@ -24,7 +25,7 @@ export default function Navigator() {
     const sizeStyle = { width: 24, height: 24 };
 
     switch (route.name) {
-      case 'Home':
+      case 'Timeline':
         return (
           <Image
             source={
@@ -112,7 +113,7 @@ export default function Navigator() {
             paddingBottom: 24,
           },
         })}>
-        <Tab.Screen name="Home" component={() => <></>} />
+        <Tab.Screen name="Timeline" component={Timeline} />
         <Tab.Screen name="Stakes" component={() => <></>} />
         <Tab.Screen name="My Habits" component={Habits} />
         <Tab.Screen name="Community" component={() => <></>} />
