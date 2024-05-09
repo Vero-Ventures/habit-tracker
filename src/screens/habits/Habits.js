@@ -12,13 +12,15 @@ import Default from "../../../assets/styles/Default";
 import Colors from "../../../assets/styles/Colors";
 import Fetching from "../../components/Fetching";
 import Header from "../../components/Header";
+import AddHabit from "./AddHabit";
 import { Button } from "react-native-elements";
 import { getAllCategoryUserHabits } from "../../store/ducks/habit";
 import UserHabit from "../../components/UserHabit";
 import * as Notifications from "expo-notifications";
 import { sendPush } from "../../store/ducks/user";
-
+import { useNavigation } from '@react-navigation/native';
 const Habits = (props) => {
+  const navigation = useNavigation();
   const [fetching, setFetching] = useState(false);
   const [user_habits, setUserHabits] = useState([]);
 
@@ -43,15 +45,15 @@ const Habits = (props) => {
 
     getAllCategoryUserHabits()
       .catch((err) => {
-        Alert.alert(
-          "Ops!",
-          "Something went wrong with our servers. Please contact us.",
-        );
+        // Alert.alert(
+        //   "Ops!",
+        //   "Something went wrong with our servers. Please contact us.",
+        // );
       })
       .then((res) => {
         if (res?.status === 200) {
           if (res.data.errors) {
-            Alert.alert("Ops!", res.data.errors[0]);
+            // Alert.alert("Ops!", res.data.errors[0]);
           } else {
             setUserHabits(res.data);
           }
@@ -62,7 +64,7 @@ const Habits = (props) => {
   };
 
   const addHabit = () => {
-    props.navigation.navigate("AddHabit");
+    navigation.navigate('AddHabit');
   };
 
   registerPush = async () => {

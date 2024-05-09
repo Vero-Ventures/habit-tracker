@@ -3,6 +3,7 @@ import { Image } from 'react-native';
 import Colors from '../../assets/styles/Colors';
 import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import { createStackNavigator } from '@react-navigation/stack';
 import Habits from '../screens/habits/Habits';
 import homeSelected from '../../assets/icons/home-selected.png';
 import home from '../../assets/icons/home.png';
@@ -17,8 +18,10 @@ import users from '../../assets/icons/users.png';
 import userSelected from '../../assets/icons/user-selected.png';
 import user from '../../assets/icons/user.png';
 import Timeline from '../screens/timeline/Timeline';
+import AddHabit from '../screens/habits/AddHabit';
 
 const Tab = createBottomTabNavigator();
+const Stack = createStackNavigator();
 
 export default function Navigator() {
   const icons = (route, focused) => {
@@ -95,7 +98,6 @@ export default function Navigator() {
         return null;
     }
   };
-
   return (
     <NavigationContainer>
       <Tab.Navigator
@@ -112,13 +114,23 @@ export default function Navigator() {
             paddingTop: 20,
             paddingBottom: 24,
           },
-        })}>
+        })}
+      >
         <Tab.Screen name="Timeline" component={Timeline} />
         <Tab.Screen name="Stakes" component={() => <></>} />
-        <Tab.Screen name="My Habits" component={Habits} />
+        <Tab.Screen name="My Habits" component={HabitsStack} />
         <Tab.Screen name="Community" component={() => <></>} />
         <Tab.Screen name="Profile" component={() => <></>} />
       </Tab.Navigator>
     </NavigationContainer>
   );
 }
+
+const HabitsStack = () => {
+  return (
+    <Stack.Navigator>
+      <Stack.Screen name="Habits" component={Habits} />
+      <Stack.Screen name="AddHabit" component={AddHabit} />
+    </Stack.Navigator>
+  );
+};
