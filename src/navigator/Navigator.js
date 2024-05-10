@@ -3,6 +3,7 @@ import PropTypes from 'prop-types';
 import { Image } from 'react-native';
 import Colors from '../../assets/styles/Colors';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import { createStackNavigator } from '@react-navigation/stack';
 import Habits from '../screens/habits/Habits';
 import ProfileScreen from '../screens/ProfileScreen';
 import homeSelected from '../../assets/icons/home-selected.png';
@@ -17,9 +18,32 @@ import usersSelected from '../../assets/icons/users-selected.png';
 import users from '../../assets/icons/users.png';
 import userSelected from '../../assets/icons/user-selected.png';
 import user from '../../assets/icons/user.png';
+
+import Timeline from '../screens/timeline/Timeline';
+import Community from '../screens/community/Community';
+import CreateCommunity from '../screens/community/CreateCommunity';
+
 import CheckoutScreen from '../components/CheckoutScreen';
 
 const Tab = createBottomTabNavigator();
+const CommunityStack = createStackNavigator();
+
+const CommunityScreen = () => {
+  return (
+    <CommunityStack.Navigator
+      initialRouteName="Community"
+      screenOptions={{
+        headerShown: false,
+        cardStyle: { backgroundColor: Colors.navigator },
+      }}>
+      <CommunityStack.Screen name="Community" component={Community} />
+      <CommunityStack.Screen
+        name="CreateCommunity"
+        component={CreateCommunity}
+      />
+    </CommunityStack.Navigator>
+  );
+};
 
 export default function Navigator({ route }) {
   const { session } = route.params;
@@ -27,71 +51,32 @@ export default function Navigator({ route }) {
     const sizeStyle = { width: 24, height: 24 };
 
     switch (route.name) {
-      case 'Home':
+      case 'Timeline':
         return (
-          <Image
-            source={
-              focused
-                ? { uri: Image.resolveAssetSource(homeSelected).uri }
-                : { uri: Image.resolveAssetSource(home).uri }
-            }
-            style={sizeStyle}
-          />
+          <Image source={focused ? homeSelected : home} style={sizeStyle} />
         );
       case 'ExtraTips':
         return (
-          <Image
-            source={
-              focused
-                ? { uri: Image.resolveAssetSource(infoSelected).uri }
-                : { uri: Image.resolveAssetSource(info).uri }
-            }
-            style={sizeStyle}
-          />
+          <Image source={focused ? infoSelected : info} style={sizeStyle} />
         );
       case 'Stakes':
         return (
-          <Image
-            source={
-              focused
-                ? { uri: Image.resolveAssetSource(stakesSelected).uri }
-                : { uri: Image.resolveAssetSource(stakes).uri }
-            }
-            style={sizeStyle}
-          />
+          <Image source={focused ? stakesSelected : stakes} style={sizeStyle} />
         );
       case 'My Habits':
         return (
           <Image
-            source={
-              focused
-                ? { uri: Image.resolveAssetSource(activitySelected).uri }
-                : { uri: Image.resolveAssetSource(activity).uri }
-            }
+            source={focused ? activitySelected : activity}
             style={focused ? { width: 22, height: 20 } : sizeStyle}
           />
         );
       case 'Community':
         return (
-          <Image
-            source={
-              focused
-                ? { uri: Image.resolveAssetSource(usersSelected).uri }
-                : { uri: Image.resolveAssetSource(users).uri }
-            }
-            style={sizeStyle}
-          />
+          <Image source={focused ? usersSelected : users} style={sizeStyle} />
         );
       case 'Profile':
         return (
-          <Image
-            source={
-              focused
-                ? { uri: Image.resolveAssetSource(userSelected).uri }
-                : { uri: Image.resolveAssetSource(user).uri }
-            }
-            style={sizeStyle}
-          />
+          <Image source={focused ? userSelected : user} style={sizeStyle} />
         );
       default:
         return null;
@@ -114,10 +99,10 @@ export default function Navigator({ route }) {
           paddingBottom: 24,
         },
       })}>
-      <Tab.Screen name="Home" component={() => <></>} />
+      <Tab.Screen name="Timeline" component={Timeline} />
       <Tab.Screen name="Stakes" component={CheckoutScreen} />
       <Tab.Screen name="My Habits" component={Habits} />
-      <Tab.Screen name="Community" component={() => <></>} />
+      <Tab.Screen name="Community" component={CommunityScreen} />
       <Tab.Screen
         name="Profile"
         component={ProfileScreen}

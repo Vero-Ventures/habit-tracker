@@ -4,7 +4,7 @@ import { View, Text, TextInput, Button } from 'react-native';
 import { supabase } from '../config/supabaseClient';
 
 function ProfileScreen({ route }) {
-  const { session, setHasProfile } = route.params;
+  const { session /*, setHasProfile*/ } = route.params;
   const [username, setUsername] = useState('');
   const [bio, setBio] = useState('');
   const [profileImage, setProfileImage] = useState('');
@@ -32,21 +32,21 @@ function ProfileScreen({ route }) {
 
   const updateUserProfile = async () => {
     setLoading(true);
-    const { data, error } = await supabase.from('User').insert([
-      {
-        user_id: session.user.id,
-        username: username,
-        bio: bio,
-        profile_image: profileImage,
-      },
-    ]);
+    // const { data, error } = await supabase.from('User').insert([
+    //   {
+    //     user_id: session.user.id,
+    //     username: username,
+    //     bio: bio,
+    //     profile_image: profileImage,
+    //   },
+    // ]);
     setLoading(false);
-    if (error) {
-      alert('Error updating profile: ' + error.message);
-    } else if (data) {
-      setHasProfile(true);
-      alert('Profile updated successfully!');
-    }
+    // if (error) {
+    //   alert('Error updating profile: ' + error.message);
+    // } else if (data) {
+    //   setHasProfile(true);
+    //   alert('Profile updated successfully!');
+    // }
   };
 
   return (

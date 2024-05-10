@@ -10,10 +10,10 @@ import {
 import Icon from "react-native-vector-icons/FontAwesome5";
 import Colors from "../../assets/styles/Colors";
 import { systemWeights } from "react-native-typography";
-import { useSelector } from "react-redux";
+// import { useSelector } from "react-redux";
 
 const Header = (props) => {
-  const user = useSelector(({ user }) => user);
+  // const user = useSelector(({ user }) => user);
 
   return (
     <View
