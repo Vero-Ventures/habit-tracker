@@ -29,7 +29,7 @@ export default function Auth({ onSignIn }) {
     });
     setLoading(false);
     if (error) {
-      Alert.alert(error.message);
+      Alert.alert('Login Error', error.message);
     } else if (data.session) {
       onSignIn(data.session.user.id);
     }
@@ -37,18 +37,21 @@ export default function Auth({ onSignIn }) {
 
   async function signUpWithEmail() {
     setLoading(true);
-    const {
-      data: { session },
-      error,
-    } = await supabase.auth.signUp({
+    const { error } = await supabase.auth.signUp({
       email: email,
       password: password,
     });
 
-    if (error) Alert.alert(error.message);
-    if (!session)
-      Alert.alert('Please check your inbox for email verification!');
-    setLoading(false);
+    if (error) {
+      Alert.alert('Signup Error', error.message);
+      setLoading(false);
+    } else {
+      Alert.alert(
+        'Signup Notification',
+        'Please check your inbox for email verification!'
+      );
+      setLoading(false);
+    }
   }
 
   return (
@@ -57,17 +60,15 @@ export default function Auth({ onSignIn }) {
         <Input
           label="Email"
           leftIcon={{ type: 'font-awesome', name: 'envelope' }}
-          onChangeText={text => setEmail(text)}
+          onChangeText={setEmail}
           value={email}
           placeholder="email@address.com"
           autoCapitalize={'none'}
         />
-      </View>
-      <View style={styles.verticallySpaced}>
         <Input
           label="Password"
           leftIcon={{ type: 'font-awesome', name: 'lock' }}
-          onChangeText={text => setPassword(text)}
+          onChangeText={setPassword}
           value={password}
           secureTextEntry={true}
           placeholder="Password"
@@ -75,18 +76,8 @@ export default function Auth({ onSignIn }) {
         />
       </View>
       <View style={[styles.verticallySpaced, styles.mt20]}>
-        <Button
-          title="Sign in"
-          disabled={loading}
-          onPress={() => signInWithEmail()}
-        />
-      </View>
-      <View style={styles.verticallySpaced}>
-        <Button
-          title="Sign up"
-          disabled={loading}
-          onPress={() => signUpWithEmail()}
-        />
+        <Button title="Sign in" disabled={loading} onPress={signInWithEmail} />
+        <Button title="Sign up" disabled={loading} onPress={signUpWithEmail} />
       </View>
     </View>
   );
