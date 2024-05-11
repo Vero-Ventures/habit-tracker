@@ -1,15 +1,15 @@
-import { React, useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import PropTypes from 'prop-types';
-import { supabase } from '../config/supabaseClient';
 import { StyleSheet, View, Alert } from 'react-native';
 import { Button, Input } from 'react-native-elements';
+import { supabase } from '../config/supabaseClient';
 
 export default function Account({ route }) {
   const { session } = route.params;
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [username, setUsername] = useState('');
-  const [website, setWebsite] = useState('');
-  const [avatarUrl, setAvatarUrl] = useState('');
+  const [bio, setBio] = useState('');
+  const [profileimage, setprofileImage] = useState('');
 
   useEffect(() => {
     if (session) getProfile();
@@ -21,9 +21,9 @@ export default function Account({ route }) {
       if (!session?.user) throw new Error('No user on the session!');
 
       const { data, error, status } = await supabase
-        .from('profiles')
-        .select(`username, website, avatar_url`)
-        .eq('id', session?.user.id)
+        .from('User')
+        .select(`username, bio, profile_image`)
+        .eq('user_id', session?.user.id)
         .single();
       if (error && status !== 406) {
         throw error;
@@ -31,77 +31,75 @@ export default function Account({ route }) {
 
       if (data) {
         setUsername(data.username);
-        setWebsite(data.website);
-        setAvatarUrl(data.avatar_url);
+        setBio(data.bio);
+        setprofileImage(data.profile_image);
       }
     } catch (error) {
-      if (error instanceof Error) {
-        Alert.alert(error.message);
-      }
+      Alert.alert('Error fetching profile', error.message);
     } finally {
       setLoading(false);
     }
   }
 
-  async function updateProfile({ username, website, avatar_url }) {
+  async function updateProfile() {
     try {
       setLoading(true);
-      if (!session?.user) throw new Error('No user on the session!');
-
       const updates = {
-        id: session?.user.id,
-        username,
-        website,
-        avatar_url,
-        updated_at: new Date(),
+        user_id: session?.user.id,
+        username: username,
+        bio: bio,
+        profile_image: profileimage,
       };
 
-      const { error } = await supabase.from('profiles').upsert(updates);
+      const { error } = await supabase
+        .from('User')
+        .upsert(updates, { returning: 'minimal' });
 
       if (error) {
         throw error;
       }
+
+      Alert.alert('Success', 'Profile updated successfully!');
     } catch (error) {
-      if (error instanceof Error) {
-        Alert.alert(error.message);
-      }
+      Alert.alert('Update Error', error.message);
     } finally {
       setLoading(false);
     }
   }
 
-  console.log('session', session?.user?.email);
-
   return (
     <View style={styles.container}>
       <View style={[styles.verticallySpaced, styles.mt20]}>
-        <Input label="Email" value={session?.user?.email} disabled />
+        <Input
+          label="Profile Image URL"
+          value={profileimage || ''}
+          onChangeText={setprofileImage}
+          placeholder="Enter profile image URL"
+        />
       </View>
       <View style={styles.verticallySpaced}>
         <Input
           label="Username"
           value={username || ''}
-          onChangeText={text => setUsername(text)}
+          onChangeText={setUsername}
+          placeholder="Enter username"
         />
       </View>
       <View style={styles.verticallySpaced}>
         <Input
-          label="Website"
-          value={website || ''}
-          onChangeText={text => setWebsite(text)}
+          label="Bio"
+          value={bio || ''}
+          onChangeText={setBio}
+          placeholder="Enter bio"
         />
       </View>
-
       <View style={[styles.verticallySpaced, styles.mt20]}>
         <Button
           title={loading ? 'Loading ...' : 'Update'}
-          onPress={() =>
-            updateProfile({ username, website, avatar_url: avatarUrl })
-          }
+          onPress={updateProfile}
           disabled={loading}
         />
       </View>
-
       <View style={styles.verticallySpaced}>
         <Button title="Sign Out" onPress={() => supabase.auth.signOut()} />
       </View>
