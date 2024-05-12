@@ -1,5 +1,7 @@
 name: update
-on: push
+on:
+  push:
+  branches: [main, dev]
 
 jobs:
   update:
@@ -28,7 +30,7 @@ jobs:
           token: ${{ secrets.EXPO_TOKEN }}
 
       - name: Install dependencies
-        run: yarn install
+        run: npm install
 
       - name: Install Prettier
-        run: yarn add prettier
+        run: npm i prettier
