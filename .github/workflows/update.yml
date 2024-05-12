@@ -1,7 +1,7 @@
 name: update
 on:
   push:
-  branches: [main, dev, devops/github-actions]
+    branches: [main, dev, devops/github-actions]
 
 jobs:
   update:
