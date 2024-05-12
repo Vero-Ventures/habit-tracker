@@ -2,7 +2,7 @@ name: Format
 on:
   pull_request:
     push:
-    branches: [main, dev]
+    branches: [main, dev, devops/github-actions]
 
 jobs:
   format:
