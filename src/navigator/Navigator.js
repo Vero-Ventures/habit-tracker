@@ -164,7 +164,7 @@ export default function Navigator({ route }) {
       })}>
       <Tab.Screen name="Timeline" component={Timeline} />
       <Tab.Screen name="Stakes" component={ChatbotScreen} />
-      {/* Used to be the stakes screen, but I am putting the chatbot screen temporarily */}
+      {/* Used to be the stakes screen, but I am putting the chatbot screen here temporarily */}
       <Tab.Screen
         options={{ title: 'Habits' }}
         name="Habits"
