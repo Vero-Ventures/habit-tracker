@@ -6,9 +6,9 @@ const API_TOKEN = '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';
 async function queryHuggingFace(data) {
     try {
         const response = await fetch(
-            "https://api-inference.huggingface.co/models/microsoft/Phi-3-mini-128k-instruct",
+            "https://api-inference.huggingface.co/models/meta-llama/Meta-Llama-3-8B",
             {
-                headers: { Authorization: `Bearer ${API_TOKEN}` },
+                headers: { Authorization: `Bearer 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` },
                 method: "POST",
                 body: JSON.stringify(data),
             }
