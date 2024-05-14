@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { View, TextInput, Button, FlatList, Text, StyleSheet } from 'react-native';
 import axios from 'axios';
 
-const API_TOKEN = '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';
+const API_TOKEN = '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';
 
 const queryHuggingFace = async (data) => {
     const response = await axios.post(
