@@ -11,9 +11,12 @@ const queryHuggingFace = async (data) => {
             data,
             {
                 headers: { Authorization: `Bearer ${API_TOKEN}` },
+                method: "POST",
+			    body: JSON.stringify(data),
             }
         );
-        return response.data;
+        const result = await response.json();
+        return result;
     } catch (error) {
         console.error("Error communicating with Hugging Face API:", error);
         return { generated_text: "Sorry, something went wrong." };
