@@ -8,7 +8,7 @@ async function queryHuggingFace(data) {
         const response = await fetch(
             "https://api-inference.huggingface.co/models/meta-llama/Meta-Llama-3-8B",
             {
-                headers: { Authorization: `Bearer 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` },
+                headers: { Authorization: `Bearer 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` },
                 method: "POST",
                 body: JSON.stringify(data),
             }
