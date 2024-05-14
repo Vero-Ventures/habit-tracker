@@ -1,20 +1,30 @@
 import React, { useState } from 'react';
 import { View, TextInput, Button, FlatList, Text, StyleSheet } from 'react-native';
-import axios from 'axios';
 
 const API_TOKEN = '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';
 
 async function queryHuggingFace(data) {
-	const response = await fetch(
-		"https://api-inference.huggingface.co/models/microsoft/Phi-3-mini-128k-instruct",
-		{
-			headers: { Authorization: "Bearer {API_TOKEN}" },
-			method: "POST",
-			body: JSON.stringify(data),
-		}
-	);
-	const result = await response.json();
-	return result;
+    try {
+        const response = await fetch(
+            "https://api-inference.huggingface.co/models/microsoft/Phi-3-mini-128k-instruct",
+            {
+                headers: { Authorization: `Bearer ${API_TOKEN}` },
+                method: "POST",
+                body: JSON.stringify(data),
+            }
+        );
+
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const result = await response.json();
+        console.log("API Response:", result); // Log the response for debugging
+        return result;
+    } catch (error) {
+        console.error("Error in queryHuggingFace:", error);
+        throw error;
+    }
 }
 
 const ChatbotScreen = () => {
@@ -28,6 +38,8 @@ const ChatbotScreen = () => {
 
         try {
             const response = await queryHuggingFace({ inputs: input });
+
+            // Assuming the response format contains `generated_text` as the model's output
             const botResponse = response.generated_text || 'Sorry, something went wrong.';
             setMessages([...newMessages, { type: 'bot', text: botResponse }]);
         } catch (error) {
