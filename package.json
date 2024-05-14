@@ -19,6 +19,7 @@
   },
   "dependencies": {
     "@react-native-async-storage/async-storage": "1.23.1",
+    "@react-native-picker/picker": "^2.7.5",
     "@react-navigation/bottom-tabs": "^6.5.20",
     "@react-navigation/native": "^6.1.17",
     "@react-navigation/native-stack": "^6.9.26",
@@ -41,6 +42,7 @@
     "react": "18.2.0",
     "react-native": "0.74.1",
     "react-native-actionsheet": "^2.4.2",
+    "react-native-chart-kit": "^6.12.0",
     "react-native-collapsible": "^1.6.1",
     "react-native-elements": "^3.4.3",
     "react-native-keyboard-aware-scroll-view": "^0.9.5",
