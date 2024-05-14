@@ -25,7 +25,7 @@ import Community from '../screens/community/Community';
 import CreateCommunity from '../screens/community/CreateCommunity';
 import Profile from '../screens/profile/Profile';
 import UpdateProfile from '../screens/profile/UpdateProfile';
-import CheckoutScreen from '../components/CheckoutScreen';
+import ChatbotScreen from '../screens/ChatbotScreen';
 
 const Tab = createBottomTabNavigator();
 const CommunityStack = createStackNavigator();
@@ -171,7 +171,7 @@ export default function Navigator({ route }) {
         },
       })}>
       <Tab.Screen name="Timeline" component={Timeline} />
-      <Tab.Screen name="Stakes" component={CheckoutScreen} />
+      <Tab.Screen name="Stakes" component={ChatbotScreen} />
       <Tab.Screen options={{ title: 'Habits' }} name="Habits" component={HabitsScreen}/>
       <Tab.Screen name="Community" component={CommunityScreen} />
       <Tab.Screen
