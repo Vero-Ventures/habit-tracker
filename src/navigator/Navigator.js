@@ -33,7 +33,6 @@ const CommunityStack = createStackNavigator();
 const ProfileStack = createStackNavigator();
 const HabitsStack = createStackNavigator();
 
-
 const CommunityScreen = () => {
   return (
     <CommunityStack.Navigator
@@ -51,7 +50,6 @@ const CommunityScreen = () => {
   );
 };
 
-
 const ProfileScreen = () => {
   return (
     <ProfileStack.Navigator
@@ -59,10 +57,8 @@ const ProfileScreen = () => {
       screenOptions={{
         headerShown: false,
         cardStyle: { backgroundColor: Colors.navigator },
-      
       }}>
-
-  <ProfileStack.Screen name="ProfileIndex" component={Profile} />
+      <ProfileStack.Screen name="ProfileIndex" component={Profile} />
       <ProfileStack.Screen name="UpdateProfile" component={UpdateProfile} />
       {/* <ProfileStack.Screen name="MyProducts" component={MyProducts} />
       <ProfileStack.Screen name="AddProducts" component={AddProducts} />
@@ -95,16 +91,13 @@ const ProfileScreen = () => {
       />
       <ProfileStack.Screen name="SavedPost" component={SavedPost} /> */}
     </ProfileStack.Navigator>
+  );
+};
 
-    )};
-
-
-      
 const HabitsScreen = () => {
   return (
     <HabitsStack.Navigator
       initialRouteName="HabitsIndex"
-
       screenOptions={{
         headerShown: false,
         cardStyle: { backgroundColor: Colors.navigator },
@@ -112,7 +105,6 @@ const HabitsScreen = () => {
       <HabitsStack.Screen name="HabitsIndex" component={Habits} />
       <HabitsStack.Screen name="AddHabit" component={AddHabit} />
     </HabitsStack.Navigator>
-
   );
 };
 
@@ -172,12 +164,17 @@ export default function Navigator({ route }) {
       })}>
       <Tab.Screen name="Timeline" component={Timeline} />
       <Tab.Screen name="Stakes" component={ChatbotScreen} />
-      <Tab.Screen options={{ title: 'Habits' }} name="Habits" component={HabitsScreen}/>
+      {/* Used to be the stakes screen, but I am putting the chatbot screen temporarily */}
+      <Tab.Screen
+        options={{ title: 'Habits' }}
+        name="Habits"
+        component={HabitsScreen}
+      />
       <Tab.Screen name="Community" component={CommunityScreen} />
       <Tab.Screen
         name="Profile"
         component={ProfileScreen} // This used to be ProfileScreen, I am putting duplicate community screen temporarily since no Profile is available when not logged in
-    // This used to be ProfileScreen, I am putting duplicate community screen temporarily since no Profile is available when not logged in
+        // This used to be ProfileScreen, I am putting duplicate community screen temporarily since no Profile is available when not logged in
         // initialParams={{ session: session }}
       />
     </Tab.Navigator>
