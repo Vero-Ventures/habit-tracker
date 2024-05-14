@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { View, TextInput, Button, FlatList, Text, StyleSheet } from 'react-native';
 
-const API_TOKEN = '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';
+const API_TOKEN = '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';
 
 async function queryHuggingFace(data) {
     try {
