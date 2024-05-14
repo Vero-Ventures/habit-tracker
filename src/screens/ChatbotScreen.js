@@ -4,24 +4,18 @@ import axios from 'axios';
 
 const API_TOKEN = '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';
 
-const queryHuggingFace = async (data) => {
-    try {
-        const response = await axios.post(
-            'https://api-inference.huggingface.co/models/microsoft/Phi-3-mini-128k-instruct',
-            data,
-            {
-                headers: { Authorization: `Bearer ${API_TOKEN}` },
-                method: "POST",
-			    body: JSON.stringify(data),
-            }
-        );
-        const result = await response.json();
-        return result;
-    } catch (error) {
-        console.error("Error communicating with Hugging Face API:", error);
-        return { generated_text: "Sorry, something went wrong." };
-    }
-};
+async function queryHuggingFace(data) {
+	const response = await fetch(
+		"https://api-inference.huggingface.co/models/microsoft/Phi-3-mini-128k-instruct",
+		{
+			headers: { Authorization: "Bearer {API_TOKEN}" },
+			method: "POST",
+			body: JSON.stringify(data),
+		}
+	);
+	const result = await response.json();
+	return result;
+}
 
 const ChatbotScreen = () => {
     const [messages, setMessages] = useState([]);
