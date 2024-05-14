@@ -6,7 +6,7 @@ const API_TOKEN = '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';
 async function queryHuggingFace(data) {
     try {
         const response = await fetch(
-            "https://api-inference.huggingface.co/models/meta-llama/Meta-Llama-3-8B",
+            "https://api-inference.huggingface.co/models/openai-community/gpt2",
             {
                 headers: { Authorization: `Bearer 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` },
                 method: "POST",
