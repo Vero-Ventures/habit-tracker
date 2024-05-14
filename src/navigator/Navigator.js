@@ -5,6 +5,9 @@ import Colors from '../../assets/styles/Colors';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createStackNavigator } from '@react-navigation/stack';
 import Habits from '../screens/habits/Habits';
+
+import AddHabit from '../screens/habits/AddHabit';
+
 import homeSelected from '../../assets/icons/home-selected.png';
 import home from '../../assets/icons/home.png';
 import infoSelected from '../../assets/icons/info-selected.png';
@@ -17,7 +20,6 @@ import usersSelected from '../../assets/icons/users-selected.png';
 import users from '../../assets/icons/users.png';
 import userSelected from '../../assets/icons/user-selected.png';
 import user from '../../assets/icons/user.png';
-
 import Timeline from '../screens/timeline/Timeline';
 import Community from '../screens/community/Community';
 import CreateCommunity from '../screens/community/CreateCommunity';
@@ -27,7 +29,10 @@ import CheckoutScreen from '../components/CheckoutScreen';
 
 const Tab = createBottomTabNavigator();
 const CommunityStack = createStackNavigator();
+
 const ProfileStack = createStackNavigator();
+const HabitsStack = createStackNavigator();
+
 
 const CommunityScreen = () => {
   return (
@@ -46,6 +51,7 @@ const CommunityScreen = () => {
   );
 };
 
+
 const ProfileScreen = () => {
   return (
     <ProfileStack.Navigator
@@ -53,8 +59,10 @@ const ProfileScreen = () => {
       screenOptions={{
         headerShown: false,
         cardStyle: { backgroundColor: Colors.navigator },
+      
       }}>
-      <ProfileStack.Screen name="ProfileIndex" component={Profile} />
+
+  <ProfileStack.Screen name="ProfileIndex" component={Profile} />
       <ProfileStack.Screen name="UpdateProfile" component={UpdateProfile} />
       {/* <ProfileStack.Screen name="MyProducts" component={MyProducts} />
       <ProfileStack.Screen name="AddProducts" component={AddProducts} />
@@ -87,6 +95,24 @@ const ProfileScreen = () => {
       />
       <ProfileStack.Screen name="SavedPost" component={SavedPost} /> */}
     </ProfileStack.Navigator>
+
+    )};
+
+
+      
+const HabitsScreen = () => {
+  return (
+    <HabitsStack.Navigator
+      initialRouteName="HabitsIndex"
+
+      screenOptions={{
+        headerShown: false,
+        cardStyle: { backgroundColor: Colors.navigator },
+      }}>
+      <HabitsStack.Screen name="HabitsIndex" component={Habits} />
+      <HabitsStack.Screen name="AddHabit" component={AddHabit} />
+    </HabitsStack.Navigator>
+
   );
 };
 
@@ -146,11 +172,12 @@ export default function Navigator({ route }) {
       })}>
       <Tab.Screen name="Timeline" component={Timeline} />
       <Tab.Screen name="Stakes" component={CheckoutScreen} />
-      <Tab.Screen name="My Habits" component={Habits} />
+      <Tab.Screen options={{ title: 'Habits' }} name="Habits" component={HabitsScreen}/>
       <Tab.Screen name="Community" component={CommunityScreen} />
       <Tab.Screen
         name="Profile"
         component={ProfileScreen} // This used to be ProfileScreen, I am putting duplicate community screen temporarily since no Profile is available when not logged in
+    // This used to be ProfileScreen, I am putting duplicate community screen temporarily since no Profile is available when not logged in
         // initialParams={{ session: session }}
       />
     </Tab.Navigator>
