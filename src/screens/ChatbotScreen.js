@@ -5,14 +5,19 @@ import axios from 'axios';
 const API_TOKEN = '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';
 
 const queryHuggingFace = async (data) => {
-    const response = await axios.post(
-        'https://api-inference.huggingface.co/models/microsoft/Phi-3-mini-128k-instruct',
-        data,
-        {
-            headers: { Authorization: `Bearer ${API_TOKEN}` },
-        }
-    );
-    return response.data;
+    try {
+        const response = await axios.post(
+            'https://api-inference.huggingface.co/models/microsoft/Phi-3-mini-128k-instruct',
+            data,
+            {
+                headers: { Authorization: `Bearer ${API_TOKEN}` },
+            }
+        );
+        return response.data;
+    } catch (error) {
+        console.error("Error communicating with Hugging Face API:", error);
+        return { generated_text: "Sorry, something went wrong." };
+    }
 };
 
 const ChatbotScreen = () => {
@@ -24,9 +29,15 @@ const ChatbotScreen = () => {
         const newMessages = [...messages, { type: 'user', text: input }];
         setMessages(newMessages);
 
-        const response = await queryHuggingFace({ inputs: input });
-        const botResponse = response.generated_text || 'Sorry, something went wrong.';
-        setMessages([...newMessages, { type: 'bot', text: botResponse }]);
+        try {
+            const response = await queryHuggingFace({ inputs: input });
+            const botResponse = response.generated_text || 'Sorry, something went wrong.';
+            setMessages([...newMessages, { type: 'bot', text: botResponse }]);
+        } catch (error) {
+            console.error("Error handling send:", error);
+            setMessages([...newMessages, { type: 'bot', text: 'Sorry, something went wrong.' }]);
+        }
+
         setInput('');
     };
 
