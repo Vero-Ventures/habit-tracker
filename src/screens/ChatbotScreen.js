@@ -1,29 +1,41 @@
 import React, { useState } from 'react';
 import { View, TextInput, Button, FlatList, Text, StyleSheet } from 'react-native';
 
-const API_TOKEN = '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';
+const API_TOKEN = 'your_generated_api_token';
 
-async function queryHuggingFace(data) {
-    try {
-        const response = await fetch(
-            "https://api-inference.huggingface.co/models/openai-community/gpt2",
-            {
-                headers: { Authorization: `Bearer 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` },
-                method: "POST",
-                body: JSON.stringify(data),
+async function queryHuggingFace(data, retries = 3, delay = 1000) {
+    for (let attempt = 1; attempt <= retries; attempt++) {
+        try {
+            const response = await fetch(
+                "https://api-inference.huggingface.co/models/openai-community/gpt2",
+                {
+                    headers: { Authorization: `Bearer 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` },
+                    method: "POST",
+                    body: JSON.stringify(data),
+                }
+            );
+
+            if (!response.ok) {
+                if (response.status === 503 && attempt < retries) {
+                    console.warn(`Service unavailable. Retrying in ${delay} ms...`);
+                    await new Promise(res => setTimeout(res, delay));
+                    continue; // Retry the request
+                }
+                if (response.status === 403) {
+                    throw new Error("Access forbidden: Check your API token and model permissions.");
+                }
+                throw new Error(`HTTP error! status: ${response.status}`);
             }
-        );
 
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
+            const result = await response.json();
+            console.log("API Response:", result); // Log the response for debugging
+            return result;
+        } catch (error) {
+            if (attempt === retries) {
+                console.error("Error in queryHuggingFace:", error);
+                throw error;
+            }
         }
-
-        const result = await response.json();
-        console.log("API Response:", result); // Log the response for debugging
-        return result;
-    } catch (error) {
-        console.error("Error in queryHuggingFace:", error);
-        throw error;
     }
 }
 
@@ -38,13 +50,12 @@ const ChatbotScreen = () => {
 
         try {
             const response = await queryHuggingFace({ inputs: input });
-
-            // Assuming the response format contains `generated_text` as the model's output
-            const botResponse = response.generated_text || 'Sorry, something went wrong.';
+            // Extract the generated text from the response
+            const botResponse = response[0]?.generated_text || 'Sorry, something went wrong.';
             setMessages([...newMessages, { type: 'bot', text: botResponse }]);
         } catch (error) {
             console.error("Error handling send:", error);
-            setMessages([...newMessages, { type: 'bot', text: 'Sorry, something went wrong.' }]);
+            setMessages([...newMessages, { type: 'bot', text: 'Service is currently unavailable. Please try again later.' }]);
         }
 
         setInput('');
