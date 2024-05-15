@@ -22,10 +22,14 @@ import user from '../../assets/icons/user.png';
 import Timeline from '../screens/timeline/Timeline';
 import Community from '../screens/community/Community';
 import CreateCommunity from '../screens/community/CreateCommunity';
-import CheckoutScreen from '../components/CheckoutScreen';
+import Profile from '../screens/profile/Profile';
+import UpdateProfile from '../screens/profile/UpdateProfile';
+import ChatbotScreen from '../screens/ChatbotScreen';
 
 const Tab = createBottomTabNavigator();
 const CommunityStack = createStackNavigator();
+
+// const ProfileStack = createStackNavigator();
 const HabitsStack = createStackNavigator();
 
 const CommunityScreen = () => {
@@ -44,6 +48,50 @@ const CommunityScreen = () => {
     </CommunityStack.Navigator>
   );
 };
+
+// const ProfileScreen = () => {
+//   return (
+//     <ProfileStack.Navigator
+//       initialRouteName="ProfileIndex"
+//       screenOptions={{
+//         headerShown: false,
+//         cardStyle: { backgroundColor: Colors.navigator },
+//       }}>
+//       <ProfileStack.Screen name="ProfileIndex" component={Profile} />
+//       <ProfileStack.Screen name="UpdateProfile" component={UpdateProfile} />
+//       {/* <ProfileStack.Screen name="MyProducts" component={MyProducts} />
+//       <ProfileStack.Screen name="AddProducts" component={AddProducts} />
+//       <ProfileStack.Screen name="Success" component={Success} />
+//       <ProfileStack.Screen name="ScoreForm" component={ScoreForm} />
+//       <ProfileStack.Screen name="Connections" component={Connections} />
+//       <ProfileStack.Screen
+//         name="UserConnections"
+//         component={UserConnections}
+//       />
+//       <ProfileStack.Screen name="UserProfile" component={UserProfile} />
+//       <ProfileStack.Screen name="Ranking" component={Ranking} />
+//       <ProfileStack.Screen
+//         name="HealthHabitReport"
+//         component={HealthHabitReport}
+//       />
+//       <ProfileStack.Screen
+//         name="HealthHabitReportDetails"
+//         component={HealthHabitReportDetails}
+//       />
+//       <ProfileStack.Screen name="UserCommunity" component={UserCommunity} />
+//       <ProfileStack.Screen name="UserHabit" component={UserHabit} />
+//       <ProfileStack.Screen
+//         name="UpdateFavoriteFood"
+//         component={UpdateFavoriteFood}
+//       />
+//       <ProfileStack.Screen
+//         name="UpdateFavoriteBook"
+//         component={UpdateFavoriteBook}
+//       />
+//       <ProfileStack.Screen name="SavedPost" component={SavedPost} /> */}
+//     </ProfileStack.Navigator>
+//   );
+// };
 
 const HabitsScreen = () => {
   return (
@@ -114,7 +162,8 @@ export default function Navigator({ route }) {
         },
       })}>
       <Tab.Screen name="Timeline" component={Timeline} />
-      <Tab.Screen name="Stakes" component={CheckoutScreen} />
+      <Tab.Screen name="Stakes" component={ChatbotScreen} />
+      {/* Used to be the stakes screen, but I am putting the chatbot screen here temporarily */}
       <Tab.Screen
         options={{ title: 'Habits' }}
         name="Habits"
