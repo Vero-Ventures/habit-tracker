@@ -5,9 +5,8 @@ import Colors from '../../assets/styles/Colors';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createStackNavigator } from '@react-navigation/stack';
 import Habits from '../screens/habits/Habits';
-
 import AddHabit from '../screens/habits/AddHabit';
-
+import ProfileScreen from '../screens/ProfileScreen';
 import homeSelected from '../../assets/icons/home-selected.png';
 import home from '../../assets/icons/home.png';
 import infoSelected from '../../assets/icons/info-selected.png';
@@ -30,7 +29,7 @@ import ChatbotScreen from '../screens/ChatbotScreen';
 const Tab = createBottomTabNavigator();
 const CommunityStack = createStackNavigator();
 
-const ProfileStack = createStackNavigator();
+// const ProfileStack = createStackNavigator();
 const HabitsStack = createStackNavigator();
 
 const CommunityScreen = () => {
@@ -50,49 +49,49 @@ const CommunityScreen = () => {
   );
 };
 
-const ProfileScreen = () => {
-  return (
-    <ProfileStack.Navigator
-      initialRouteName="ProfileIndex"
-      screenOptions={{
-        headerShown: false,
-        cardStyle: { backgroundColor: Colors.navigator },
-      }}>
-      <ProfileStack.Screen name="ProfileIndex" component={Profile} />
-      <ProfileStack.Screen name="UpdateProfile" component={UpdateProfile} />
-      {/* <ProfileStack.Screen name="MyProducts" component={MyProducts} />
-      <ProfileStack.Screen name="AddProducts" component={AddProducts} />
-      <ProfileStack.Screen name="Success" component={Success} />
-      <ProfileStack.Screen name="ScoreForm" component={ScoreForm} />
-      <ProfileStack.Screen name="Connections" component={Connections} />
-      <ProfileStack.Screen
-        name="UserConnections"
-        component={UserConnections}
-      />
-      <ProfileStack.Screen name="UserProfile" component={UserProfile} />
-      <ProfileStack.Screen name="Ranking" component={Ranking} />
-      <ProfileStack.Screen
-        name="HealthHabitReport"
-        component={HealthHabitReport}
-      />
-      <ProfileStack.Screen
-        name="HealthHabitReportDetails"
-        component={HealthHabitReportDetails}
-      />
-      <ProfileStack.Screen name="UserCommunity" component={UserCommunity} />
-      <ProfileStack.Screen name="UserHabit" component={UserHabit} />
-      <ProfileStack.Screen
-        name="UpdateFavoriteFood"
-        component={UpdateFavoriteFood}
-      />
-      <ProfileStack.Screen
-        name="UpdateFavoriteBook"
-        component={UpdateFavoriteBook}
-      />
-      <ProfileStack.Screen name="SavedPost" component={SavedPost} /> */}
-    </ProfileStack.Navigator>
-  );
-};
+// const ProfileScreen = () => {
+//   return (
+//     <ProfileStack.Navigator
+//       initialRouteName="ProfileIndex"
+//       screenOptions={{
+//         headerShown: false,
+//         cardStyle: { backgroundColor: Colors.navigator },
+//       }}>
+//       <ProfileStack.Screen name="ProfileIndex" component={Profile} />
+//       <ProfileStack.Screen name="UpdateProfile" component={UpdateProfile} />
+//       {/* <ProfileStack.Screen name="MyProducts" component={MyProducts} />
+//       <ProfileStack.Screen name="AddProducts" component={AddProducts} />
+//       <ProfileStack.Screen name="Success" component={Success} />
+//       <ProfileStack.Screen name="ScoreForm" component={ScoreForm} />
+//       <ProfileStack.Screen name="Connections" component={Connections} />
+//       <ProfileStack.Screen
+//         name="UserConnections"
+//         component={UserConnections}
+//       />
+//       <ProfileStack.Screen name="UserProfile" component={UserProfile} />
+//       <ProfileStack.Screen name="Ranking" component={Ranking} />
+//       <ProfileStack.Screen
+//         name="HealthHabitReport"
+//         component={HealthHabitReport}
+//       />
+//       <ProfileStack.Screen
+//         name="HealthHabitReportDetails"
+//         component={HealthHabitReportDetails}
+//       />
+//       <ProfileStack.Screen name="UserCommunity" component={UserCommunity} />
+//       <ProfileStack.Screen name="UserHabit" component={UserHabit} />
+//       <ProfileStack.Screen
+//         name="UpdateFavoriteFood"
+//         component={UpdateFavoriteFood}
+//       />
+//       <ProfileStack.Screen
+//         name="UpdateFavoriteBook"
+//         component={UpdateFavoriteBook}
+//       />
+//       <ProfileStack.Screen name="SavedPost" component={SavedPost} /> */}
+//     </ProfileStack.Navigator>
+//   );
+// };
 
 const HabitsScreen = () => {
   return (
@@ -109,7 +108,7 @@ const HabitsScreen = () => {
 };
 
 export default function Navigator({ route }) {
-  // const { session } = route.params;
+  const { session } = route.params;
   const icons = (route, focused) => {
     const sizeStyle = { width: 24, height: 24 };
 
@@ -174,8 +173,7 @@ export default function Navigator({ route }) {
       <Tab.Screen
         name="Profile"
         component={ProfileScreen} // This used to be ProfileScreen, I am putting duplicate community screen temporarily since no Profile is available when not logged in
-        // This used to be ProfileScreen, I am putting duplicate community screen temporarily since no Profile is available when not logged in
-        // initialParams={{ session: session }}
+        initialParams={{ session: session }}
       />
     </Tab.Navigator>
   );
