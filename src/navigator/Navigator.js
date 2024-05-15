@@ -22,7 +22,6 @@ import user from '../../assets/icons/user.png';
 import Timeline from '../screens/timeline/Timeline';
 import Community from '../screens/community/Community';
 import CreateCommunity from '../screens/community/CreateCommunity';
-
 import CheckoutScreen from '../components/CheckoutScreen';
 
 const Tab = createBottomTabNavigator();
@@ -61,7 +60,7 @@ const HabitsScreen = () => {
 };
 
 export default function Navigator({ route }) {
-  // const { session } = route.params;
+  const { session } = route.params;
   const icons = (route, focused) => {
     const sizeStyle = { width: 24, height: 24 };
 
@@ -116,12 +115,16 @@ export default function Navigator({ route }) {
       })}>
       <Tab.Screen name="Timeline" component={Timeline} />
       <Tab.Screen name="Stakes" component={CheckoutScreen} />
-      <Tab.Screen options={{ title: 'Habits' }} name="Habits" component={HabitsScreen}/>
+      <Tab.Screen
+        options={{ title: 'Habits' }}
+        name="Habits"
+        component={HabitsScreen}
+      />
       <Tab.Screen name="Community" component={CommunityScreen} />
       <Tab.Screen
         name="Profile"
-        component={CommunityScreen} // This used to be ProfileScreen, I am putting duplicate community screen temporarily since no Profile is available when not logged in
-        // initialParams={{ session: session }}
+        component={ProfileScreen} // This used to be ProfileScreen, I am putting duplicate community screen temporarily since no Profile is available when not logged in
+        initialParams={{ session: session }}
       />
     </Tab.Navigator>
   );
