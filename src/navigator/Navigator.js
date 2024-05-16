@@ -5,9 +5,7 @@ import Colors from '../../assets/styles/Colors';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createStackNavigator } from '@react-navigation/stack';
 import Habits from '../screens/habits/Habits';
-
 import AddHabit from '../screens/habits/AddHabit';
-
 import homeSelected from '../../assets/icons/home-selected.png';
 import home from '../../assets/icons/home.png';
 import infoSelected from '../../assets/icons/info-selected.png';
@@ -20,6 +18,8 @@ import usersSelected from '../../assets/icons/users-selected.png';
 import users from '../../assets/icons/users.png';
 import userSelected from '../../assets/icons/user-selected.png';
 import user from '../../assets/icons/user.png';
+import checklist from '../../assets/icons/clipboard-check.png';
+import checklistSelected from '../../assets/icons/clipboard-check-selected.png';
 import Timeline from '../screens/timeline/Timeline';
 import Community from '../screens/community/Community';
 import CreateCommunity from '../screens/community/CreateCommunity';
@@ -29,7 +29,6 @@ import CheckoutScreen from '../components/CheckoutScreen';
 
 const Tab = createBottomTabNavigator();
 const CommunityStack = createStackNavigator();
-
 const ProfileStack = createStackNavigator();
 const HabitsStack = createStackNavigator();
 
@@ -126,13 +125,9 @@ export default function Navigator({ route }) {
         return (
           <Image source={focused ? homeSelected : home} style={sizeStyle} />
         );
-      case 'ExtraTips':
+      case 'Checklist':
         return (
-          <Image source={focused ? infoSelected : info} style={sizeStyle} />
-        );
-      case 'Stakes':
-        return (
-          <Image source={focused ? stakesSelected : stakes} style={sizeStyle} />
+          <Image source={focused ? checklistSelected : checklist} style={sizeStyle} />
         );
       case 'My Habits':
         return (
@@ -171,7 +166,7 @@ export default function Navigator({ route }) {
         },
       })}>
       <Tab.Screen name="Timeline" component={Timeline} />
-      <Tab.Screen name="Stakes" component={CheckoutScreen} />
+      <Tab.Screen name="Checklist" component={CheckoutScreen} />
       <Tab.Screen options={{ title: 'Habits' }} name="Habits" component={HabitsScreen}/>
       <Tab.Screen name="Community" component={CommunityScreen} />
       <Tab.Screen
