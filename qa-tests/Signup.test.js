@@ -15,7 +15,7 @@ jest.mock('../src/config/supabaseClient', () => ({
   },
 }));
 
-describe('Auth Screen', () => {
+describe('User Account Management', () => {
   // Tests sign in with successful email and password
   it('should call signInWithEmail and handle success', async () => {
     const onSignInMock = jest.fn();
