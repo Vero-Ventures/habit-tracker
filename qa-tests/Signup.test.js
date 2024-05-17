@@ -1,5 +1,6 @@
 import React from 'react';
 import { render, fireEvent, waitFor } from '@testing-library/react-native';
+import { Alert } from 'react-native';
 import Auth from '../src/screens/SignupScreen';
 import { supabase } from '../src/config/supabaseClient';
 
@@ -15,9 +16,11 @@ jest.mock('../src/config/supabaseClient', () => ({
   },
 }));
 
+jest.spyOn(Alert, 'alert');
+
 describe('User Account Management', () => {
   // Tests sign in with successful email and password
-  it('should call signInWithEmail and handle success', async () => {
+  it('Call signInWithEmail and handle success', async () => {
     const onSignInMock = jest.fn();
     supabase.auth.signInWithPassword.mockResolvedValue({
       data: { session: { user: { id: '123' } } },
@@ -45,7 +48,7 @@ describe('User Account Management', () => {
   });
 
   // Tests sign in with unsuccessful email and password
-  it('should call signInWithEmail and handle error', async () => {
+  it('Call signInWithEmail and handle error', async () => {
     const onSignInMock = jest.fn();
     supabase.auth.signInWithPassword.mockResolvedValue({
       data: null,
@@ -66,6 +69,55 @@ describe('User Account Management', () => {
         password: '',
       });
       expect(onSignInMock).not.toHaveBeenCalled();
+    });
+  });
+
+  // Tests sign up with successful email and password
+  it('Call signUpWithEmail and handle success', async () => {
+    supabase.auth.signUp.mockResolvedValue({ error: null });
+
+    const { getByPlaceholderText, getByText } = render(<Auth />);
+
+    fireEvent.changeText(
+      getByPlaceholderText('email@address.com'),
+      'test@example.com'
+    );
+    fireEvent.changeText(getByPlaceholderText('Password'), 'password123');
+    fireEvent.press(getByText('Sign up'));
+
+    await waitFor(() => {
+      expect(supabase.auth.signUp).toHaveBeenCalledWith({
+        email: 'test@example.com',
+        password: 'password123',
+      });
+      expect(Alert.alert).toHaveBeenCalledWith(
+        'Signup Notification',
+        'Please check your inbox for email verification!'
+      );
+    });
+  });
+
+  // Tests sign up with unsuccessful email and password
+  it('Call signUpWithEmail and handle error', async () => {
+    supabase.auth.signUp.mockResolvedValue({
+      error: { message: 'Signup error' },
+    });
+
+    const { getByPlaceholderText, getByText } = render(<Auth />);
+
+    fireEvent.changeText(
+      getByPlaceholderText('email@address.com'),
+      'test@example.com'
+    );
+    fireEvent.changeText(getByPlaceholderText('Password'), 'password123');
+    fireEvent.press(getByText('Sign up'));
+
+    await waitFor(() => {
+      expect(supabase.auth.signUp).toHaveBeenCalledWith({
+        email: 'test@example.com',
+        password: 'password123',
+      });
+      expect(Alert.alert).toHaveBeenCalledWith('Signup Error', 'Signup error');
     });
   });
 });
