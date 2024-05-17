@@ -124,7 +124,7 @@ export default function Navigator() {
         return (
           <Image source={focused ? stakesSelected : stakes} style={sizeStyle} />
         );
-      case 'My Habits':
+      case 'Habits':
         return (
           <Image
             source={focused ? activitySelected : activity}
@@ -146,7 +146,7 @@ export default function Navigator() {
 
   return (
     <Tab.Navigator
-      initialRouteName="My Habits"
+      initialRouteName="Habits"
       screenOptions={({ route }) => ({
         tabBarIcon: ({ focused }) => icons(route, focused),
         tabBarShowLabel: true,
@@ -163,11 +163,7 @@ export default function Navigator() {
       <Tab.Screen name="Timeline" component={Timeline} />
       <Tab.Screen name="Stakes" component={ChatbotScreen} />
       {/* Used to be the stakes screen, but I am putting the chatbot screen here temporarily */}
-      <Tab.Screen
-        options={{ title: 'Habits' }}
-        name="Habits"
-        component={HabitsScreen}
-      />
+      <Tab.Screen name="Habits" component={HabitsScreen} />
       <Tab.Screen name="Community" component={CommunityScreen} />
       <Tab.Screen name="Profile" component={ProfileScreen} />
     </Tab.Navigator>
