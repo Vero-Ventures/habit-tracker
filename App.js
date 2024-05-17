@@ -51,7 +51,7 @@ export default function App() {
             <Stack.Screen
               name="Navigator"
               component={Navigator}
-              initialParams={{ session: session }}
+              // initialParams={{ session: session }}
             />
           )}
         </Stack.Navigator>
