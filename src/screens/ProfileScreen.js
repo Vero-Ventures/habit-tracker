@@ -86,6 +86,7 @@ export default function Account() {
     console.log('User and associated data deleted successfully:', data);
   }
 
+  //Old function that's no longer used (replaced by downloaduserdata function below)
   async function fetchUserData(userId) {
     try {
       const { data, error } = await supabase.rpc('get_user_data', {
@@ -179,7 +180,7 @@ async function downloadUserData(userId) {
         </View>
         <View style={styles.verticallySpaced}>
           <Button
-            title="Fetch User Data"
+            title="Download User Data"
             onPress={() => downloadUserData(session.user.id)}
           />
         </View>
