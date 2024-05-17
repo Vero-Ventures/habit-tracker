@@ -3,6 +3,8 @@ import PropTypes from 'prop-types';
 import { Alert, StyleSheet, View, AppState } from 'react-native';
 import { supabase } from '../config/supabaseClient';
 import { Button, Input } from 'react-native-elements';
+import { userLogin } from '../store/ducks/user';
+import store from '../store/storeConfig';
 
 // Tells Supabase Auth to continuously refresh the session automatically if
 // the app is in the foreground. When this is added, you will continue to receive
@@ -16,7 +18,7 @@ AppState.addEventListener('change', state => {
   }
 });
 
-export default function Auth({ onSignIn }) {
+export default function Auth() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
@@ -27,11 +29,12 @@ export default function Auth({ onSignIn }) {
       email: email,
       password: password,
     });
+
     setLoading(false);
     if (error) {
       Alert.alert('Login Error', error.message);
     } else if (data.session) {
-      onSignIn(data.session.user.id);
+      store.dispatch(userLogin(data.session));
     }
   }
 

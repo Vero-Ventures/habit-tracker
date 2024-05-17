@@ -107,8 +107,7 @@ const HabitsScreen = () => {
   );
 };
 
-export default function Navigator({ route }) {
-  const { session } = route.params;
+export default function Navigator() {
   const icons = (route, focused) => {
     const sizeStyle = { width: 24, height: 24 };
 
@@ -170,11 +169,7 @@ export default function Navigator({ route }) {
         component={HabitsScreen}
       />
       <Tab.Screen name="Community" component={CommunityScreen} />
-      <Tab.Screen
-        name="Profile"
-        component={ProfileScreen} // This used to be ProfileScreen, I am putting duplicate community screen temporarily since no Profile is available when not logged in
-        initialParams={{ session: session }}
-      />
+      <Tab.Screen name="Profile" component={ProfileScreen} />
     </Tab.Navigator>
   );
 }
