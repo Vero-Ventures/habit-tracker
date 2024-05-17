@@ -52,6 +52,7 @@ export default [
       'src/screens/profile/UserHabit.js',
       'src/screens/profile/UserProfile.js',
       'src/screens/profile/HealthHabitReportUtils.js',
+      'qa-tests/Signup.test.js',
     ],
     rules: {
       'no-unused-vars': 'off',
