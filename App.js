@@ -1,20 +1,53 @@
+import { React, useState, useEffect } from 'react';
 import { StatusBar } from 'expo-status-bar';
-import { StyleSheet, Text, View } from 'react-native';
+import Navigator from './src/navigator/Navigator';
+import { supabase } from './src/config/supabaseClient';
+import SignupScreen from './src/screens/SignupScreen';
+import { NavigationContainer } from '@react-navigation/native';
+import { createStackNavigator } from '@react-navigation/stack';
+
+const Stack = createStackNavigator();
 
 export default function App() {
+  const [session, setSession] = useState(null);
+
+  useEffect(() => {
+    const checkSession = async () => {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+      if (session) {
+        setSession(session);
+      }
+    };
+
+    checkSession();
+
+    const { data: listener } = supabase.auth.onAuthStateChange(
+      (_event, session) => {
+        setSession(session);
+      }
+    );
+
+    return () => {
+      listener.unsubscribe();
+    };
+  }, []);
+
   return (
-    <View style={styles.container}>
-      <Text>Initial commit for Habit Tracker</Text>
+    <NavigationContainer>
       <StatusBar style="auto" />
-    </View>
+      <Stack.Navigator screenOptions={{ headerShown: false }}>
+        {!session ? (
+          <Stack.Screen name="Signup" component={SignupScreen} />
+        ) : (
+          <Stack.Screen
+            name="Navigator"
+            component={Navigator}
+            initialParams={{ session: session }}
+          />
+        )}
+      </Stack.Navigator>
+    </NavigationContainer>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#fff',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-});
