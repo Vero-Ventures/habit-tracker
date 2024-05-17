@@ -61,16 +61,9 @@ export default function Navigator() {
             style={sizeStyle}
           />
         );
-      case 'My Habits':
+      case 'Habits':
         return (
-          <Image
-            source={
-              focused
-                ? { uri: Image.resolveAssetSource(activitySelected).uri }
-                : { uri: Image.resolveAssetSource(activity).uri }
-            }
-            style={focused ? { width: 22, height: 20 } : sizeStyle}
-          />
+          <Image source={focused ? activitySelected : activity} style={sizeStyle} />
         );
       case 'Community':
         return (
@@ -99,30 +92,32 @@ export default function Navigator() {
     }
   };
   return (
-    <NavigationContainer>
-      <Tab.Navigator
-        initialRouteName="My Habits"
-        screenOptions={({ route }) => ({
-          tabBarIcon: ({ focused }) => icons(route, focused),
-          tabBarShowLabel: true,
-          tabBarActiveTintColor: Colors.primary8,
-          tabBarInactiveTintColor: Colors.primary9,
-          tabBarStyle: {
-            backgroundColor: Colors.navigator,
-            borderTopWidth: 0,
-            height: 82,
-            paddingTop: 20,
-            paddingBottom: 24,
-          },
-        })}
-      >
-        <Tab.Screen name="Timeline" component={Timeline} />
-        <Tab.Screen name="Stakes" component={() => <></>} />
-        <Tab.Screen name="My Habits" component={HabitsStack} />
-        <Tab.Screen name="Community" component={() => <></>} />
-        <Tab.Screen name="Profile" component={() => <></>} />
-      </Tab.Navigator>
-    </NavigationContainer>
+    <Tab.Navigator
+      initialRouteName="Habits"
+      screenOptions={({ route }) => ({
+        tabBarIcon: ({ focused }) => icons(route, focused),
+        tabBarShowLabel: true,
+        tabBarActiveTintColor: Colors.primary8,
+        tabBarInactiveTintColor: Colors.primary9,
+        tabBarStyle: {
+          backgroundColor: Colors.navigator,
+          borderTopWidth: 0,
+          height: 82,
+          paddingTop: 20,
+          paddingBottom: 24,
+        },
+      })}>
+      <Tab.Screen name="Timeline" component={Timeline} />
+      <Tab.Screen name="Stakes" component={ChatbotScreen} />
+      {/* Used to be the stakes screen, but I am putting the chatbot screen here temporarily */}
+      <Tab.Screen name="Habits" component={HabitsScreen} />
+      <Tab.Screen name="Community" component={CommunityScreen} />
+      <Tab.Screen
+        name="Profile"
+        component={ProfileScreen} // This used to be ProfileScreen, I am putting duplicate community screen temporarily since no Profile is available when not logged in
+        initialParams={{ session: session }}
+      />
+    </Tab.Navigator>
   );
 }
 
