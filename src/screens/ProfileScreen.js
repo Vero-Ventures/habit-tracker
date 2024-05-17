@@ -3,9 +3,10 @@ import PropTypes from 'prop-types';
 import { StyleSheet, View, Alert } from 'react-native';
 import { Button, Input } from 'react-native-elements';
 import { supabase } from '../config/supabaseClient';
+import store from '../store/storeConfig';
 
-export default function Account({ route }) {
-  const { session } = route.params;
+export default function Account() {
+  const session = store.getState().user.session;
   const [loading, setLoading] = useState(false);
   const [username, setUsername] = useState('');
   const [bio, setBio] = useState('');
@@ -18,6 +19,7 @@ export default function Account({ route }) {
   async function getProfile() {
     try {
       setLoading(true);
+      // if (!session?.user) throw new Error('No user on the session!');
       if (!session?.user) throw new Error('No user on the session!');
 
       const { data, error, status } = await supabase
