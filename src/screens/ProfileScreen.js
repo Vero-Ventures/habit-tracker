@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import PropTypes from 'prop-types';
-import { StyleSheet, View, Alert } from 'react-native';
+import { StyleSheet, View, Alert, ScrollView, Text } from 'react-native';
 import { Button, Input } from 'react-native-elements';
 import { supabase } from '../config/supabaseClient';
 
@@ -9,7 +9,8 @@ export default function Account({ route }) {
   const [loading, setLoading] = useState(false);
   const [username, setUsername] = useState('');
   const [bio, setBio] = useState('');
-  const [profileimage, setprofileImage] = useState('');
+  const [profileImage, setProfileImage] = useState('');
+  const [userData, setUserData] = useState(null);
 
   useEffect(() => {
     if (session) getProfile();
@@ -32,7 +33,7 @@ export default function Account({ route }) {
       if (data) {
         setUsername(data.username);
         setBio(data.bio);
-        setprofileImage(data.profile_image);
+        setProfileImage(data.profile_image);
       }
     } catch (error) {
       Alert.alert('Error fetching profile', error.message);
@@ -48,7 +49,7 @@ export default function Account({ route }) {
         user_id: session?.user.id,
         username: username,
         bio: bio,
-        profile_image: profileimage,
+        profile_image: profileImage,
       };
 
       const { error } = await supabase
@@ -67,50 +68,113 @@ export default function Account({ route }) {
     }
   }
 
+  async function deleteUserAndData(userId) {
+    supabase.auth.signOut();
+    const { data, error } = await supabase.rpc('delete_user_data', {
+      user_id: userId,
+    });
+
+    if (error) {
+      console.error('Error deleting user:', error);
+      return;
+    }
+
+    console.log('User and associated data deleted successfully:', data);
+  }
+
+  async function fetchUserData(userId) {
+    try {
+      const { data, error } = await supabase.rpc('get_user_data', {
+        p_user_id: userId,
+      });
+
+      if (error) {
+        console.error('Error fetching data:', error);
+        Alert.alert('Error', 'Error fetching data: ' + error.message);
+        return;
+      }
+
+      setUserData(JSON.stringify(data, null, 2));
+      Alert.alert('User Data', JSON.stringify(data, null, 2));
+    } catch (error) {
+      console.error('Error:', error);
+      Alert.alert('Error', 'Unexpected error: ' + error.message);
+    }
+  }
+
   return (
     <View style={styles.container}>
-      <View style={[styles.verticallySpaced, styles.mt20]}>
-        <Input
-          label="Profile Image URL"
-          value={profileimage || ''}
-          onChangeText={setprofileImage}
-          placeholder="Enter profile image URL"
-        />
-      </View>
-      <View style={styles.verticallySpaced}>
-        <Input
-          label="Username"
-          value={username || ''}
-          onChangeText={setUsername}
-          placeholder="Enter username"
-        />
-      </View>
-      <View style={styles.verticallySpaced}>
-        <Input
-          label="Bio"
-          value={bio || ''}
-          onChangeText={setBio}
-          placeholder="Enter bio"
-        />
-      </View>
-      <View style={[styles.verticallySpaced, styles.mt20]}>
-        <Button
-          title={loading ? 'Loading ...' : 'Update'}
-          onPress={updateProfile}
-          disabled={loading}
-        />
-      </View>
-      <View style={styles.verticallySpaced}>
-        <Button title="Sign Out" onPress={() => supabase.auth.signOut()} />
-      </View>
+      <ScrollView>
+        <View style={[styles.verticallySpaced, styles.mt20]}>
+          <Input
+            label="Profile Image URL"
+            value={profileImage || ''}
+            onChangeText={setProfileImage}
+            placeholder="Enter profile image URL"
+          />
+        </View>
+        <View style={styles.verticallySpaced}>
+          <Input
+            label="Username"
+            value={username || ''}
+            onChangeText={setUsername}
+            placeholder="Enter username"
+          />
+        </View>
+        <View style={styles.verticallySpaced}>
+          <Input
+            label="Bio"
+            value={bio || ''}
+            onChangeText={setBio}
+            placeholder="Enter bio"
+          />
+        </View>
+        <View style={[styles.verticallySpaced, styles.mt20]}>
+          <Button
+            title={loading ? 'Loading ...' : 'Update'}
+            onPress={updateProfile}
+            disabled={loading}
+          />
+        </View>
+        <View style={styles.verticallySpaced}>
+          <Button title="Sign Out" onPress={() => supabase.auth.signOut()} />
+        </View>
+        <View style={styles.verticallySpaced}>
+          <Button
+            title="Delete Account"
+            onPress={() => deleteUserAndData(session.user.id)}
+          />
+        </View>
+        <View style={styles.verticallySpaced}>
+          <Button
+            title="Fetch User Data"
+            onPress={() => fetchUserData(session.user.id)}
+          />
+        </View>
+        {userData && (
+          <View style={styles.userDataContainer}>
+            <Text style={styles.userDataText}>{userData}</Text>
+          </View>
+        )}
+      </ScrollView>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
+    flex: 1,
     marginTop: 40,
     padding: 12,
+  },
+  userDataContainer: {
+    marginTop: 20,
+    padding: 10,
+    backgroundColor: '#f0f0f0',
+    borderRadius: 5,
+  },
+  userDataText: {
+    fontFamily: 'monospace',
   },
   verticallySpaced: {
     paddingTop: 4,
