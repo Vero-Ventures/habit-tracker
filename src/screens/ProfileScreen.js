@@ -4,6 +4,8 @@ import { StyleSheet, View, Alert, ScrollView, Text } from 'react-native';
 import { Button, Input } from 'react-native-elements';
 import { supabase } from '../config/supabaseClient';
 import store from '../store/storeConfig';
+import * as FileSystem from 'expo-file-system';
+import * as Sharing from 'expo-sharing';
 
 export default function Account() {
   const session = store.getState().user.session;
@@ -84,6 +86,7 @@ export default function Account() {
     console.log('User and associated data deleted successfully:', data);
   }
 
+  //Old function that's no longer used (replaced by downloaduserdata function below)
   async function fetchUserData(userId) {
     try {
       const { data, error } = await supabase.rpc('get_user_data', {
@@ -103,6 +106,34 @@ export default function Account() {
       Alert.alert('Error', 'Unexpected error: ' + error.message);
     }
   }
+
+  // Inside your component
+async function downloadUserData(userId) {
+  try {
+    const { data, error } = await supabase.rpc('get_user_data', {
+      p_user_id: userId,
+    });
+
+    if (error) {
+      console.error('Error fetching data:', error);
+      Alert.alert('Error', 'Error fetching data: ' + error.message);
+      return;
+    }
+
+    const jsonData = JSON.stringify(data, null, 2);
+    const fileUri = FileSystem.documentDirectory + 'user_data.json';
+
+    await FileSystem.writeAsStringAsync(fileUri, jsonData, {
+      encoding: FileSystem.EncodingType.UTF8,
+    });
+
+    Alert.alert('Success', 'User data saved as user_data.json');
+    Sharing.shareAsync(fileUri);
+  } catch (error) {
+    console.error('Error:', error);
+    Alert.alert('Error', 'Unexpected error: ' + error.message);
+  }
+}
 
   return (
     <View style={styles.container}>
@@ -149,8 +180,8 @@ export default function Account() {
         </View>
         <View style={styles.verticallySpaced}>
           <Button
-            title="Fetch User Data"
-            onPress={() => fetchUserData(session.user.id)}
+            title="Download User Data"
+            onPress={() => downloadUserData(session.user.id)}
           />
         </View>
         {userData && (
