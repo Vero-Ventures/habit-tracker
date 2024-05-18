@@ -5,6 +5,7 @@ import Colors from '../../assets/styles/Colors';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createStackNavigator } from '@react-navigation/stack';
 import Habits from '../screens/habits/Habits';
+import ViewHabit from '../screens/habits/ViewHabit';
 import AddHabit from '../screens/habits/AddHabit';
 import ProfileScreen from '../screens/ProfileScreen';
 import homeSelected from '../../assets/icons/home-selected.png';
@@ -103,6 +104,7 @@ const HabitsScreen = () => {
       }}>
       <HabitsStack.Screen name="HabitsIndex" component={Habits} />
       <HabitsStack.Screen name="AddHabit" component={AddHabit} />
+      <HabitsStack.Screen name="ViewHabit" component={ViewHabit} />
     </HabitsStack.Navigator>
   );
 };
