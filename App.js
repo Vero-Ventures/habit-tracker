@@ -68,7 +68,7 @@ export default function App() {
           onPress={() => setIsChatVisible(true)}>
           <View style={styles.tooltipCircle}>
             <Image
-              source={require('./assets/images/Chatbot.png')} // Ensure the path to your image is correct
+              source={require('./assets/images/Chatbot.png')}
               style={styles.tooltipImage}
             />
           </View>
