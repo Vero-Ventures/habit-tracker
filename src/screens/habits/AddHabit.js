@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import PropTypes from 'prop-types';
 import {
   View,
   ScrollView,
@@ -13,143 +14,140 @@ import {
 } from 'react-native';
 import Default from '../../../assets/styles/Default';
 import Colors from '../../../assets/styles/Colors';
-import Fetching from '../../components/Fetching';
+// import Fetching from '../../components/Fetching';
 import Header from '../../components/Header';
 import Icon from 'react-native-vector-icons/FontAwesome5';
 import { Button, Input } from 'react-native-elements';
 import { Picker } from '@react-native-picker/picker';
-import { getAllCategory } from '../../store/ducks/habit';
+// import { getAllCategory } from '../../store/ducks/habit';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 import RBSheet from 'react-native-raw-bottom-sheet';
-import { storeCustom } from '../../store/ducks/habit';
-import DateTimePicker from '@react-native-community/datetimepicker';
-import moment from 'moment';
+// import { storeCustom } from '../../store/ducks/habit';
+// import DateTimePicker from '@react-native-community/datetimepicker';
+// import moment from 'moment';
 import { getFrequencyTypes, takeCamera, takeGaleria } from '../../utils/Utils';
 import { LinearGradient } from 'expo-linear-gradient';
 import ActionSheet from 'react-native-actionsheet';
 import * as ImagePicker from 'expo-image-picker';
-import * as mime from 'react-native-mime-types';
-import { manipulateAsync } from 'expo-image-manipulator';
+// import * as mime from 'react-native-mime-types';
+// import { manipulateAsync } from 'expo-image-manipulator';
+import { supabase } from '../../config/supabaseClient';
+import store from '../../store/storeConfig';
 
 const AddHabit = props => {
   const [sending, setSending] = useState(false);
-  const [fetching, setFetching] = useState(false);
+  // const [fetching, setFetching] = useState(false);
   const [name, setName] = useState('');
-  const [category, setCategory] = useState('');
-  const [category_ios, setCategoryIOS] = useState('');
+  // const [category, setCategory] = useState('');
+  // const [category_ios, setCategoryIOS] = useState('');
   const [habit_description, setHabitDecription] = useState('');
-  const [list_category, setListCategory] = useState([]);
+  // const [list_category, setListCategory] = useState([]);
   const [frequency_type, setFrequencyType] = useState('EVERYDAY');
   const [frequency_type_ios, setFrequencyTypeIos] = useState('EVERYDAY');
-  const [frequency_days, setFrequencyDays] = useState([
-    false,
-    false,
-    false,
-    false,
-    false,
-    false,
-    false,
-  ]);
-  const [isRemind, setIsRemind] = useState(false);
-  const [time, setTime] = useState(new Date());
-  const [timeIOS, setTimeIOS] = useState(new Date());
-  const [showPicker, setShowPicker] = useState(false);
+  // const [frequency_days, setFrequencyDays] = useState([
+  //   false,
+  //   false,
+  //   false,
+  //   false,
+  //   false,
+  //   false,
+  //   false,
+  // ]);
+  const [active_days, setActiveDays] = useState(0);
+  // const [isRemind, setIsRemind] = useState(false);
+  // const [time, setTime] = useState(new Date());
+  // const [timeIOS, setTimeIOS] = useState(new Date());
+  // const [showPicker, setShowPicker] = useState(false);
   const [habitPhoto, setHabitPhoto] = useState(null);
 
-  const RBSTime = useRef();
+  // const RBSTime = useRef();
   const RBSFrequency = useRef();
   const RBSFillFrequencyDays = useRef();
-  const RBSCategory = useRef();
+  // const RBSCategory = useRef();
   const ASPhotoOptions = useRef();
 
   useEffect(() => {
-    fetchAll();
+    // fetchAll();
 
     if (props.route?.params?.habit) {
       setName(props.route.params.habit.hab_name);
-      setCategory(props.route.params.habit.hab_id_category);
+      // setCategory(props.route.params.habit.hab_id_category);
       setHabitDecription(props.route.params.habit.hab_description);
-      setCategory(props.route.params.habit.hab_id_category);
+      // setCategory(props.route.params.habit.hab_id_category);
       // setCategoryIOS(props.route.params.habit.hab_id_category);
     }
   }, []);
 
-  const fetchAll = async () => {
-    setFetching(true);
+  // const fetchAll = async () => {
+  //   setFetching(true);
 
-    await getAllCategory()
-      .catch(err => {
-        Alert.alert(
-          'Ops!',
-          'Something went wrong with our servers. Please contact us.'
-        );
-      })
-      .then(res => {
-        if (res?.status === 200) {
-          setListCategory(res.data);
+  //   // await getAllCategory()
+  //   //   .catch(err => {
+  //   //     Alert.alert(
+  //   //       'Ops!',
+  //   //       'Something went wrong with our servers. Please contact us.'
+  //   //     );
+  //   //   })
+  //   //   .then(res => {
+  //   //     if (res?.status === 200) {
+  //   //       setListCategory(res.data);
 
-          if (props.route?.params?.habit) {
-            res.data.map((obj, i) => {
-              if (obj.id === props.route.params.habit.hab_id_category) {
-                setCategoryIOS(obj);
-              }
-            });
-          }
-        }
-      });
+  //   //       if (props.route?.params?.habit) {
+  //   //         res.data.map((obj, i) => {
+  //   //           if (obj.id === props.route.params.habit.hab_id_category) {
+  //   //             setCategoryIOS(obj);
+  //   //           }
+  //   //         });
+  //   //       }
+  //   //     }
+  //   //   });
 
-    setFetching(false);
-  };
+  //   setFetching(false);
+  // };
 
   const addHabit = async () => {
     if (name.trim() === '') {
       Alert.alert(
-        'Ops!',
+        'Oops!',
         'You need to input the habit name before continuing.'
-      );
-      return;
-    } else if (category === '') {
-      Alert.alert(
-        'Ops!',
-        'You need to select the habit category before continuing.'
       );
       return;
     } else if (habit_description === '') {
       Alert.alert(
-        'Ops!',
+        'Oops!',
         'You need to input the habit description before continuing.'
       );
       return;
     } else if (frequency_type === '') {
       Alert.alert(
-        'Ops!',
+        'Oops!',
         'You need to input the habit frequency before continuing.'
       );
       return;
     }
 
-    if (frequency_type === 'CUSTOM') {
-      let hasDaySelected = false;
+    // if (frequency_type === 'CUSTOM') {
+    //   let hasDaySelected = false;
 
-      frequency_days.map((obj, i) => {
-        if (obj) {
-          hasDaySelected = true;
-        }
-      });
+    //   frequency_days.map((obj, i) => {
+    //     if (obj) {
+    //       hasDaySelected = true;
+    //     }
+    //   });
 
-      if (!hasDaySelected) {
-        RBSFillFrequencyDays.current.open();
-        return;
-      }
-    }
+    //   if (!hasDaySelected) {
+    //     RBSFillFrequencyDays.current.open();
+    //     return;
+    //   }
+    // }
 
     setSending(true);
 
-    let notification_time = time;
+    // let notification_time = time;
 
-    if (moment(time).isBefore(moment())) {
-      notification_time = new Date(moment(time).add(1, 'day'));
-    }
+    // if (moment(time).isBefore(moment())) {
+    //   notification_time = new Date(moment(time).add(1, 'day'));
+    // }
 
     // let push_identifier = isRemind ?
     // 	await Notifications.scheduleNotificationAsync({
@@ -163,62 +161,100 @@ const AddHabit = props => {
     // 	})
     // 	: null;
 
-    let coh_frequency = { type: frequency_type };
+    // let coh_frequency = { type: frequency_type };
 
-    frequency_type === 'CUSTOM' ? (coh_frequency.days = frequency_days) : null;
+    // frequency_type === 'CUSTOM' ? (coh_frequency.days = frequency_days) : null;
 
-    const data_frequency = JSON.stringify(coh_frequency);
+    // const data_frequency = JSON.stringify(coh_frequency);
 
-    let habitForm = new FormData();
+    // let habitForm = new FormData();
 
-    habitForm.append('ush_frequency', data_frequency);
-    habitForm.append('hab_name', name);
-    habitForm.append('hab_id_category', category);
-    habitForm.append('hab_description', habit_description);
+    // habitForm.append('ush_frequency', data_frequency);
+    // habitForm.append('hab_name', name);
+    // // habitForm.append('hab_id_category', category);
+    // habitForm.append('hab_description', habit_description);
 
-    isRemind
-      ? habitForm.append(
-          'ush_reminder_time',
-          moment(notification_time).format('HH:mm:ss')
-        )
-      : null;
+    // isRemind
+    //   ? habitForm.append(
+    //       'ush_reminder_time',
+    //       moment(notification_time).format('HH:mm:ss')
+    //     )
+    //   : null;
 
-    habitPhoto ? habitForm.append('habit_image', habitPhoto) : null;
+    // habitPhoto ? habitForm.append('habit_image', habitPhoto) : null;
 
-    storeCustom(habitForm)
-      .catch(err => {
-        Alert.alert(
-          'Ops!',
-          'Something went wrong with our servers. Please contact us.'
-        );
-      })
-      .then(res => {
-        if (res?.status === 200) {
-          if (res.data.errors) {
-            Alert.alert('Ops', res.data.errors[0]);
-          } else {
-            props.navigation.push('HabitSuccess');
-          }
-        }
+    // storeCustom(habitForm)
+    //   .catch(err => {
+    //     Alert.alert(
+    //       'Ops!',
+    //       'Something went wrong with our servers. Please contact us.'
+    //     );
+    //   })
+    //   .then(res => {
+    //     if (res?.status === 200) {
+    //       if (res.data.errors) {
+    //         Alert.alert('Ops', res.data.errors[0]);
+    //       } else {
+    //         props.navigation.push('HabitSuccess');
+    //       }
+    //     }
 
-        setSending(false);
-      });
+    //     setSending(false);
+    //   });
+
+    const { data, error } = await supabase
+      .from('Habit')
+      .insert([{ habit_title: name, habit_description: habit_description }])
+      .select();
+    const habit_id = data[0].habit_id;
+    console.log('habit data: ', data);
+    console.log('habit error: ', error);
+
+    if (error) {
+      Alert.alert('Error', error.message);
+    } else {
+      console.log('habit_id: ', habit_id);
+      console.log('user_id: ', store.getState().user.session.user.id);
+      console.log('created_at: ', new Date().toISOString());
+      console.log('checks done');
+
+      const { data, error } = await supabase
+        .from('Schedule')
+        .insert([
+          {
+            habit_id: habit_id,
+            user_id: store.getState().user.session.user.id,
+            created_at: new Date().toISOString(),
+            schedule_state: 'Open',
+            schedule_active_days: 0,
+            schedule_quantity: '10',
+          },
+        ])
+        .select();
+      console.log('schedule data: ', data);
+      console.log('schedule error: ', error);
+      if (error) {
+        Alert.alert('Error', error.message);
+      } else {
+        props.navigation.navigate('Habits');
+      }
+    }
   };
 
   const closeModalIOS = (modal, change) => {
-    if (modal === 'category') {
-      if (change) {
-        setCategory(category_ios.id);
-      } else {
-        list_category.map((obj, i) => {
-          if (obj.id === category) {
-            setCategoryIOS(obj);
-          }
-        });
-      }
+    // if (modal === 'category') {
+    //   if (change) {
+    //     setCategory(category_ios.id);
+    //   } else {
+    //     list_category.map((obj, i) => {
+    //       if (obj.id === category) {
+    //         setCategoryIOS(obj);
+    //       }
+    //     });
+    //   }
 
-      RBSCategory.current.close();
-    }
+    //   RBSCategory.current.close();
+    // }
 
     if (modal === 'frequency') {
       if (change) {
@@ -231,53 +267,63 @@ const AddHabit = props => {
     }
   };
 
-  const onToggleFrequencyDay = day => {
-    let days = [...frequency_days];
+  // const onToggleFrequencyDay = day => {
+  //   let days = [...frequency_days];
 
-    days[day] = !days[day];
+  //   days[day] = !days[day];
 
-    setFrequencyDays(days);
+  //   setFrequencyDays(days);
+  // };
+
+  const onToggleActiveDay = day => {
+    let new_days = active_days ^ (1 << day);
+
+    setActiveDays(new_days);
   };
 
-  const changeTime = () => {
-    if (Platform.OS === 'ios') {
-      RBSTime.current.open();
-    } else {
-      setShowPicker(true);
-    }
+  const getActiveDay = day => {
+    return (active_days & (1 << day)) > 0;
   };
 
-  const onChangeDatePicker = (event, selectedDate) => {
-    setShowPicker(false);
+  // const changeTime = () => {
+  //   if (Platform.OS === 'ios') {
+  //     RBSTime.current.open();
+  //   } else {
+  //     setShowPicker(true);
+  //   }
+  // };
 
-    if (Platform.OS === 'ios') {
-      setTimeIOS(selectedDate);
-    } else {
-      if (event.type !== 'dismissed') {
-        setIsRemind(true);
-        setTime(selectedDate);
-      }
-    }
-  };
+  // const onChangeDatePicker = (event, selectedDate) => {
+  //   setShowPicker(false);
 
-  const doSetTimeIOS = changeTime => {
-    RBSTime.current.close();
+  //   if (Platform.OS === 'ios') {
+  //     setTimeIOS(selectedDate);
+  //   } else {
+  //     if (event.type !== 'dismissed') {
+  //       setIsRemind(true);
+  //       setTime(selectedDate);
+  //     }
+  //   }
+  // };
 
-    if (changeTime) {
-      setIsRemind(true);
-      setTime(timeIOS);
-    } else {
-      setTimeIOS(time);
-    }
-  };
+  // const doSetTimeIOS = changeTime => {
+  //   RBSTime.current.close();
 
-  const doSetCategoryIOS = (value, index) => {
-    list_category.map((obj, i) => {
-      if (obj.id === value) {
-        setCategoryIOS(obj);
-      }
-    });
-  };
+  //   if (changeTime) {
+  //     setIsRemind(true);
+  //     setTime(timeIOS);
+  //   } else {
+  //     setTimeIOS(time);
+  //   }
+  // };
+
+  // const doSetCategoryIOS = (value, index) => {
+  //   list_category.map((obj, i) => {
+  //     if (obj.id === value) {
+  //       setCategoryIOS(obj);
+  //     }
+  //   });
+  // };
 
   const handleActionSheet = async index => {
     if (index === 0) {
@@ -340,92 +386,91 @@ const AddHabit = props => {
         extraHeight={120}
         contentContainerStyle={Default.container}>
         <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
-          <Fetching isFetching={fetching}>
-            <LinearGradient
-              colors={['rgba(114, 198, 239, 0.3)', 'rgba(0, 78, 143, 0.138)']}
-              start={{ x: 0, y: 0.5 }}
-              end={{ x: 1, y: 0.5 }}
-              style={styles.containerHeaderImage}>
-              {habitPhoto ? (
-                <>
-                  <TouchableOpacity
-                    onPress={() => ASPhotoOptions.current.show()}
-                    style={styles.habitImage}>
+          <LinearGradient
+            colors={['rgba(114, 198, 239, 0.3)', 'rgba(0, 78, 143, 0.138)']}
+            start={{ x: 0, y: 0.5 }}
+            end={{ x: 1, y: 0.5 }}
+            style={styles.containerHeaderImage}>
+            {habitPhoto ? (
+              <>
+                <TouchableOpacity
+                  onPress={() => ASPhotoOptions.current.show()}
+                  style={styles.habitImage}>
+                  <Image
+                    source={{ uri: habitPhoto.url }}
+                    style={styles.habitImage}
+                    resizeMode="cover"
+                  />
+                  <View
+                    style={{
+                      flexDirection: 'column',
+                      alignSelf: 'center',
+                      alignItems: 'center',
+                      marginTop: 56,
+                    }}>
                     <Image
-                      source={{ uri: habitPhoto.url }}
-                      style={styles.habitImage}
-                      resizeMode="cover"
+                      source={require('../../../assets/icons/add-photo.png')}
+                      style={styles.addPhoto}
                     />
-                    <View
-                      style={{
-                        flexDirection: 'column',
-                        alignSelf: 'center',
-                        alignItems: 'center',
-                        marginTop: 56,
-                      }}>
-                      <Image
-                        source={require('../../../assets/icons/add-photo.png')}
-                        style={styles.addPhoto}
-                      />
-                      <Text style={styles.textAddPhoto}>Edit Photo</Text>
-                    </View>
-                  </TouchableOpacity>
-                </>
-              ) : (
-                <>
-                  <TouchableOpacity
-                    onPress={() => ASPhotoOptions.current.show()}
-                    style={styles.containerPhoto}>
-                    <View
-                      style={{
-                        flexDirection: 'column',
-                        alignSelf: 'center',
-                        alignItems: 'center',
-                        marginTop: 56,
-                      }}>
-                      <Image
-                        source={require('../../../assets/icons/add-photo.png')}
-                        style={styles.addPhoto}
-                      />
-                      <Text style={styles.textAddPhoto}>Add Photo</Text>
-                    </View>
-                  </TouchableOpacity>
-                </>
-              )}
-            </LinearGradient>
+                    <Text style={styles.textAddPhoto}>Edit Photo</Text>
+                  </View>
+                </TouchableOpacity>
+              </>
+            ) : (
+              <>
+                <TouchableOpacity
+                  onPress={() => ASPhotoOptions.current.show()}
+                  style={styles.containerPhoto}>
+                  <View
+                    style={{
+                      flexDirection: 'column',
+                      alignSelf: 'center',
+                      alignItems: 'center',
+                      marginTop: 56,
+                    }}>
+                    <Image
+                      source={require('../../../assets/icons/add-photo.png')}
+                      style={styles.addPhoto}
+                    />
+                    <Text style={styles.textAddPhoto}>Add Photo</Text>
+                  </View>
+                </TouchableOpacity>
+              </>
+            )}
+          </LinearGradient>
 
-            <ActionSheet
-              ref={ASPhotoOptions}
-              options={['Camera', 'Library', 'Cancel']}
-              cancelButtonIndex={2}
-              destructiveButtonIndex={2}
-              buttonUnderlayColor={Colors.grey1}
-              onPress={index => handleActionSheet(index)}
-              styles={{
-                buttonBox: Default.actionSheetButtonBox,
-                body: Default.actionSheetBody,
-                cancelButtonBox: Default.actionSheetCancelButtonBox,
-              }}
+          <ActionSheet
+            ref={ASPhotoOptions}
+            options={['Camera', 'Library', 'Cancel']}
+            cancelButtonIndex={2}
+            destructiveButtonIndex={2}
+            buttonUnderlayColor={Colors.grey1}
+            onPress={index => handleActionSheet(index)}
+            styles={{
+              buttonBox: Default.actionSheetButtonBox,
+              body: Default.actionSheetBody,
+              cancelButtonBox: Default.actionSheetCancelButtonBox,
+            }}
+          />
+
+          <View style={styles.container}>
+            <Input
+              label="Name"
+              placeholder="Habit Name"
+              value={name}
+              onChangeText={setName}
+              keyboardAppearance="dark"
+              autoFocus={false}
+              autoCorrect={false}
+              returnKeyType="next"
+              placeholderTextColor="#455c8a"
+              containerStyle={Default.containerInput}
+              inputStyle={Default.loginInput}
+              inputContainerStyle={Default.loginInputContainer}
+              labelStyle={Default.loginInputLabel}
             />
 
-            <View style={styles.container}>
-              <Input
-                label="Name"
-                placeholder="Habit Name"
-                value={name}
-                onChangeText={setName}
-                keyboardAppearance="dark"
-                autoFocus={false}
-                autoCorrect={false}
-                returnKeyType="next"
-                placeholderTextColor="#455c8a"
-                containerStyle={Default.containerInput}
-                inputStyle={Default.loginInput}
-                inputContainerStyle={Default.loginInputContainer}
-                labelStyle={Default.loginInputLabel}
-              />
-
-              <Text style={styles.labelStyle}>Category</Text>
+            {/* <Text style={styles.labelStyle}>Category</Text>
 
               {Platform.OS === 'ios' ? (
                 <TouchableOpacity
@@ -462,9 +507,11 @@ const AddHabit = props => {
                     })}
                   </Picker>
                 </View>
-              )}
+              )} */}
 
-              <RBSheet
+            {/* <Text style={styles.labelStyle}>End Date</Text> */}
+
+            {/* <RBSheet
                 ref={RBSCategory}
                 height={300}
                 openDuration={250}
@@ -500,213 +547,199 @@ const AddHabit = props => {
                     );
                   })}
                 </Picker>
-              </RBSheet>
+              </RBSheet> */}
 
-              <Text style={styles.labelStyle}>Habit Description</Text>
+            <Text style={styles.labelStyle}>Habit Description</Text>
 
-              <TextInput
-                value={habit_description}
-                numberOfLines={3}
-                multiline
-                onChangeText={setHabitDecription}
-                keyboardAppearance="dark"
-                style={styles.textInputStyle}
-                placeholder="Short Habit Description"
-                placeholderTextColor={'#455c8a'}
-              />
+            <TextInput
+              value={habit_description}
+              numberOfLines={3}
+              multiline
+              onChangeText={setHabitDecription}
+              keyboardAppearance="dark"
+              style={styles.textInputStyle}
+              placeholder="Short Habit Description"
+              placeholderTextColor={'#455c8a'}
+            />
 
-              <Text style={styles.title}>Frequency</Text>
+            <Text style={styles.title}>Frequency</Text>
 
-              {Platform.OS === 'ios' ? (
-                <TouchableOpacity
-                  style={styles.containerSelectIOS}
-                  onPress={() => RBSFrequency.current.open()}>
-                  <Text
-                    style={[
-                      styles.textSelectIOS,
-                      {
-                        color: frequency_type_ios ? Colors.primary4 : '#455c8a',
-                      },
-                    ]}>
-                    {frequency_type_ios
-                      ? frequency_type_ios
-                      : 'Select habit frequency'}
-                  </Text>
+            {Platform.OS === 'ios' ? (
+              <TouchableOpacity
+                style={styles.containerSelectIOS}
+                onPress={() => RBSFrequency.current.open()}>
+                <Text
+                  style={[
+                    styles.textSelectIOS,
+                    {
+                      color: frequency_type_ios ? Colors.primary4 : '#455c8a',
+                    },
+                  ]}>
+                  {frequency_type_ios
+                    ? frequency_type_ios
+                    : 'Select habit frequency'}
+                </Text>
 
-                  <Icon size={16} color={'#455c8a'} name="chevron-down" />
-                </TouchableOpacity>
-              ) : (
-                <View style={styles.viewPicker}>
-                  <Picker
-                    selectedValue={frequency_type}
-                    style={[styles.pickerStyle, styles.pickerStyleAndroid]}
-                    onValueChange={(itemValue, itemIndex) =>
-                      setFrequencyType(itemValue)
-                    }>
-                    {getFrequencyTypes().map((obj, i) => {
-                      return <Picker.Item key={i} label={obj} value={obj} />;
-                    })}
-                  </Picker>
-                </View>
-              )}
-
-              <RBSheet
-                ref={RBSFrequency}
-                height={300}
-                openDuration={250}
-                customStyles={{ container: styles.containerBottomSheet }}
-                closeOnPressBack={false}
-                closeOnPressMask={false}>
-                <View style={styles.containerHeaderBottomSheet}>
-                  <TouchableOpacity
-                    onPress={() => closeModalIOS('frequency', false)}>
-                    <Text style={styles.textHeaderBottomSheet}>Cancel</Text>
-                  </TouchableOpacity>
-
-                  <TouchableOpacity
-                    onPress={() => closeModalIOS('frequency', true)}>
-                    <Text style={styles.textHeaderBottomSheet}>Confirm</Text>
-                  </TouchableOpacity>
-                </View>
-
+                <Icon size={16} color={'#455c8a'} name="chevron-down" />
+              </TouchableOpacity>
+            ) : (
+              <View style={styles.viewPicker}>
                 <Picker
-                  selectedValue={frequency_type_ios}
-                  style={[styles.pickerStyle, styles.pickerStyleIOS]}
-                  itemStyle={{ color: Colors.text }}
-                  onValueChange={(itemValue, itemIndex) =>
-                    setFrequencyTypeIos(itemValue)
+                  selectedValue={frequency_type}
+                  style={[styles.pickerStyle, styles.pickerStyleAndroid]}
+                  onValueChange={(itemValue /*itemIndex*/) =>
+                    setFrequencyType(itemValue)
                   }>
                   {getFrequencyTypes().map((obj, i) => {
                     return <Picker.Item key={i} label={obj} value={obj} />;
                   })}
                 </Picker>
-              </RBSheet>
+              </View>
+            )}
 
-              {frequency_type === 'CUSTOM' ? (
-                <View style={{ marginBottom: 32 }}>
-                  <Text style={styles.title}>Select Days</Text>
+            <RBSheet
+              ref={RBSFrequency}
+              height={300}
+              openDuration={250}
+              customStyles={{ container: styles.containerBottomSheet }}
+              closeOnPressBack={false}
+              closeOnPressMask={false}>
+              <View style={styles.containerHeaderBottomSheet}>
+                <TouchableOpacity
+                  onPress={() => closeModalIOS('frequency', false)}>
+                  <Text style={styles.textHeaderBottomSheet}>Cancel</Text>
+                </TouchableOpacity>
 
-                  <View
-                    style={{
-                      width: Dimensions.get('window').width - 44,
-                      flexDirection: 'row',
-                      justifyContent: 'space-between',
-                    }}>
-                    <TouchableOpacity onPress={() => onToggleFrequencyDay(1)}>
-                      <View
-                        style={[
-                          styles.frequencyDay,
-                          frequency_days[1]
-                            ? styles.frequencyDaySelected
-                            : null,
-                        ]}>
-                        <Text style={styles.textFrequencyDay}>M</Text>
-                      </View>
-                    </TouchableOpacity>
+                <TouchableOpacity
+                  onPress={() => closeModalIOS('frequency', true)}>
+                  <Text style={styles.textHeaderBottomSheet}>Confirm</Text>
+                </TouchableOpacity>
+              </View>
 
-                    <TouchableOpacity onPress={() => onToggleFrequencyDay(2)}>
-                      <View
-                        style={[
-                          styles.frequencyDay,
-                          frequency_days[2]
-                            ? styles.frequencyDaySelected
-                            : null,
-                        ]}>
-                        <Text style={styles.textFrequencyDay}>T</Text>
-                      </View>
-                    </TouchableOpacity>
+              <Picker
+                selectedValue={frequency_type_ios}
+                style={[styles.pickerStyle, styles.pickerStyleIOS]}
+                itemStyle={{ color: Colors.text }}
+                onValueChange={(itemValue /*itemIndex*/) =>
+                  setFrequencyTypeIos(itemValue)
+                }>
+                {getFrequencyTypes().map((obj, i) => {
+                  return <Picker.Item key={i} label={obj} value={obj} />;
+                })}
+              </Picker>
+            </RBSheet>
 
-                    <TouchableOpacity onPress={() => onToggleFrequencyDay(3)}>
-                      <View
-                        style={[
-                          styles.frequencyDay,
-                          frequency_days[3]
-                            ? styles.frequencyDaySelected
-                            : null,
-                        ]}>
-                        <Text style={styles.textFrequencyDay}>W</Text>
-                      </View>
-                    </TouchableOpacity>
-
-                    <TouchableOpacity onPress={() => onToggleFrequencyDay(4)}>
-                      <View
-                        style={[
-                          styles.frequencyDay,
-                          frequency_days[4]
-                            ? styles.frequencyDaySelected
-                            : null,
-                        ]}>
-                        <Text style={styles.textFrequencyDay}>T</Text>
-                      </View>
-                    </TouchableOpacity>
-
-                    <TouchableOpacity onPress={() => onToggleFrequencyDay(5)}>
-                      <View
-                        style={[
-                          styles.frequencyDay,
-                          frequency_days[5]
-                            ? styles.frequencyDaySelected
-                            : null,
-                        ]}>
-                        <Text style={styles.textFrequencyDay}>F</Text>
-                      </View>
-                    </TouchableOpacity>
-
-                    <TouchableOpacity onPress={() => onToggleFrequencyDay(6)}>
-                      <View
-                        style={[
-                          styles.frequencyDay,
-                          frequency_days[6]
-                            ? styles.frequencyDaySelected
-                            : null,
-                        ]}>
-                        <Text style={styles.textFrequencyDay}>S</Text>
-                      </View>
-                    </TouchableOpacity>
-
-                    <TouchableOpacity onPress={() => onToggleFrequencyDay(0)}>
-                      <View
-                        style={[
-                          styles.frequencyDay,
-                          frequency_days[0]
-                            ? styles.frequencyDaySelected
-                            : null,
-                        ]}>
-                        <Text style={styles.textFrequencyDay}>S</Text>
-                      </View>
-                    </TouchableOpacity>
-                  </View>
-                </View>
-              ) : null}
-
-              <RBSheet
-                ref={RBSFillFrequencyDays}
-                height={350}
-                openDuration={250}
-                customStyles={{
-                  container: styles.containerBottomSheetFillDays,
-                }}>
-                <View style={styles.containerTextBottomSheet}>
-                  <Image
-                    style={styles.warningIconStyle}
-                    source={require('../../../assets/icons/warning.png')}
-                  />
-                  <Text style={styles.textDelete}>
-                    You must complete the frequency of the new habit to continue
-                  </Text>
-                </View>
-
-                <View style={styles.buttonContainer}>
-                  <Button
-                    buttonStyle={Default.loginNextButton}
-                    titleStyle={Default.loginButtonBoldTitle}
-                    onPress={() => RBSFillFrequencyDays.current.close()}
-                    title="BACK TO COMPLETE HABIT"
-                  />
-                </View>
-              </RBSheet>
-
+            {frequency_type === 'CUSTOM' ? (
               <View style={{ marginBottom: 32 }}>
+                <Text style={styles.title}>Select Days</Text>
+
+                <View
+                  style={{
+                    width: Dimensions.get('window').width - 44,
+                    flexDirection: 'row',
+                    justifyContent: 'space-between',
+                  }}>
+                  <TouchableOpacity onPress={() => onToggleActiveDay(1)}>
+                    <View
+                      style={[
+                        styles.frequencyDay,
+                        getActiveDay(1) ? styles.frequencyDaySelected : null,
+                      ]}>
+                      <Text style={styles.textFrequencyDay}>M</Text>
+                    </View>
+                  </TouchableOpacity>
+
+                  <TouchableOpacity onPress={() => onToggleActiveDay(2)}>
+                    <View
+                      style={[
+                        styles.frequencyDay,
+                        getActiveDay(2) ? styles.frequencyDaySelected : null,
+                      ]}>
+                      <Text style={styles.textFrequencyDay}>T</Text>
+                    </View>
+                  </TouchableOpacity>
+
+                  <TouchableOpacity onPress={() => onToggleActiveDay(3)}>
+                    <View
+                      style={[
+                        styles.frequencyDay,
+                        getActiveDay(3) ? styles.frequencyDaySelected : null,
+                      ]}>
+                      <Text style={styles.textFrequencyDay}>W</Text>
+                    </View>
+                  </TouchableOpacity>
+
+                  <TouchableOpacity onPress={() => onToggleActiveDay(4)}>
+                    <View
+                      style={[
+                        styles.frequencyDay,
+                        getActiveDay(4) ? styles.frequencyDaySelected : null,
+                      ]}>
+                      <Text style={styles.textFrequencyDay}>T</Text>
+                    </View>
+                  </TouchableOpacity>
+
+                  <TouchableOpacity onPress={() => onToggleActiveDay(5)}>
+                    <View
+                      style={[
+                        styles.frequencyDay,
+                        getActiveDay(5) ? styles.frequencyDaySelected : null,
+                      ]}>
+                      <Text style={styles.textFrequencyDay}>F</Text>
+                    </View>
+                  </TouchableOpacity>
+
+                  <TouchableOpacity onPress={() => onToggleActiveDay(6)}>
+                    <View
+                      style={[
+                        styles.frequencyDay,
+                        getActiveDay(6) ? styles.frequencyDaySelected : null,
+                      ]}>
+                      <Text style={styles.textFrequencyDay}>S</Text>
+                    </View>
+                  </TouchableOpacity>
+
+                  <TouchableOpacity onPress={() => onToggleActiveDay(0)}>
+                    <View
+                      style={[
+                        styles.frequencyDay,
+                        getActiveDay(0) ? styles.frequencyDaySelected : null,
+                      ]}>
+                      <Text style={styles.textFrequencyDay}>S</Text>
+                    </View>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            ) : null}
+
+            <RBSheet
+              ref={RBSFillFrequencyDays}
+              height={350}
+              openDuration={250}
+              customStyles={{
+                container: styles.containerBottomSheetFillDays,
+              }}>
+              <View style={styles.containerTextBottomSheet}>
+                <Image
+                  style={styles.warningIconStyle}
+                  source={require('../../../assets/icons/warning.png')}
+                />
+                <Text style={styles.textDelete}>
+                  You must complete the frequency of the new habit to continue
+                </Text>
+              </View>
+
+              <View style={styles.buttonContainer}>
+                <Button
+                  buttonStyle={Default.loginNextButton}
+                  titleStyle={Default.loginButtonBoldTitle}
+                  onPress={() => RBSFillFrequencyDays.current.close()}
+                  title="BACK TO COMPLETE HABIT"
+                />
+              </View>
+            </RBSheet>
+
+            {/* <View style={{ marginBottom: 32 }}>
                 <Text style={styles.title}>Reminders</Text>
 
                 <View style={styles.containerReminders}>
@@ -765,21 +798,20 @@ const AddHabit = props => {
                     />
                   </RBSheet>
                 </View>
-              </View>
+              </View> */}
 
-              <View style={styles.containerButton}>
-                <Button
-                  buttonStyle={[Default.loginNextButton]}
-                  titleStyle={Default.loginButtonBoldTitle}
-                  onPress={addHabit}
-                  title="ADD CUSTOM HABIT"
-                  disabledStyle={Default.loginNextButton}
-                  disabled={sending}
-                  loading={sending}
-                />
-              </View>
+            <View style={styles.containerButton}>
+              <Button
+                buttonStyle={[Default.loginNextButton]}
+                titleStyle={Default.loginButtonBoldTitle}
+                onPress={addHabit}
+                title="ADD CUSTOM HABIT"
+                disabledStyle={Default.loginNextButton}
+                disabled={sending}
+                loading={sending}
+              />
             </View>
-          </Fetching>
+          </View>
         </ScrollView>
       </KeyboardAwareScrollView>
     </View>
@@ -1012,5 +1044,10 @@ const styles = StyleSheet.create({
     backgroundColor: '#1c1c1e',
   },
 });
+
+AddHabit.propTypes = {
+  navigation: PropTypes.object,
+  route: PropTypes.object,
+};
 
 export default AddHabit;
