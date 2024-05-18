@@ -120,4 +120,23 @@ describe('User Account Management', () => {
       expect(Alert.alert).toHaveBeenCalledWith('Signup Error', 'Signup error');
     });
   });
+
+  // Checks if all components are rendered successfully
+  it('Navigating to signup page', () => {
+    const { getByPlaceholderText, getByText } = render(
+      <Auth onSignIn={() => {}} />
+    );
+
+    // Check for email input field
+    expect(getByPlaceholderText('email@address.com')).toBeTruthy();
+
+    // Check for password input field
+    expect(getByPlaceholderText('Password')).toBeTruthy();
+
+    // Check for Sign in button
+    expect(getByText('Sign in')).toBeTruthy();
+
+    // Check for Sign up button
+    expect(getByText('Sign up')).toBeTruthy();
+  });
 });
