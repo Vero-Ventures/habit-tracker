@@ -1,11 +1,22 @@
 import React, { useState, useEffect } from 'react';
 import PropTypes from 'prop-types';
-import { StyleSheet, View, Alert, ScrollView, Text } from 'react-native';
+import {
+  StyleSheet,
+  View,
+  Alert,
+  ScrollView,
+  Text,
+  Image,
+  Dimensions,
+  TouchableOpacity,
+} from 'react-native';
 import { Button, Input } from 'react-native-elements';
 import { supabase } from '../config/supabaseClient';
 import store from '../store/storeConfig';
 import * as FileSystem from 'expo-file-system';
 import * as Sharing from 'expo-sharing';
+import Default from '../../assets/styles/Default';
+import Colors from '../../assets/styles/Colors';
 
 export default function Account() {
   const session = store.getState().user.session;
@@ -13,7 +24,7 @@ export default function Account() {
   const [username, setUsername] = useState('');
   const [bio, setBio] = useState('');
   const [profileImage, setProfileImage] = useState('');
-  const [userData, setUserData] = useState(null);
+  const [userData /*, setUserData*/] = useState(null);
 
   useEffect(() => {
     if (session) getProfile();
@@ -22,7 +33,6 @@ export default function Account() {
   async function getProfile() {
     try {
       setLoading(true);
-      // if (!session?.user) throw new Error('No user on the session!');
       if (!session?.user) throw new Error('No user on the session!');
 
       const { data, error, status } = await supabase
@@ -86,8 +96,7 @@ export default function Account() {
     console.log('User and associated data deleted successfully:', data);
   }
 
-  //Old function that's no longer used (replaced by downloaduserdata function below)
-  async function fetchUserData(userId) {
+  async function downloadUserData(userId) {
     try {
       const { data, error } = await supabase.rpc('get_user_data', {
         p_user_id: userId,
@@ -99,67 +108,97 @@ export default function Account() {
         return;
       }
 
-      setUserData(JSON.stringify(data, null, 2));
-      Alert.alert('User Data', JSON.stringify(data, null, 2));
+      const jsonData = JSON.stringify(data, null, 2);
+      const fileUri = FileSystem.documentDirectory + 'user_data.json';
+
+      await FileSystem.writeAsStringAsync(fileUri, jsonData, {
+        encoding: FileSystem.EncodingType.UTF8,
+      });
+
+      Alert.alert('Success', 'User data saved as user_data.json');
+      Sharing.shareAsync(fileUri);
     } catch (error) {
       console.error('Error:', error);
       Alert.alert('Error', 'Unexpected error: ' + error.message);
     }
   }
 
-  // Inside your component
-async function downloadUserData(userId) {
-  try {
-    const { data, error } = await supabase.rpc('get_user_data', {
-      p_user_id: userId,
-    });
-
-    if (error) {
-      console.error('Error fetching data:', error);
-      Alert.alert('Error', 'Error fetching data: ' + error.message);
-      return;
-    }
-
-    const jsonData = JSON.stringify(data, null, 2);
-    const fileUri = FileSystem.documentDirectory + 'user_data.json';
-
-    await FileSystem.writeAsStringAsync(fileUri, jsonData, {
-      encoding: FileSystem.EncodingType.UTF8,
-    });
-
-    Alert.alert('Success', 'User data saved as user_data.json');
-    Sharing.shareAsync(fileUri);
-  } catch (error) {
-    console.error('Error:', error);
-    Alert.alert('Error', 'Unexpected error: ' + error.message);
-  }
-}
-
   return (
-    <View style={styles.container}>
-      <ScrollView>
-        <View style={[styles.verticallySpaced, styles.mt20]}>
+    <View style={Default.container}>
+      <ScrollView contentContainerStyle={styles.scrollViewContent}>
+        <View style={styles.containerHeader}>
+          <View style={styles.containerPhoto}>
+            {profileImage ? (
+              <Image source={{ uri: profileImage }} style={styles.userPhoto} />
+            ) : (
+              <Image
+                source={require('../../assets/images/no-profile.png')}
+                style={styles.userPhoto}
+              />
+            )}
+          </View>
+          <Text style={styles.textName} numberOfLines={1}>
+            {`Hi, ${username || 'User'}`}
+          </Text>
+        </View>
+
+        <View style={styles.containerActionsHeader}>
+          <TouchableOpacity
+            style={styles.editProfile}
+            onPress={() => console.log('Share profile pressed')}>
+            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+              <Image
+                source={require('../../assets/icons/share-profile.png')}
+                style={styles.iconsHeader}
+              />
+              <Text style={styles.editProfileText}>Share My Profile</Text>
+            </View>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.editProfile}
+            onPress={() => console.log('Edit profile pressed')}>
+            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+              <Image
+                source={require('../../assets/icons/edit.png')}
+                style={styles.iconsHeader}
+              />
+              <Text style={styles.editProfileText}>Edit Profile</Text>
+            </View>
+          </TouchableOpacity>
+        </View>
+
+        <View style={styles.inputWrapper}>
           <Input
             label="Profile Image URL"
             value={profileImage || ''}
             onChangeText={setProfileImage}
             placeholder="Enter profile image URL"
+            containerStyle={styles.inputContainer}
+            inputStyle={styles.input}
+            labelStyle={styles.inputLabel}
           />
         </View>
-        <View style={styles.verticallySpaced}>
+        <View style={styles.inputWrapper}>
           <Input
             label="Username"
             value={username || ''}
             onChangeText={setUsername}
             placeholder="Enter username"
+            containerStyle={styles.inputContainer}
+            inputStyle={styles.input}
+            labelStyle={styles.inputLabel}
           />
         </View>
-        <View style={styles.verticallySpaced}>
+        <View style={styles.inputWrapper}>
           <Input
             label="Bio"
             value={bio || ''}
             onChangeText={setBio}
             placeholder="Enter bio"
+            containerStyle={styles.inputContainer}
+            inputStyle={styles.input}
+            labelStyle={styles.inputLabel}
           />
         </View>
         <View style={[styles.verticallySpaced, styles.mt20]}>
@@ -167,21 +206,32 @@ async function downloadUserData(userId) {
             title={loading ? 'Loading ...' : 'Update'}
             onPress={updateProfile}
             disabled={loading}
+            buttonStyle={styles.updateButton}
+            titleStyle={Default.loginButtonBoldTitle}
           />
         </View>
         <View style={styles.verticallySpaced}>
-          <Button title="Sign Out" onPress={() => supabase.auth.signOut()} />
+          <Button
+            title="Sign Out"
+            onPress={() => supabase.auth.signOut()}
+            buttonStyle={styles.signOutButton}
+            titleStyle={Default.loginButtonBoldTitle}
+          />
         </View>
         <View style={styles.verticallySpaced}>
           <Button
             title="Delete Account"
             onPress={() => deleteUserAndData(session.user.id)}
+            buttonStyle={styles.deleteButton}
+            titleStyle={Default.loginButtonBoldTitle}
           />
         </View>
         <View style={styles.verticallySpaced}>
           <Button
             title="Download User Data"
             onPress={() => downloadUserData(session.user.id)}
+            buttonStyle={styles.downloadButton}
+            titleStyle={Default.loginButtonBoldTitle}
           />
         </View>
         {userData && (
@@ -195,30 +245,114 @@ async function downloadUserData(userId) {
 }
 
 const styles = StyleSheet.create({
-  container: {
+  scrollViewContent: {
+    paddingHorizontal: 15,
+    paddingTop: 28,
+    width: Dimensions.get('window').width - 2,
+    zIndex: 1,
+    elevation: 1,
+  },
+  containerHeader: {
+    flexDirection: 'column',
+    alignSelf: 'center',
+    alignItems: 'center',
+    marginBottom: 32,
+  },
+  containerPhoto: {
+    flexDirection: 'row',
+  },
+  userPhoto: {
+    alignSelf: 'center',
+    width: 70,
+    height: 70,
+    borderRadius: 32,
+    marginTop: 5,
+    position: 'relative',
+  },
+  textName: {
+    fontSize: 24,
+    color: Colors.text,
+    marginTop: 14,
+    alignSelf: 'center',
+  },
+  containerActionsHeader: {
     flex: 1,
-    marginTop: 40,
-    padding: 12,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 34,
   },
-  userDataContainer: {
-    marginTop: 20,
-    padding: 10,
-    backgroundColor: '#f0f0f0',
-    borderRadius: 5,
+  iconsHeader: {
+    marginRight: 4,
+    alignSelf: 'center',
+    width: 16,
+    height: 16,
   },
-  userDataText: {
-    fontFamily: 'monospace',
+  editProfile: {
+    alignSelf: 'flex-end',
+  },
+  editProfileText: {
+    fontSize: 14,
+    lineHeight: 19,
+    color: Colors.primary8,
+    fontWeight: '700',
+  },
+  inputWrapper: {
+    marginTop: 15,
+    marginBottom: 10,
+  },
+  inputContainer: {
+    marginBottom: 10,
+  },
+  input: {
+    color: Colors.primary4,
+    borderColor: '#455c8a',
+    borderWidth: StyleSheet.hairlineWidth,
+    borderRadius: 2,
+    fontSize: 16,
+    paddingHorizontal: 12,
+    paddingTop: 8,
+    paddingBottom: 8,
+    height: 40,
+    backgroundColor: Colors.primary,
+    textAlignVertical: 'top',
+  },
+  inputLabel: {
+    color: Colors.text,
+    fontWeight: 'normal',
+    marginBottom: 8,
   },
   verticallySpaced: {
-    paddingTop: 4,
-    paddingBottom: 4,
-    alignSelf: 'stretch',
+    marginTop: 4,
+    marginBottom: 4,
   },
   mt20: {
     marginTop: 20,
   },
+  updateButton: {
+    backgroundColor: Colors.primary8,
+    borderRadius: 20,
+  },
+  signOutButton: {
+    backgroundColor: Colors.primary8,
+    borderRadius: 20,
+  },
+  deleteButton: {
+    backgroundColor: Colors.error,
+    borderRadius: 20,
+  },
+  downloadButton: {
+    backgroundColor: Colors.success,
+    borderRadius: 20,
+  },
+  userDataContainer: {
+    marginTop: 20,
+  },
+  userDataText: {
+    fontSize: 16,
+    color: Colors.text,
+  },
 });
 
 Account.propTypes = {
-  route: PropTypes.object,
+  navigation: PropTypes.object,
 };
