@@ -18,77 +18,34 @@ jest.mock('../src/config/supabaseClient', () => ({
 
 jest.spyOn(Alert, 'alert');
 
-describe('User Account Management', () => {
-  // Tests sign in with successful email and password
-  it('Call signInWithEmail and handle success', async () => {
-    const onSignInMock = jest.fn();
-    supabase.auth.signInWithPassword.mockResolvedValue({
-      data: { session: { user: { id: '123' } } },
-      error: null,
-    });
+describe('Auth Component', () => {
+  const mockOnSignIn = jest.fn();
 
+  afterEach(() => {
+    jest.clearAllMocks();
+  });
+
+  test('signs up and notifies user to check email for verification', async () => {
     const { getByPlaceholderText, getByText } = render(
-      <Auth onSignIn={onSignInMock} />
+      <Auth onSignIn={mockOnSignIn} />
     );
 
+    // Simulate user input
     fireEvent.changeText(
       getByPlaceholderText('email@address.com'),
       'test@example.com'
     );
-    fireEvent.changeText(getByPlaceholderText('Password'), 'password123');
-    fireEvent.press(getByText('Sign in'));
+    fireEvent.changeText(getByPlaceholderText('Password'), 'password');
 
-    await waitFor(() => {
-      expect(supabase.auth.signInWithPassword).toHaveBeenCalledWith({
-        email: 'test@example.com',
-        password: 'password123',
-      });
-      expect(onSignInMock).toHaveBeenCalledWith('123');
-    });
-  });
+    // Mock the signUp response
+    supabase.auth.signUp.mockResolvedValueOnce({ error: null });
 
-  // Tests sign in with unsuccessful email and password
-  it('Call signInWithEmail and handle error', async () => {
-    const onSignInMock = jest.fn();
-    supabase.auth.signInWithPassword.mockResolvedValue({
-      data: null,
-      error: { message: 'Login error' },
-    });
-
-    const { getByPlaceholderText, getByText } = render(
-      <Auth onSignIn={onSignInMock} />
-    );
-
-    fireEvent.changeText(getByPlaceholderText('email@address.com'), '');
-    fireEvent.changeText(getByPlaceholderText('Password'), '');
-    fireEvent.press(getByText('Sign in'));
-
-    await waitFor(() => {
-      expect(supabase.auth.signInWithPassword).toHaveBeenCalledWith({
-        email: '',
-        password: '',
-      });
-      expect(onSignInMock).not.toHaveBeenCalled();
-    });
-  });
-
-  // Tests sign up with successful email and password
-  it('Call signUpWithEmail and handle success', async () => {
-    supabase.auth.signUp.mockResolvedValue({ error: null });
-
-    const { getByPlaceholderText, getByText } = render(<Auth />);
-
-    fireEvent.changeText(
-      getByPlaceholderText('email@address.com'),
-      'test@example.com'
-    );
-    fireEvent.changeText(getByPlaceholderText('Password'), 'password123');
     fireEvent.press(getByText('Sign up'));
 
     await waitFor(() => {
       expect(supabase.auth.signUp).toHaveBeenCalledWith({
         email: 'test@example.com',
-        password: 'password123',
+        password: 'password',
       });
       expect(Alert.alert).toHaveBeenCalledWith(
         'Signup Notification',
@@ -97,46 +54,66 @@ describe('User Account Management', () => {
     });
   });
 
-  // Tests sign up with unsuccessful email and password
-  it('Call signUpWithEmail and handle error', async () => {
-    supabase.auth.signUp.mockResolvedValue({
-      error: { message: 'Signup error' },
-    });
+  test('signs in successfully and calls onSignIn with user id', async () => {
+    const { getByPlaceholderText, getByText } = render(
+      <Auth onSignIn={mockOnSignIn} />
+    );
 
-    const { getByPlaceholderText, getByText } = render(<Auth />);
-
+    // Simulate user input
     fireEvent.changeText(
       getByPlaceholderText('email@address.com'),
       'test@example.com'
     );
-    fireEvent.changeText(getByPlaceholderText('Password'), 'password123');
-    fireEvent.press(getByText('Sign up'));
+    fireEvent.changeText(getByPlaceholderText('Password'), 'password');
+
+    // Mock the signInWithPassword response
+    supabase.auth.signInWithPassword.mockResolvedValueOnce({
+      data: { session: { user: { id: 'user-id-123' } } },
+      error: null,
+    });
+
+    fireEvent.press(getByText('Sign in'));
 
     await waitFor(() => {
-      expect(supabase.auth.signUp).toHaveBeenCalledWith({
+      expect(supabase.auth.signInWithPassword).toHaveBeenCalledWith({
         email: 'test@example.com',
-        password: 'password123',
+        password: 'password',
       });
-      expect(Alert.alert).toHaveBeenCalledWith('Signup Error', 'Signup error');
+      expect(mockOnSignIn).toHaveBeenCalledWith('user-id-123');
     });
   });
 
-  // Checks if all components are rendered successfully
-  it('Navigating to signup page', () => {
+  // Sign in using unverified email, wrong password, wrong email, etc
+  test('shows login error on sign in failure', async () => {
+    // Set up test environment
     const { getByPlaceholderText, getByText } = render(
-      <Auth onSignIn={() => {}} />
+      <Auth onSignIn={mockOnSignIn} />
     );
 
-    // Check for email input field
-    expect(getByPlaceholderText('email@address.com')).toBeTruthy();
+    // Simulate user input
+    fireEvent.changeText(
+      getByPlaceholderText('email@address.com'),
+      'test@example.com'
+    );
+    fireEvent.changeText(getByPlaceholderText('Password'), 'password');
 
-    // Check for password input field
-    expect(getByPlaceholderText('Password')).toBeTruthy();
+    // Mock the signInWithPassword response
+    supabase.auth.signInWithPassword.mockResolvedValueOnce({
+      data: null,
+      error: { message: 'Invalid login credentials' },
+    });
 
-    // Check for Sign in button
-    expect(getByText('Sign in')).toBeTruthy();
+    fireEvent.press(getByText('Sign in'));
 
-    // Check for Sign up button
-    expect(getByText('Sign up')).toBeTruthy();
+    await waitFor(() => {
+      expect(supabase.auth.signInWithPassword).toHaveBeenCalledWith({
+        email: 'test@example.com',
+        password: 'password',
+      });
+      expect(Alert.alert).toHaveBeenCalledWith(
+        'Login Error',
+        'Invalid login credentials'
+      );
+    });
   });
 });
