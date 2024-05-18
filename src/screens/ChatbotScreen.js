@@ -73,7 +73,7 @@ const ChatbotScreen = () => {
       style={styles.container}
       behavior={Platform.OS === 'ios' ? 'padding' : null}
       keyboardVerticalOffset={Platform.OS === 'ios' ? 100 : 0}>
-      <Text style={styles.title}>Talk to Your Habits Coach!</Text>
+      <Text style={styles.title}>Talk to Your Habit Coach!</Text>
 
       <FlatList
         ref={flatListRef}
