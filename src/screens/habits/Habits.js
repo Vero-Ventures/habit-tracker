@@ -1,5 +1,143 @@
+// import React, { useState, useEffect } from 'react';
+// import { View, StyleSheet, Text, Alert, FlatList, TouchableOpacity } from 'react-native';
+// import Default from '../../../assets/styles/Default';
+// import Colors from '../../../assets/styles/Colors';
+// import Fetching from '../../components/Fetching';
+// import Header from '../../components/Header';
+// import { Button } from 'react-native-elements';
+// import { useNavigation } from '@react-navigation/native';
+// import store from '../../store/storeConfig';
+// import { supabase } from '../../config/supabaseClient';
+
+// const Habits = () => {
+//   const session = store.getState().user.session;
+//   const navigation = useNavigation();
+//   const [schedules, setSchedules] = useState([]);
+//   const [loading, setLoading] = useState(true);
+
+//   useEffect(() => {
+//     fetchSchedules();
+//   }, []);
+
+//   const fetchSchedules = async () => {
+//     try {
+//       setLoading(true);
+//       if (!session?.user) throw new Error('No user on the session!');
+
+//       const { data: scheduleData, error: scheduleError } = await supabase
+//         .from('Schedule')
+//         .select('*')
+//         .eq('user_id', session?.user.id);
+
+//       console.log('Fetched schedule data:', scheduleData);
+
+//       if (scheduleError) {
+//         throw scheduleError;
+//       }
+
+//       if (scheduleData) {
+//         const habitIds = scheduleData.map(schedule => schedule.habit_id);
+//         const { data: habitData, error: habitError } = await supabase
+//           .from('Habit')
+//           .select('*')
+//           .in('habit_id', habitIds);
+
+//         console.log('Fetched habit data:', habitData);
+
+//         if (habitError) {
+//           throw habitError;
+//         }
+
+//         if (habitData) {
+//           const combinedData = scheduleData.map(schedule => {
+//             const habit = habitData.find(h => h.habit_id === schedule.habit_id);
+//             return {
+//               ...schedule,
+//               habit_title: habit?.habit_title,
+//               habit_description: habit?.habit_description,
+//             };
+//           });
+//           setSchedules(combinedData);
+//           console.log('Combined data:', combinedData);
+//         }
+//       }
+//     } catch (error) {
+//       Alert.alert('Error fetching schedules or habits', error.message);
+//     } finally {
+//       setLoading(false);
+//     }
+//   };
+
+//   const addHabit = () => {
+//     navigation.navigate('AddHabit');
+//   };
+
+//   const viewHabit = (habit) => {
+//     navigation.navigate('ViewHabit', { habit });
+//   };
+
+//   const renderSchedule = ({ item }) => (
+//     <TouchableOpacity onPress={() => viewHabit(item)} style={styles.scheduleItem}>
+//       <Text>Habit Title: {item.habit_title || 'N/A'}</Text>
+//       <Text>Habit Description: {item.habit_description || 'N/A'}</Text>
+//       <Text>Quantity: {item.schedule_quantity}</Text>
+//       <Text>Start Date: {item.schedule_start_date || 'N/A'}</Text>
+//       <Text>End Date: {item.schedule_end_date || 'N/A'}</Text>
+//       <Text>
+//         Active Days:{' '}
+//         {item.schedule_active_days !== null ? item.schedule_active_days : 'N/A'}
+//       </Text>
+//       <Text>State: {item.schedule_state || 'N/A'}</Text>
+//     </TouchableOpacity>
+//   );
+
+//   return (
+//     <View style={styles.container}>
+//       <Header title="My Habits" />
+//       {loading ? (
+//         <Fetching />
+//       ) : (
+//         <FlatList
+//           data={schedules}
+//           keyExtractor={(item, index) => index.toString()}
+//           renderItem={renderSchedule}
+//           contentContainerStyle={styles.list}
+//         />
+//       )}
+//       <Button title="Add Habit" onPress={addHabit} />
+//     </View>
+//   );
+// };
+
+// const styles = StyleSheet.create({
+//   container: {
+//     flex: 1,
+//     backgroundColor: Colors.background,
+//   },
+//   list: {
+//     padding: 10,
+//   },
+//   scheduleItem: {
+//     padding: 10,
+//     marginVertical: 5,
+//     backgroundColor: 'white',
+//     borderRadius: 5,
+//     ...Default.shadow,
+//   },
+// });
+
+// export default Habits;
+
 import React, { useState, useEffect } from 'react';
-import { View, StyleSheet, Text, Alert, FlatList } from 'react-native';
+import {
+  View,
+  StyleSheet,
+  Text,
+  Alert,
+  FlatList,
+  TouchableOpacity,
+  Dimensions,
+} from 'react-native';
 import Default from '../../../assets/styles/Default';
 import Colors from '../../../assets/styles/Colors';
 import Fetching from '../../components/Fetching';
@@ -55,6 +193,7 @@ const Habits = () => {
               ...schedule,
               habit_title: habit?.habit_title,
               habit_description: habit?.habit_description,
+              habit_id: schedule.habit_id,
             };
           });
           setSchedules(combinedData);
@@ -73,18 +212,18 @@ const Habits = () => {
   };
 
   const renderSchedule = ({ item }) => (
-    <View style={styles.scheduleItem}>
-      <Text>Habit Title: {item.habit_title || 'N/A'}</Text>
-      <Text>Habit Description: {item.habit_description || 'N/A'}</Text>
-      <Text>Quantity: {item.schedule_quantity}</Text>
-      <Text>Start Date: {item.schedule_start_date || 'N/A'}</Text>
-      <Text>End Date: {item.schedule_end_date || 'N/A'}</Text>
-      <Text>
-        Active Days:{' '}
-        {item.schedule_active_days !== null ? item.schedule_active_days : 'N/A'}
+    <TouchableOpacity
+      onPress={() => navigation.navigate('ViewHabit', { habit: item })}
+      style={styles.scheduleItem}>
+      <Text style={styles.habitTitle}>{item.habit_title || 'N/A'}</Text>
+      <Text
+        style={[
+          styles.habitStatus,
+          { color: item.schedule_state === 'Open' ? Colors.green : Colors.red },
+        ]}>
+        {item.schedule_state === 'Open' ? 'ACTIVE' : 'INACTIVE'}
       </Text>
-      <Text>State: {item.schedule_state || 'N/A'}</Text>
-    </View>
+    </TouchableOpacity>
   );
 
   return (
@@ -100,7 +239,15 @@ const Habits = () => {
           contentContainerStyle={styles.list}
         />
       )}
-      <Button title="Add Habit" onPress={addHabit} />
+      <Button
+        buttonStyle={[
+          Default.loginNextButton,
+          { width: Dimensions.get('window').width - 48 },
+        ]}
+        titleStyle={Default.loginButtonBoldTitle}
+        onPress={addHabit}
+        title="ADD HABIT"
+      />
     </View>
   );
 };
@@ -109,16 +256,34 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: Colors.background,
+    padding: 20,
   },
   list: {
     padding: 10,
   },
   scheduleItem: {
-    padding: 10,
-    marginVertical: 5,
-    backgroundColor: 'white',
-    borderRadius: 5,
-    ...Default.shadow,
+    padding: 15,
+    marginVertical: 10,
+    backgroundColor: Colors.white,
+    borderRadius: 8,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 3,
+    },
+    shadowOpacity: 0.27,
+    shadowRadius: 4.65,
+    elevation: 6,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  habitTitle: {
+    fontSize: 18,
+    color: Colors.primary5,
+  },
+  habitStatus: {
+    fontSize: 14,
   },
 });
 
