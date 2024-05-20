@@ -5,6 +5,7 @@ import Colors from '../../assets/styles/Colors';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createStackNavigator } from '@react-navigation/stack';
 import Habits from '../screens/habits/Habits';
+import ViewHabit from '../screens/habits/ViewHabit';
 import AddHabit from '../screens/habits/AddHabit';
 import ProfileScreen from '../screens/ProfileScreen';
 import homeSelected from '../../assets/icons/home-selected.png';
@@ -103,12 +104,12 @@ const HabitsScreen = () => {
       }}>
       <HabitsStack.Screen name="HabitsIndex" component={Habits} />
       <HabitsStack.Screen name="AddHabit" component={AddHabit} />
+      <HabitsStack.Screen name="ViewHabit" component={ViewHabit} />
     </HabitsStack.Navigator>
   );
 };
 
-export default function Navigator({ route }) {
-  const { session } = route.params;
+export default function Navigator() {
   const icons = (route, focused) => {
     const sizeStyle = { width: 24, height: 24 };
 
@@ -125,7 +126,7 @@ export default function Navigator({ route }) {
         return (
           <Image source={focused ? stakesSelected : stakes} style={sizeStyle} />
         );
-      case 'My Habits':
+      case 'Habits':
         return (
           <Image
             source={focused ? activitySelected : activity}
@@ -147,7 +148,7 @@ export default function Navigator({ route }) {
 
   return (
     <Tab.Navigator
-      initialRouteName="My Habits"
+      initialRouteName="Habits"
       screenOptions={({ route }) => ({
         tabBarIcon: ({ focused }) => icons(route, focused),
         tabBarShowLabel: true,
@@ -164,17 +165,9 @@ export default function Navigator({ route }) {
       <Tab.Screen name="Timeline" component={Timeline} />
       <Tab.Screen name="Stakes" component={ChatbotScreen} />
       {/* Used to be the stakes screen, but I am putting the chatbot screen here temporarily */}
-      <Tab.Screen
-        options={{ title: 'Habits' }}
-        name="Habits"
-        component={HabitsScreen}
-      />
+      <Tab.Screen name="Habits" component={HabitsScreen} />
       <Tab.Screen name="Community" component={CommunityScreen} />
-      <Tab.Screen
-        name="Profile"
-        component={ProfileScreen} // This used to be ProfileScreen, I am putting duplicate community screen temporarily since no Profile is available when not logged in
-        initialParams={{ session: session }}
-      />
+      <Tab.Screen name="Profile" component={ProfileScreen} />
     </Tab.Navigator>
   );
 }
