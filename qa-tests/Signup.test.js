@@ -19,16 +19,12 @@ jest.mock('../src/config/supabaseClient', () => ({
 jest.spyOn(Alert, 'alert');
 
 describe('Auth Component', () => {
-  const mockOnSignIn = jest.fn();
-
   afterEach(() => {
     jest.clearAllMocks();
   });
 
   test('signs up and notifies user to check email for verification', async () => {
-    const { getByPlaceholderText, getByText } = render(
-      <Auth onSignIn={mockOnSignIn} />
-    );
+    const { getByPlaceholderText, getByText } = render(<Auth />);
 
     // Simulate user input
     fireEvent.changeText(
@@ -54,21 +50,17 @@ describe('Auth Component', () => {
     });
   });
 
-  test('signs in successfully and calls onSignIn with user id', async () => {
-    const { getByPlaceholderText, getByText } = render(
-      <Auth onSignIn={mockOnSignIn} />
-    );
+  test('signs in successfully', async () => {
+    const { getByPlaceholderText, getByText } = render(<Auth />);
 
-    // Simulate user input
     fireEvent.changeText(
       getByPlaceholderText('email@address.com'),
       'test@example.com'
     );
     fireEvent.changeText(getByPlaceholderText('Password'), 'password');
 
-    // Mock the signInWithPassword response
     supabase.auth.signInWithPassword.mockResolvedValueOnce({
-      data: { session: { user: { id: 'user-id-123' } } },
+      data: { session: 'mockedSession' },
       error: null,
     });
 
@@ -79,16 +71,12 @@ describe('Auth Component', () => {
         email: 'test@example.com',
         password: 'password',
       });
-      expect(mockOnSignIn).toHaveBeenCalledWith('user-id-123');
     });
   });
 
-  // Sign in using unverified email, wrong password, wrong email, etc
   test('shows login error on sign in failure', async () => {
     // Set up test environment
-    const { getByPlaceholderText, getByText } = render(
-      <Auth onSignIn={mockOnSignIn} />
-    );
+    const { getByPlaceholderText, getByText } = render(<Auth />);
 
     // Simulate user input
     fireEvent.changeText(
@@ -113,6 +101,35 @@ describe('Auth Component', () => {
       expect(Alert.alert).toHaveBeenCalledWith(
         'Login Error',
         'Invalid login credentials'
+      );
+    });
+  });
+
+  test('shows signup error on sign up failure', async () => {
+    const { getByPlaceholderText, getByText } = render(<Auth />);
+
+    // Simulate user input
+    fireEvent.changeText(
+      getByPlaceholderText('email@address.com'),
+      'test@example.com'
+    );
+    fireEvent.changeText(getByPlaceholderText('Password'), 'password');
+
+    // Mock the signUp response
+    supabase.auth.signUp.mockResolvedValueOnce({
+      error: { message: 'Email already exists' },
+    });
+
+    fireEvent.press(getByText('Sign up'));
+
+    await waitFor(() => {
+      expect(supabase.auth.signUp).toHaveBeenCalledWith({
+        email: 'test@example.com',
+        password: 'password',
+      });
+      expect(Alert.alert).toHaveBeenCalledWith(
+        'Signup Error',
+        'Email already exists'
       );
     });
   });
