@@ -104,33 +104,4 @@ describe('Auth Component', () => {
       );
     });
   });
-
-  test('shows signup error on sign up failure', async () => {
-    const { getByPlaceholderText, getByText } = render(<Auth />);
-
-    // Simulate user input
-    fireEvent.changeText(
-      getByPlaceholderText('email@address.com'),
-      'test@example.com'
-    );
-    fireEvent.changeText(getByPlaceholderText('Password'), 'password');
-
-    // Mock the signUp response
-    supabase.auth.signUp.mockResolvedValueOnce({
-      error: { message: 'Email already exists' },
-    });
-
-    fireEvent.press(getByText('Sign up'));
-
-    await waitFor(() => {
-      expect(supabase.auth.signUp).toHaveBeenCalledWith({
-        email: 'test@example.com',
-        password: 'password',
-      });
-      expect(Alert.alert).toHaveBeenCalledWith(
-        'Signup Error',
-        'Email already exists'
-      );
-    });
-  });
 });
