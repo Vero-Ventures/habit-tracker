@@ -12,6 +12,7 @@ import {
 } from 'react-native';
 import { Button, Input } from 'react-native-elements';
 import { supabase } from '../config/supabaseClient';
+import { useNavigation } from '@react-navigation/native';
 
 import * as ImagePicker from 'expo-image-picker';
 import store from '../store/storeConfig';
@@ -22,17 +23,21 @@ import Colors from '../../assets/styles/Colors';
 
 export default function Account() {
   const session = store.getState().user.session;
+  const navigation = useNavigation();
   const [loading, setLoading] = useState(false);
   const [username, setUsername] = useState('');
   const [bio, setBio] = useState('');
   const [profileImage, setProfileImage] = useState(null);
   const [postsCount, setPostsCount] = useState(0);
+  const [followingCount, setFollowingCount] = useState(0);
+  const [followerCount, setFollowerCount] = useState(0);
 
-  // Code to fetch the user's profile data
   useEffect(() => {
     if (session) {
       getProfile();
       getPostsCount();
+      getFollowingCount();
+      getFollowerCount();
     }
   }, [session]);
 
@@ -62,13 +67,12 @@ export default function Account() {
     }
   }
 
-  // Code to fetch how many posts the user has made
   async function getPostsCount() {
     try {
       setLoading(true);
       if (!session?.user) throw new Error('No user on the session!');
   
-      const { data, error, status, count } = await supabase
+      const { error, status, count } = await supabase
         .from('Post')
         .select('*', { count: 'exact' })
         .eq('user_id', session?.user.id);
@@ -86,9 +90,59 @@ export default function Account() {
       setLoading(false);
     }
   }
-  
 
-  // Code to handle image upload for profile picture
+  async function getFollowingCount() {
+    try {
+      setLoading(true);
+      if (!session?.user) throw new Error('No user on the session!');
+
+      const { count, error, status } = await supabase
+        .from('Following')
+        .select('*', { count: 'exact' })
+        .eq('follower', session?.user.id);
+
+      if (error && status !== 406) {
+        throw error;
+      }
+
+      if (count !== undefined) {
+        setFollowingCount(count);
+      }
+    } catch (error) {
+      Alert.alert('Error fetching following count', error.message);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function getFollowerCount() {
+    try {
+      setLoading(true);
+      if (!session?.user) throw new Error('No user on the session!');
+
+      const { count, error, status } = await supabase
+        .from('Following')
+        .select('*', { count: 'exact' })
+        .eq('following', session?.user.id);
+
+      if (error && status !== 406) {
+        throw error;
+      }
+
+      if (count !== undefined) {
+        setFollowerCount(count);
+      }
+    } catch (error) {
+      Alert.alert('Error fetching follower count', error.message);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  const goToFollowScreen = () => {
+    navigation.navigate('FollowScreen');
+  };
+
   const handleImagePicker = async () => {
     let result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
@@ -157,7 +211,6 @@ export default function Account() {
     }
   };
 
-  // Code to update the user's profile data with the user input
   async function updateProfile() {
     try {
       setLoading(true);
@@ -186,7 +239,6 @@ export default function Account() {
     }
   }
 
-  // Code to delete the user and all associated data
   async function deleteUserAndData() {
     try {
       if (!session?.user) throw new Error('No user on the session!');
@@ -208,7 +260,6 @@ export default function Account() {
     }
   }
 
-  // Code to download the user's data as a JSON file
   async function downloadUserData() {
     try {
       if (!session?.user) throw new Error('No user on the session!');
@@ -258,6 +309,12 @@ export default function Account() {
           <Text style={styles.userDataContainer}>
             <Text style={styles.userDataText}>{`Posts: ${postsCount}`}</Text>
           </Text>
+          <Text style={styles.userDataContainer}>
+            <Text style={styles.userDataText}>{`Following: ${followingCount}`}</Text>
+          </Text>
+          <Text style={styles.userDataContainer}>
+            <Text style={styles.userDataText}>{`Followers: ${followerCount}`}</Text>
+          </Text>
         </View>
 
         <View style={styles.containerActionsHeader}>
@@ -285,6 +342,10 @@ export default function Account() {
             </View>
           </TouchableOpacity>
         </View>
+
+        <Button 
+        title={'Find Users'}
+        onPress={goToFollowScreen}/>
 
         <View style={styles.inputWrapper}>
           <Input
