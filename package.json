@@ -11,8 +11,7 @@
     "format": "prettier --write .",
     "prepare": "husky",
     "postinstall": "node --eval \"require('fs').writeFileSync('.husky/pre-commit', 'npx lint-staged .\\n')\"",
-    "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js",
-    "test2": "jest --testPathPattern=qa-tests/.*\\.test\\.js"
+    "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js"
   },
   "husky": {
     "hooks": {
