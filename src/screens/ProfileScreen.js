@@ -12,11 +12,13 @@ import {
 } from 'react-native';
 import { Button, Input } from 'react-native-elements';
 import { supabase } from '../config/supabaseClient';
+// import { useNavigation } from '@react-navigation/native';
 import store from '../store/storeConfig';
 import * as FileSystem from 'expo-file-system';
 import * as Sharing from 'expo-sharing';
 import Default from '../../assets/styles/Default';
 import Colors from '../../assets/styles/Colors';
+// import emailjs from 'emailjs-com';
 
 export default function Account() {
   const session = store.getState().user.session;
@@ -25,6 +27,7 @@ export default function Account() {
   const [bio, setBio] = useState('');
   const [profileImage, setProfileImage] = useState('');
   const [userData /*, setUserData*/] = useState(null);
+  // const navigation = useNavigation();
 
   useEffect(() => {
     if (session) getProfile();
@@ -55,6 +58,11 @@ export default function Account() {
       setLoading(false);
     }
   }
+
+  // This function would work if we have emailjs on mobile devices.
+  // const downloadData = () => {
+  //   navigation.navigate('UserDataScreen');
+  // }
 
   async function updateProfile() {
     try {
@@ -229,7 +237,7 @@ export default function Account() {
         <View style={styles.verticallySpaced}>
           <Button
             title="Download User Data"
-            onPress={() => downloadUserData(session.user.id)}
+            onPress={() => downloadUserData()}
             buttonStyle={styles.downloadButton}
             titleStyle={Default.loginButtonBoldTitle}
           />

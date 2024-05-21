@@ -26,11 +26,12 @@ import CreateCommunity from '../screens/community/CreateCommunity';
 import Profile from '../screens/profile/Profile';
 import UpdateProfile from '../screens/profile/UpdateProfile';
 import ChatbotScreen from '../screens/ChatbotScreen';
+import UserDataScreen from '../screens/UserDataScreen';
 
 const Tab = createBottomTabNavigator();
 const CommunityStack = createStackNavigator();
 
-// const ProfileStack = createStackNavigator();
+const ProfileStack = createStackNavigator();
 const HabitsStack = createStackNavigator();
 
 const CommunityScreen = () => {
@@ -109,6 +110,20 @@ const HabitsScreen = () => {
   );
 };
 
+const ProfilesScreen = () => {
+  return (
+    <ProfileStack.Navigator
+      initialRouteName="ProfileScreen"
+      screenOptions={{
+        headerShown: false,
+        cardStyle: { backgroundColor: Colors.navigator },
+      }}>
+      <ProfileStack.Screen name="ProfileScreen" component={ProfileScreen} />
+      <ProfileStack.Screen name="UserDataScreen" component={UserDataScreen} />
+    </ProfileStack.Navigator>
+  );
+};
+
 export default function Navigator() {
   const icons = (route, focused) => {
     const sizeStyle = { width: 24, height: 24 };
@@ -167,7 +182,7 @@ export default function Navigator() {
       {/* Used to be the stakes screen, but I am putting the chatbot screen here temporarily */}
       <Tab.Screen name="Habits" component={HabitsScreen} />
       <Tab.Screen name="Community" component={CommunityScreen} />
-      <Tab.Screen name="Profile" component={ProfileScreen} />
+      <Tab.Screen name="Profile" component={ProfilesScreen} />
     </Tab.Navigator>
   );
 }
