@@ -1,6 +1,7 @@
 import React from 'react';
 import { render, fireEvent, waitFor } from '@testing-library/react-native';
 import Account from '../src/screens/ProfileScreen';
+import Auth from '../src/screens/SignupScreen';
 import { supabase } from '../src/config/supabaseClient';
 import store from '../src/store/storeConfig';
 
@@ -25,6 +26,8 @@ jest.mock('../src/store/storeConfig', () => ({
       session: {
         user: {
           id: 'test-user-id',
+          email: 'test@example.com',
+          password: 'password',
         },
       },
     },
@@ -70,6 +73,10 @@ describe('Account Component', () => {
       expect(supabase.rpc).toHaveBeenCalledWith('delete_user_data', {
         user_id: 'test-user-id',
       });
+    });
+
+    await waitFor(() => {
+      expect(supabase.auth.signOut).toHaveBeenCalled();
     });
   });
 });
