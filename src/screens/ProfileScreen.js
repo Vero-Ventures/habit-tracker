@@ -26,9 +26,14 @@ export default function Account() {
   const [username, setUsername] = useState('');
   const [bio, setBio] = useState('');
   const [profileImage, setProfileImage] = useState(null);
+  const [postsCount, setPostsCount] = useState(0);
 
+  // Code to fetch the user's profile data
   useEffect(() => {
-    if (session) getProfile();
+    if (session) {
+      getProfile();
+      getPostsCount();
+    }
   }, [session]);
 
   async function getProfile() {
@@ -57,6 +62,33 @@ export default function Account() {
     }
   }
 
+  // Code to fetch how many posts the user has made
+  async function getPostsCount() {
+    try {
+      setLoading(true);
+      if (!session?.user) throw new Error('No user on the session!');
+  
+      const { data, error, status, count } = await supabase
+        .from('Post')
+        .select('*', { count: 'exact' })
+        .eq('user_id', session?.user.id);
+  
+      if (error && status !== 406) {
+        throw error;
+      }
+  
+      if (count !== undefined) {
+        setPostsCount(count);
+      }
+    } catch (error) {
+      Alert.alert('Error fetching posts count', error.message);
+    } finally {
+      setLoading(false);
+    }
+  }
+  
+
+  // Code to handle image upload for profile picture
   const handleImagePicker = async () => {
     let result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
@@ -125,6 +157,7 @@ export default function Account() {
     }
   };
 
+  // Code to update the user's profile data with the user input
   async function updateProfile() {
     try {
       setLoading(true);
@@ -153,6 +186,7 @@ export default function Account() {
     }
   }
 
+  // Code to delete the user and all associated data
   async function deleteUserAndData() {
     try {
       if (!session?.user) throw new Error('No user on the session!');
@@ -174,6 +208,7 @@ export default function Account() {
     }
   }
 
+  // Code to download the user's data as a JSON file
   async function downloadUserData() {
     try {
       if (!session?.user) throw new Error('No user on the session!');
@@ -219,6 +254,9 @@ export default function Account() {
           </TouchableOpacity>
           <Text style={styles.textName} numberOfLines={1}>
             {`Hi, ${username || 'User'}`}
+          </Text>
+          <Text style={styles.userDataContainer}>
+            <Text style={styles.userDataText}>{`Posts: ${postsCount}`}</Text>
           </Text>
         </View>
 
