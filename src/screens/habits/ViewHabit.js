@@ -21,7 +21,6 @@ import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view
 import RBSheet from 'react-native-raw-bottom-sheet';
 import moment from 'moment';
 import { systemWeights } from 'react-native-typography';
-import { LinearGradient } from 'expo-linear-gradient';
 
 const ViewHabit = () => {
   const [loadingDelete, setLoadingDelete] = useState(false);
@@ -34,9 +33,24 @@ const ViewHabit = () => {
   const { habit } = route.params;
 
   useEffect(() => {
-    console.log('Habit Data:', habit);
-    setHabitPhoto(habit?.image);
-  }, [habit]);
+    const fetchHabit = async () => {
+      const { data: habitData, error } = await supabase
+        .from('Habit')
+        .select('*')
+        .eq('habit_id', habit.habit_id)
+        .single();
+      
+      if (error) {
+        Alert.alert('Error fetching habit', error.message);
+        return;
+      }
+
+      console.log('Habit Data:', habitData);
+      setHabitPhoto(habitData?.habit_photo);
+    };
+
+    fetchHabit();
+  }, [habit.habit_id]);
 
   const onDeleteHabit = () => {
     RBSDelete.current.open();
@@ -109,19 +123,13 @@ const ViewHabit = () => {
           />
 
           {habitPhoto ? (
-            <LinearGradient
-              colors={['rgba(114, 198, 239, 0.3)', 'rgba(0, 78, 143, 0.138)']}
-              start={{ x: 0, y: 0.5 }}
-              end={{ x: 1, y: 0.5 }}
-              style={styles.containerHeaderImage}>
-              <View style={styles.habitImage}>
-                <Image
-                  source={{ uri: habitPhoto }}
-                  style={styles.habitImage}
-                  resizeMode="cover"
-                />
-              </View>
-            </LinearGradient>
+            <View style={styles.photoContainer}>
+              <Image
+                source={{ uri: habitPhoto }}
+                style={styles.habitPhoto}
+                resizeMode="cover"
+              />
+            </View>
           ) : null}
 
           <View style={styles.container}>
@@ -261,6 +269,15 @@ const styles = StyleSheet.create({
     paddingVertical: 32,
     paddingHorizontal: 22,
   },
+  photoContainer: {
+    width: '100%',
+    height: Dimensions.get('window').width,
+    backgroundColor: '#000',
+  },
+  habitPhoto: {
+    width: '100%',
+    height: '100%',
+  },
   containerBackButton: {
     flexDirection: 'row',
   },
@@ -293,47 +310,6 @@ const styles = StyleSheet.create({
     marginBottom: 32,
     fontSize: 16,
     color: Colors.text,
-  },
-  containerHeaderImage: {
-    height: 189,
-    width: Dimensions.get('window').width,
-    zIndex: 0,
-    elevation: 0,
-    marginTop: 16,
-  },
-  habitImage: {
-    width: '100%',
-    height: '100%',
-    position: 'absolute',
-  },
-  addPhoto: {
-    width: 50,
-    height: 50,
-    marginBottom: 8,
-  },
-  textAddPhoto: {
-    fontWeight: '400',
-    fontSize: 16,
-    lineHeight: 19,
-    color: '#FCFCFC',
-  },
-  pickerStyleAndroid: {
-    marginHorizontal: 0,
-    paddingVertical: 15,
-    marginBottom: 0,
-    color: Colors.primary4,
-  },
-  pickerStyleIOS: {
-    paddingHorizontal: 0,
-    color: Colors.primary4,
-  },
-  buttonBottom: {
-    position: 'absolute',
-    bottom: 0,
-    right: 0,
-    left: 0,
-    paddingBottom: 16,
-    paddingHorizontal: 22,
   },
   containerBottomSheet: {
     borderTopLeftRadius: 24,
