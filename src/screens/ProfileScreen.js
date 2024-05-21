@@ -12,33 +12,33 @@ import {
 } from 'react-native';
 import { Button, Input } from 'react-native-elements';
 import { supabase } from '../config/supabaseClient';
-import store from '../store/storeConfig';
+import * as ImagePicker from 'expo-image-picker';
 import * as FileSystem from 'expo-file-system';
 import * as Sharing from 'expo-sharing';
 import Default from '../../assets/styles/Default';
 import Colors from '../../assets/styles/Colors';
 
 export default function Account() {
-  const session = store.getState().user.session;
   const [loading, setLoading] = useState(false);
   const [username, setUsername] = useState('');
   const [bio, setBio] = useState('');
-  const [profileImage, setProfileImage] = useState('');
-  const [userData /*, setUserData*/] = useState(null);
+  const [profileImage, setProfileImage] = useState(null);
+  const [userData, setUserData] = useState(null);
 
   useEffect(() => {
-    if (session) getProfile();
-  }, [session]);
+    getProfile();
+  }, []);
 
   async function getProfile() {
     try {
       setLoading(true);
-      if (!session?.user) throw new Error('No user on the session!');
+      const { data: { user }, error: userError } = await supabase.auth.getUser();
+      if (userError || !user) throw new Error('No user on the session!');
 
       const { data, error, status } = await supabase
         .from('User')
         .select(`username, bio, profile_image`)
-        .eq('user_id', session?.user.id)
+        .eq('user_id', user.id)
         .single();
       if (error && status !== 406) {
         throw error;
@@ -56,11 +56,82 @@ export default function Account() {
     }
   }
 
+  const handleImagePicker = async () => {
+    let result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [4, 3],
+      quality: 1,
+    });
+
+    if (!result.cancelled) {
+      setProfileImage(result.assets[0]);
+      uploadProfileImage(result.assets[0]);
+    }
+  };
+
+  const base64ToArrayBuffer = (base64) => {
+    const binaryString = window.atob(base64);
+    const len = binaryString.length;
+    const bytes = new Uint8Array(len);
+    for (let i = 0; i < len; i++) {
+      bytes[i] = binaryString.charCodeAt(i);
+    }
+    return bytes.buffer;
+  };
+
+  const uploadProfileImage = async (image) => {
+    try {
+      setLoading(true);
+      const fileName = `${Date.now()}_${String(image.uri).replace('null', '').split('/').pop()}`;
+      console.log('Uploading file:', fileName);
+
+      const response = await fetch(image.uri);
+      const blob = await response.blob();
+
+      const reader = new FileReader();
+      reader.onloadend = async () => {
+        const base64data = reader.result.split(',')[1];
+        const arrayBuffer = base64ToArrayBuffer(base64data);
+
+        const { data: uploadData, error: uploadError } = await supabase.storage
+          .from('profiles')
+          .upload(fileName, arrayBuffer, {
+            cacheControl: '3600',
+            upsert: false,
+            contentType: 'image/jpeg',
+          });
+
+        if (uploadError) {
+          console.error('Upload error:', uploadError);
+          Alert.alert('Error', uploadError.message);
+          setLoading(false);
+          return;
+        }
+
+        const { data } = supabase.storage.from('profiles').getPublicUrl(fileName);
+        const publicUrl = data.publicUrl;
+        setProfileImage(publicUrl);
+
+        Alert.alert('Success', 'Profile image updated successfully!');
+      };
+      reader.readAsDataURL(blob);
+    } catch (error) {
+      console.error('Upload error:', error);
+      Alert.alert('Error', 'Failed to upload image');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   async function updateProfile() {
     try {
       setLoading(true);
+      const { data: { user }, error: userError } = await supabase.auth.getUser();
+      if (userError || !user) throw new Error('No user on the session!');
+
       const updates = {
-        user_id: session?.user.id,
+        user_id: user.id,
         username: username,
         bio: bio,
         profile_image: profileImage,
@@ -82,24 +153,35 @@ export default function Account() {
     }
   }
 
-  async function deleteUserAndData(userId) {
-    supabase.auth.signOut();
-    const { data, error } = await supabase.rpc('delete_user_data', {
-      user_id: userId,
-    });
+  async function deleteUserAndData() {
+    try {
+      const { data: { user }, error: userError } = await supabase.auth.getUser();
+      if (userError || !user) throw new Error('No user on the session!');
 
-    if (error) {
+      const { error } = await supabase.rpc('delete_user_data', {
+        user_id: user.id,
+      });
+
+      if (error) {
+        console.error('Error deleting user:', error);
+        return;
+      }
+
+      console.log('User and associated data deleted successfully');
+      await supabase.auth.signOut();
+    } catch (error) {
       console.error('Error deleting user:', error);
-      return;
+      Alert.alert('Error', error.message);
     }
-
-    console.log('User and associated data deleted successfully:', data);
   }
 
-  async function downloadUserData(userId) {
+  async function downloadUserData() {
     try {
+      const { data: { user }, error: userError } = await supabase.auth.getUser();
+      if (userError || !user) throw new Error('No user on the session!');
+
       const { data, error } = await supabase.rpc('get_user_data', {
-        p_user_id: userId,
+        p_user_id: user.id,
       });
 
       if (error) {
@@ -123,11 +205,13 @@ export default function Account() {
     }
   }
 
+
+
   return (
     <View style={Default.container}>
       <ScrollView contentContainerStyle={styles.scrollViewContent}>
         <View style={styles.containerHeader}>
-          <View style={styles.containerPhoto}>
+          <TouchableOpacity style={styles.containerPhoto} onPress={handleImagePicker}>
             {profileImage ? (
               <Image source={{ uri: profileImage }} style={styles.userPhoto} />
             ) : (
@@ -136,7 +220,7 @@ export default function Account() {
                 style={styles.userPhoto}
               />
             )}
-          </View>
+          </TouchableOpacity>
           <Text style={styles.textName} numberOfLines={1}>
             {`Hi, ${username || 'User'}`}
           </Text>
@@ -168,17 +252,6 @@ export default function Account() {
           </TouchableOpacity>
         </View>
 
-        <View style={styles.inputWrapper}>
-          <Input
-            label="Profile Image URL"
-            value={profileImage || ''}
-            onChangeText={setProfileImage}
-            placeholder="Enter profile image URL"
-            containerStyle={styles.inputContainer}
-            inputStyle={styles.input}
-            labelStyle={styles.inputLabel}
-          />
-        </View>
         <View style={styles.inputWrapper}>
           <Input
             label="Username"
@@ -234,11 +307,6 @@ export default function Account() {
             titleStyle={Default.loginButtonBoldTitle}
           />
         </View>
-        {userData && (
-          <View style={styles.userDataContainer}>
-            <Text style={styles.userDataText}>{userData}</Text>
-          </View>
-        )}
       </ScrollView>
     </View>
   );
