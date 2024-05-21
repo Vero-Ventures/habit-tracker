@@ -12,33 +12,34 @@ import {
 } from 'react-native';
 import { Button, Input } from 'react-native-elements';
 import { supabase } from '../config/supabaseClient';
+
 import * as ImagePicker from 'expo-image-picker';
+import store from '../store/storeConfig';
 import * as FileSystem from 'expo-file-system';
 import * as Sharing from 'expo-sharing';
 import Default from '../../assets/styles/Default';
 import Colors from '../../assets/styles/Colors';
 
 export default function Account() {
+  const session = store.getState().user.session;
   const [loading, setLoading] = useState(false);
   const [username, setUsername] = useState('');
   const [bio, setBio] = useState('');
   const [profileImage, setProfileImage] = useState(null);
-  const [userData, setUserData] = useState(null);
 
   useEffect(() => {
-    getProfile();
-  }, []);
+    if (session) getProfile();
+  }, [session]);
 
   async function getProfile() {
     try {
       setLoading(true);
-      const { data: { user }, error: userError } = await supabase.auth.getUser();
-      if (userError || !user) throw new Error('No user on the session!');
+      if (!session?.user) throw new Error('No user on the session!');
 
       const { data, error, status } = await supabase
         .from('User')
         .select(`username, bio, profile_image`)
-        .eq('user_id', user.id)
+        .eq('user_id', session?.user.id)
         .single();
       if (error && status !== 406) {
         throw error;
@@ -127,11 +128,10 @@ export default function Account() {
   async function updateProfile() {
     try {
       setLoading(true);
-      const { data: { user }, error: userError } = await supabase.auth.getUser();
-      if (userError || !user) throw new Error('No user on the session!');
+      if (!session?.user) throw new Error('No user on the session!');
 
       const updates = {
-        user_id: user.id,
+        user_id: session?.user.id,
         username: username,
         bio: bio,
         profile_image: profileImage,
@@ -155,11 +155,10 @@ export default function Account() {
 
   async function deleteUserAndData() {
     try {
-      const { data: { user }, error: userError } = await supabase.auth.getUser();
-      if (userError || !user) throw new Error('No user on the session!');
+      if (!session?.user) throw new Error('No user on the session!');
 
       const { error } = await supabase.rpc('delete_user_data', {
-        user_id: user.id,
+        user_id: session.user.id,
       });
 
       if (error) {
@@ -177,11 +176,10 @@ export default function Account() {
 
   async function downloadUserData() {
     try {
-      const { data: { user }, error: userError } = await supabase.auth.getUser();
-      if (userError || !user) throw new Error('No user on the session!');
+      if (!session?.user) throw new Error('No user on the session!');
 
       const { data, error } = await supabase.rpc('get_user_data', {
-        p_user_id: user.id,
+        p_user_id: session.user.id,
       });
 
       if (error) {
@@ -204,8 +202,6 @@ export default function Account() {
       Alert.alert('Error', 'Unexpected error: ' + error.message);
     }
   }
-
-
 
   return (
     <View style={Default.container}>
@@ -294,7 +290,7 @@ export default function Account() {
         <View style={styles.verticallySpaced}>
           <Button
             title="Delete Account"
-            onPress={() => deleteUserAndData(session.user.id)}
+            onPress={() => deleteUserAndData()}
             buttonStyle={styles.deleteButton}
             titleStyle={Default.loginButtonBoldTitle}
           />
@@ -302,7 +298,7 @@ export default function Account() {
         <View style={styles.verticallySpaced}>
           <Button
             title="Download User Data"
-            onPress={() => downloadUserData(session.user.id)}
+            onPress={() => downloadUserData()}
             buttonStyle={styles.downloadButton}
             titleStyle={Default.loginButtonBoldTitle}
           />
