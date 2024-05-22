@@ -83,7 +83,7 @@ const ProfilesScreen = () => {
   );
 };
 
-export default function Navigator() {
+export default function Navigator( { setIsLoggedIn }) {
   const icons = (route, focused) => {
     const sizeStyle = { width: 24, height: 24 };
 
@@ -141,8 +141,9 @@ export default function Navigator() {
       <Tab.Screen name="Stakes" component={ChatbotScreen} />
       <Tab.Screen name="Habits" component={HabitsScreen} />
       <Tab.Screen name="Community" component={CommunityScreen} />
-      <Tab.Screen name="Profile" component={ProfilesScreen} />
-
+      <Tab.Screen name="Profile">
+        {() => <ProfilesScreen setIsLoggedIn={setIsLoggedIn} />}
+      </Tab.Screen>
     </Tab.Navigator>
   );
 }
