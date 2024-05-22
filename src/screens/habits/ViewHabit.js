@@ -25,6 +25,7 @@ import { systemWeights } from 'react-native-typography';
 const ViewHabit = () => {
   const [loadingDelete, setLoadingDelete] = useState(false);
   const [loadingDisable, setLoadingDisable] = useState(false);
+  const [loadingShare, setLoadingShare] = useState(false);
   const [habitPhoto, setHabitPhoto] = useState(null);
 
   const RBSDelete = useRef();
@@ -96,6 +97,61 @@ const ViewHabit = () => {
 
     RBSDelete.current.close();
     navigation.pop();
+  };
+
+  const shareHabitToInstagram = async () => {
+    if (!habitPhoto) {
+      Alert.alert('No habit photo to share');
+      return;
+    }
+
+    setLoadingShare(true);
+
+    try {
+      // create Media Container
+      const mediaContainerResponse = await fetch(`https://graph.facebook.com/v20.0/${YOUR_IG_USER_ID}/media`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${YOUR_ACCESS_TOKEN}`,
+        },
+        body: JSON.stringify({
+          image_url: habitPhoto,
+          caption: `Check out my habit: ${habit.habit_title} #MyHabit`,
+        }),
+      });
+      
+      const mediaContainerData = await mediaContainerResponse.json();
+
+      if (!mediaContainerData.id) {
+        throw new Error('Failed to create media container');
+      }
+
+      // publish Media
+      const publishResponse = await fetch(`https://graph.facebook.com/v20.0/${YOUR_IG_USER_ID}/media_publish`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${YOUR_ACCESS_TOKEN}`,
+        },
+        body: JSON.stringify({
+          creation_id: mediaContainerData.id,
+        }),
+      });
+
+      const publishData = await publishResponse.json();
+
+      if (publishData.id) {
+        Alert.alert('Success', 'Habit shared to Instagram!');
+      } else {
+        throw new Error('Failed to publish media');
+      }
+
+    } catch (error) {
+      Alert.alert('Error sharing habit to Instagram', error.message);
+    } finally {
+      setLoadingShare(false);
+    }
   };
 
   return (
@@ -216,48 +272,56 @@ const ViewHabit = () => {
                 title="DELETE HABIT"
                 disabledStyle={Default.loginNextButton}
               />
-            </View>
-          </View>
 
-          <RBSheet
-            ref={RBSDelete}
-            height={350}
-            openDuration={250}
-            customStyles={{ container: styles.containerBottomSheet }}>
-            <View style={styles.containerTextBottomSheet}>
-              <Image
-                style={styles.warningIconStyle}
-                source={require('../../../assets/icons/wrong.png')}
-              />
-              <Text style={styles.textDelete}>
-                Are you sure to delete this habit?
-              </Text>
-            </View>
-
-            <View style={styles.buttonContainer}>
               <Button
-                disabled={loadingDelete}
-                loading={loadingDelete}
+                disabled={loadingShare}
+                loading={loadingShare}
                 buttonStyle={Default.loginNextButton}
                 titleStyle={Default.loginButtonBoldTitle}
-                onPress={deleteHabit}
-                title="DELETE"
+                onPress={shareHabitToInstagram}
+                title="SHARE TO INSTAGRAM"
                 disabledStyle={Default.loginNextButton}
               />
-
-              <TouchableOpacity
-                disabled={loadingDelete}
-                style={{ marginTop: 16 }}
-                onPress={() => RBSDelete.current.close()}>
-                <View style={{ alignItems: 'center' }}>
-                  <Text style={[systemWeights.bold, styles.createAccountText]}>
-                    Cancel
-                  </Text>
-                </View>
-              </TouchableOpacity>
             </View>
-          </RBSheet>
+          </View>
         </ScrollView>
+
+        <RBSheet
+          ref={RBSDelete}
+          height={200}
+          openDuration={250}
+          customStyles={{
+            container: {
+              justifyContent: 'center',
+              alignItems: 'center',
+              backgroundColor: Colors.background,
+            },
+          }}>
+          <View style={{ flex: 1, justifyContent: 'space-evenly' }}>
+            <Text
+              style={{
+                textAlign: 'center',
+                fontSize: 18,
+                fontWeight: 'bold',
+                color: Colors.text,
+              }}>
+              Are you sure you want to delete this habit?
+            </Text>
+
+            <View style={{ flexDirection: 'row', justifyContent: 'space-evenly' }}>
+              <Button
+                title="Cancel"
+                onPress={() => RBSDelete.current.close()}
+                buttonStyle={{ backgroundColor: Colors.secondary }}
+              />
+              <Button
+                title="Delete"
+                onPress={deleteHabit}
+                buttonStyle={{ backgroundColor: Colors.primary }}
+              />
+            </View>
+          </View>
+        </RBSheet>
       </KeyboardAwareScrollView>
     </View>
   );
@@ -266,93 +330,29 @@ const ViewHabit = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    paddingVertical: 32,
-    paddingHorizontal: 22,
+    padding: 16,
+  },
+  title: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: Colors.text,
+    marginBottom: 8,
+  },
+  textContent: {
+    fontSize: 14,
+    color: Colors.text,
+    marginBottom: 16,
   },
   photoContainer: {
-    width: '100%',
+    width: Dimensions.get('window').width,
     height: Dimensions.get('window').width,
-    backgroundColor: '#000',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 16,
   },
   habitPhoto: {
     width: '100%',
     height: '100%',
-  },
-  containerBackButton: {
-    flexDirection: 'row',
-  },
-  textBackButton: {
-    fontSize: 16,
-    color: Colors.primary4,
-    marginLeft: 6,
-    fontStyle: 'normal',
-  },
-  textCreate: {
-    color: '#FCFCFC',
-    fontSize: 24,
-    marginTop: 8,
-    marginBottom: 32,
-  },
-  containerButton: {
-    flex: 1,
-    justifyContent: 'flex-end',
-    marginTop: 60,
-  },
-  pickerStyle: {
-    width: Dimensions.get('window').width - 44,
-    backgroundColor: Colors.primary,
-    borderRadius: 2,
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: '#455c8a',
-    marginHorizontal: 10,
-    paddingHorizontal: 16,
-    paddingVertical: 15,
-    marginBottom: 32,
-    fontSize: 16,
-    color: Colors.text,
-  },
-  containerBottomSheet: {
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
-    paddingVertical: 32,
-    paddingHorizontal: 22,
-  },
-  containerTextBottomSheet: {
-    alignItems: 'center',
-  },
-  warningIconStyle: {
-    width: 80,
-    height: 80,
-    marginBottom: 16,
-  },
-  textDelete: {
-    color: '#000000',
-    fontSize: 18,
-    fontWeight: '600',
-    marginBottom: 24,
-  },
-  buttonContainer: {
-    alignItems: 'center',
-    marginTop: 16,
-  },
-  createAccountText: {
-    fontSize: 14,
-    color: '#4A4A4A',
-  },
-  title: {
-    color: Colors.text,
-    fontSize: 16,
-    fontWeight: '400',
-    marginBottom: 12,
-  },
-  textContent: {
-    fontSize: 16,
-    color: Colors.primary4,
-    fontWeight: '400',
-    marginBottom: 32,
-  },
-  scheduleDetails: {
-    marginTop: 16,
   },
 });
 

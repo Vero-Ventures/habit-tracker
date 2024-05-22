@@ -64,26 +64,30 @@ export default function App() {
             </Stack.Screen>
           ))}
         </Stack.Navigator>
-        <Modal
-          isVisible={isChatVisible}
-          onBackdropPress={() => setIsChatVisible(false)}
-          style={styles.modal}>
-          <View style={styles.modalContent}>
-            <ChatBotScreen
-              navigation={{ goBack: () => setIsChatVisible(false) }}
-            />
-          </View>
-        </Modal>
-        <TouchableOpacity
-          style={styles.tooltipButton}
-          onPress={() => setIsChatVisible(true)}>
-          <View style={styles.tooltipCircle}>
-            <Image
-              source={require('./assets/images/Chatbot.png')}
-              style={styles.tooltipImage}
-            />
-          </View>
-        </TouchableOpacity>
+        {session && (
+          <>
+            <Modal
+              isVisible={isChatVisible}
+              onBackdropPress={() => setIsChatVisible(false)}
+              style={styles.modal}>
+              <View style={styles.modalContent}>
+                <ChatBotScreen
+                  navigation={{ goBack: () => setIsChatVisible(false) }}
+                />
+              </View>
+            </Modal>
+            <TouchableOpacity
+              style={styles.tooltipButton}
+              onPress={() => setIsChatVisible(true)}>
+              <View style={styles.tooltipCircle}>
+                <Image
+                  source={require('./assets/images/Chatbot.png')}
+                  style={styles.tooltipImage}
+                />
+              </View>
+            </TouchableOpacity>
+          </>
+        )}
       </NavigationContainer>
     </Provider>
   );

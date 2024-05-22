@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useCallback } from 'react';
 import {
   View,
   StyleSheet,
@@ -13,7 +13,7 @@ import Colors from '../../../assets/styles/Colors';
 import Fetching from '../../components/Fetching';
 import Header from '../../components/Header';
 import { Button } from 'react-native-elements';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import store from '../../store/storeConfig';
 import { supabase } from '../../config/supabaseClient';
 
@@ -23,9 +23,11 @@ const Habits = () => {
   const [schedules, setSchedules] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    fetchSchedules();
-  }, []);
+  useFocusEffect(
+    useCallback(() => {
+      fetchSchedules();
+    }, [])
+  );
 
   const fetchSchedules = async () => {
     try {
