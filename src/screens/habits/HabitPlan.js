@@ -7,9 +7,8 @@ import {
   TouchableOpacity,
 } from "react-native";
 import Accordion from "react-native-collapsible/Accordion";
-import Icon from "react-native-vector-icons/FontAwesome5";
 import Colors from "../../../assets/styles/Colors"; 
-
+import { AntDesign } from '@expo/vector-icons';
 const HabitPlan = ({ habitPlan }) => {
   const [activeSections, setActiveSections] = useState([]);
   const [parsedHabitPlan, setParsedHabitPlan] = useState([]);
@@ -55,11 +54,7 @@ const HabitPlan = ({ habitPlan }) => {
           ]}
         >
           <Text style={styles.textAccordionHeader}>{section.hac_name}</Text>
-          <Icon
-            size={15}
-            color={Colors.primary4}
-            name={isActive ? "fa-solid fa-chevron-up" : "fa-solid fa-chevron-down"}
-          />
+          {isActive ? <AntDesign name="caretup" size={18} color="black" /> : <AntDesign name="caretdown" size={18} color="black" />}
         </View>
       </TouchableOpacity>
     );
