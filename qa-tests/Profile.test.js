@@ -3,6 +3,7 @@ import { render, fireEvent, waitFor } from '@testing-library/react-native';
 import Account from '../src/screens/ProfileScreen';
 import { Alert } from 'react-native';
 import { supabase } from '../src/config/supabaseClient';
+import * as FileSystem from 'expo-file-system';
 
 // Mocking the supabase client to prevent actual API calls
 jest.mock('../src/config/supabaseClient', () => ({
@@ -127,6 +128,29 @@ describe('CRUD operations on profile', () => {
       expect(getByPlaceholderText('Enter bio').props.value).toBe(
         'This is a test bio'
       );
+    });
+  });
+
+  describe('Data export', () => {
+    afterEach(() => {
+      jest.clearAllMocks();
+    });
+
+    // test case fails because functionality does not work properly
+    test('user downloads their data', async () => {
+      const { getByText } = render(<Account />);
+
+      fireEvent.press(getByText('Download User Data'));
+
+      await waitFor(() => {
+        expect(supabase.rpc).toHaveBeenCalledWith('get_user_data', {
+          p_user_id: 'test-user-id',
+        });
+        expect(Alert.alert).toHaveBeenCalledWith(
+          'Success',
+          'User data saved as user_data.json'
+        );
+      });
     });
   });
 });
