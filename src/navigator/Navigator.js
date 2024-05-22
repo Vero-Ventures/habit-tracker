@@ -148,13 +148,12 @@ export default function Navigator({ setIsLoggedIn }) {
       <Tab.Screen name="Stakes" component={ChatbotScreen} />
       <Tab.Screen name="Habits" component={HabitsScreen} />
       <Tab.Screen name="Community" component={CommunityScreen} />
-      <Tab.Screen name="Profile">
-        {() => <ProfileScreen setIsLoggedIn={setIsLoggedIn} />}
-      </Tab.Screen>
+      <Tab.Screen name="Profile" component={ProfilesScreen} />
     </Tab.Navigator>
   );
 }
 
 Navigator.propTypes = {
   route: PropTypes.object,
+  setIsLoggedIn: PropTypes.func,
 };
