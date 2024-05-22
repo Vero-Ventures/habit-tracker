@@ -3,7 +3,6 @@ import { render, fireEvent, waitFor } from '@testing-library/react-native';
 import Account from '../src/screens/ProfileScreen';
 import { Alert } from 'react-native';
 import { supabase } from '../src/config/supabaseClient';
-import * as FileSystem from 'expo-file-system';
 
 // Mocking the supabase client to prevent actual API calls
 jest.mock('../src/config/supabaseClient', () => ({
