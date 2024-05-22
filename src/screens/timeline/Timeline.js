@@ -37,7 +37,7 @@ const Timeline = () => {
         setLoading(true);
       }
 
-      // fetch posts for the currently logged-in user
+      // Fetch posts for the currently logged-in user
       const { data: postData, error: postError } = await supabase
         .from('Post')
         .select('*')
@@ -56,6 +56,7 @@ const Timeline = () => {
         return;
       }
 
+      // Fetch schedules
       const scheduleIds = postData.map(post => post.schedule_id);
       const { data: scheduleData, error: scheduleError } = await supabase
         .from('Schedule')
@@ -68,6 +69,7 @@ const Timeline = () => {
 
       console.log('Fetched schedule data:', scheduleData);
 
+      // Fetch habits
       const habitIds = scheduleData.map(schedule => schedule.habit_id);
       const { data: habitData, error: habitError } = await supabase
         .from('Habit')
@@ -80,10 +82,9 @@ const Timeline = () => {
 
       console.log('Fetched habit data:', habitData);
 
+      // Combine the data
       const combinedData = postData.map(post => {
-        const schedule = scheduleData.find(
-          s => s.schedule_id === post.schedule_id
-        );
+        const schedule = scheduleData.find(s => s.schedule_id === post.schedule_id);
         const habit = habitData.find(h => h.habit_id === schedule.habit_id);
 
         return {
