@@ -77,13 +77,13 @@ const ProfilesScreen = ({ setIsLoggedIn }) => {
         headerShown: false,
         cardStyle: { backgroundColor: Colors.navigator },
       }}>
-      <ProfileStack.Screen name="ProfileScreen">
-        {() => <ProfileScreen setIsLoggedIn={setIsLoggedIn} />}
-      </ProfileStack.Screen>
+      <ProfileStack.Screen name="ProfileScreen" component={ProfileScreen}/>
       <ProfileStack.Screen name="UserDataScreen" component={UserDataScreen} />
       <ProfileStack.Screen name="FollowScreen" component={FollowScreen} />
       <ProfileStack.Screen name="FollowersScreen" component={FollowersScreen} />
-      <ProfileStack.Screen name="SettingsScreen" component={SettingsScreen} />
+      <ProfileStack.Screen name="SettingsScreen">
+        {() => <SettingsScreen setIsLoggedIn={setIsLoggedIn} />}
+      </ProfileStack.Screen>
     </ProfileStack.Navigator>
   );
 };
@@ -145,7 +145,9 @@ export default function Navigator({ setIsLoggedIn }) {
       <Tab.Screen name="Stakes" component={ChatbotScreen} />
       <Tab.Screen name="Habits" component={HabitsScreen} />
       <Tab.Screen name="Community" component={CommunityScreen} />
-      <Tab.Screen name="Profile" component={ProfilesScreen} />
+      <Tab.Screen name="Profile">
+        {() => <ProfilesScreen setIsLoggedIn={setIsLoggedIn} />}
+      </Tab.Screen>
     </Tab.Navigator>
   );
 }
