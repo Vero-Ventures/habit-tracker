@@ -69,6 +69,25 @@ const HabitsScreen = () => {
   );
 };
 
+const ProfilesScreen = ({ setIsLoggedIn }) => {
+  return (
+    <ProfileStack.Navigator
+      initialRouteName="ProfileScreen"
+      screenOptions={{
+        headerShown: false,
+        cardStyle: { backgroundColor: Colors.navigator },
+      }}>
+      <ProfileStack.Screen name="ProfileScreen">
+        {() => <ProfileScreen setIsLoggedIn={setIsLoggedIn} />}
+      </ProfileStack.Screen>
+      <ProfileStack.Screen name="UserDataScreen" component={UserDataScreen} />
+      <ProfileStack.Screen name="FollowScreen" component={FollowScreen} />
+      <ProfileStack.Screen name="FollowersScreen" component={FollowersScreen} />
+      <ProfileStack.Screen name="SettingsScreen" component={SettingsScreen} />
+    </ProfileStack.Navigator>
+  );
+};
+
 export default function Navigator({ setIsLoggedIn }) {
   const icons = (route, focused) => {
     const sizeStyle = { width: 24, height: 24 };
@@ -104,28 +123,6 @@ export default function Navigator({ setIsLoggedIn }) {
       default:
         return null;
     }
-  };
-
-  const ProfilesScreen = () => {
-    return (
-      <ProfileStack.Navigator
-        initialRouteName="ProfileScreen"
-        screenOptions={{
-          headerShown: false,
-          cardStyle: { backgroundColor: Colors.navigator },
-        }}>
-        <ProfileStack.Screen name="ProfileScreen">
-          {() => <ProfileScreen setIsLoggedIn={setIsLoggedIn} />}
-        </ProfileStack.Screen>
-        <ProfileStack.Screen name="UserDataScreen" component={UserDataScreen} />
-        <ProfileStack.Screen name="FollowScreen" component={FollowScreen} />
-        <ProfileStack.Screen
-          name="FollowersScreen"
-          component={FollowersScreen}
-        />
-        <ProfileStack.Screen name="SettingsScreen" component={SettingsScreen} />
-      </ProfileStack.Navigator>
-    );
   };
 
   return (
