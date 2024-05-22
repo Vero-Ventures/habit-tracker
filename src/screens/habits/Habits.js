@@ -30,7 +30,7 @@ const Habits = () => {
   const fetchSchedules = async () => {
     try {
       setLoading(true);
-      if (!session?.user) throw new Error('No user on the session!');
+      // if (!session?.user) throw new Error('No user on the session!');
 
       const { data: scheduleData, error: scheduleError } = await supabase
         .from('Schedule')
@@ -72,7 +72,7 @@ const Habits = () => {
       }
     } catch (error) {
       console.error('Error fetching schedules or habits:', error);
-      Alert.alert('Error fetching schedules or habits', error.message);
+      // Alert.alert('Error fetching schedules or habits', error.message);
     } finally {
       setLoading(false);
     }
@@ -97,6 +97,33 @@ const Habits = () => {
     </TouchableOpacity>
   );
 
+  const temp = [
+    {
+      habit_id: 1,
+      habit_title: 'Drink Water',
+      habit_description: 'Drink 8 glasses of water daily',
+      schedule_state: 'Open',
+    },
+    {
+      habit_id: 2,
+      habit_title: 'Walk',
+      habit_description: 'Walk 30 minutes daily',
+      schedule_state: 'Open',
+    },
+    {
+      habit_id: 3,
+      habit_title: 'Read',
+      habit_description: 'Read 30 minutes daily',
+      schedule_state: 'Open',
+    },
+    {
+      habit_id: 4,
+      habit_title: 'Meditate',
+      habit_description: 'Meditate 30 minutes daily',
+      schedule_state: 'Open',
+    },
+  ];
+  
   return (
     <View style={styles.container}>
       <Header title="My Habits" />
@@ -104,7 +131,7 @@ const Habits = () => {
         <Fetching />
       ) : (
         <FlatList
-          data={schedules}
+          data={temp}
           keyExtractor={(item, index) => index.toString()}
           renderItem={renderSchedule}
           contentContainerStyle={styles.list}
