@@ -174,7 +174,6 @@ const ViewHabit = () => {
       
       try {
         setGeneratedSchedule(validJsonString);
-        // setJsonPlan(validJsonString);
       } catch (parseError) {
         console.error('Error parsing habit plan:', parseError);
         Alert.alert('Error', 'Failed to parse habit schedule. Please try again.');
@@ -277,7 +276,7 @@ const ViewHabit = () => {
 
             {generatedSchedule && (
               <View style={styles.scheduleDetails}>
-                <Text style={styles.title}>Generated Habit Schedule</Text>
+                <Text style={styles.title} >Generated Habit Schedule</Text>
                 <HabitPlan habitPlan={generatedSchedule} />
               </View>
             )}

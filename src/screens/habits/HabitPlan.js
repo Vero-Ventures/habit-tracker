@@ -58,7 +58,7 @@ const HabitPlan = ({ habitPlan }) => {
           <Icon
             size={15}
             color={Colors.primary4}
-            name={isActive ? "chevron-up" : "chevron-down"}
+            name={isActive ? "fa-solid fa-chevron-up" : "fa-solid fa-chevron-down"}
           />
         </View>
       </TouchableOpacity>
@@ -87,7 +87,6 @@ const HabitPlan = ({ habitPlan }) => {
   };
 
   return (
-    <View>
       <Accordion
         sections={parsedHabitPlan}
         activeSections={activeSections}
@@ -95,7 +94,6 @@ const HabitPlan = ({ habitPlan }) => {
         renderContent={_renderContent}
         onChange={() => null}
       />
-    </View>
   );
 };
 
@@ -126,7 +124,7 @@ const styles = StyleSheet.create({
   textAccordionContent: {
     flex: 1,
     fontSize: 14,
-    color: Colors.text,
+    color: Colors.white, 
   },
   stageItem: {
     marginBottom: 10,
@@ -135,19 +133,23 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "bold",
     marginBottom: 5,
+    color: Colors.white, 
   },
   stageDuration: {
     fontSize: 14,
     marginBottom: 5,
+    color: Colors.white, 
   },
   stageGoals: {
     fontSize: 14,
     marginBottom: 10,
+    color: Colors.white, 
   },
   stepDescription: {
     fontSize: 14,
     marginLeft: 10,
     marginBottom: 5,
+    color: Colors.white, 
   },
   headerOpened: {
     borderBottomLeftRadius: 0,
