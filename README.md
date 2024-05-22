@@ -70,8 +70,9 @@ Before you start, make sure your mobile device and your computer are both connec
    ```bash
    npm i
    ```
-
+   
 4. After the dependencies are installed, create a .env file to hold the necessary environment variables. To do this, create a new file in the root of the project and name the file .env. Paste the provided environment variables into .env file. See the .env.example file for the environment variable names.
+
 
 5. You should now have the correct environment variables file, and the necessary dependencies installed. You can now run the app by entering the following command into the terminal:
 
