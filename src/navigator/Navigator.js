@@ -8,8 +8,8 @@ import Habits from '../screens/habits/Habits';
 import ViewHabit from '../screens/habits/ViewHabit';
 import AddHabit from '../screens/habits/AddHabit';
 import ProfileScreen from '../screens/ProfileScreen';
-import FollowScreen from '../screens/FollowScreen'; 
-import FollowersScreen from '../screens/FollowersScreen'; 
+import FollowScreen from '../screens/FollowScreen';
+import FollowersScreen from '../screens/FollowersScreen';
 import SettingsScreen from '../screens/SettingsScreen';
 import homeSelected from '../../assets/icons/home-selected.png';
 import home from '../../assets/icons/home.png';
@@ -46,7 +46,10 @@ const CommunityScreen = () => {
         cardStyle: { backgroundColor: Colors.navigator },
       }}>
       <CommunityStack.Screen name="Community" component={Community} />
-      <CommunityStack.Screen name="CreateCommunity" component={CreateCommunity} />
+      <CommunityStack.Screen
+        name="CreateCommunity"
+        component={CreateCommunity}
+      />
     </CommunityStack.Navigator>
   );
 };
@@ -83,7 +86,7 @@ const ProfilesScreen = () => {
   );
 };
 
-export default function Navigator( { setIsLoggedIn }) {
+export default function Navigator({ setIsLoggedIn }) {
   const icons = (route, focused) => {
     const sizeStyle = { width: 24, height: 24 };
 
@@ -136,13 +139,12 @@ export default function Navigator( { setIsLoggedIn }) {
           paddingBottom: 24,
         },
       })}>
-
       <Tab.Screen name="Timeline" component={Timeline} />
       <Tab.Screen name="Stakes" component={ChatbotScreen} />
       <Tab.Screen name="Habits" component={HabitsScreen} />
       <Tab.Screen name="Community" component={CommunityScreen} />
       <Tab.Screen name="Profile">
-        {() => <ProfilesScreen setIsLoggedIn={setIsLoggedIn} />}
+        {() => <ProfileScreen setIsLoggedIn={setIsLoggedIn} />}
       </Tab.Screen>
     </Tab.Navigator>
   );
