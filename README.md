@@ -71,12 +71,7 @@ Before you start, make sure your mobile device and your computer are both connec
    npm i
    ```
 
-4. After the dependencies are installed, create a .env file to hold the necessary environment variables. To do this, create a new file in the root of the project and name the file .env. Paste the contents below into the .env file:
-
-   ```
-   EXPO_PUBLIC_REACT_APP_SUPABASE_URL=https://kodvkbozuzzotaqlnpaz.supabase.co
-   EXPO_PUBLIC_REACT_APP_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtvZHZrYm96dXp6b3RhcWxucGF6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MTQ3NzIyMTIsImV4cCI6MjAzMDM0ODIxMn0.NaqEouUyHeJZjTc37tP-yvomK4d7jtsE3kxDP73s0PE
-   ```
+4. After the dependencies are installed, create a .env file to hold the necessary environment variables. To do this, create a new file in the root of the project and name the file .env. Paste the provided environment variables into .env file. See the .env.example file for the environment variable names.
 
 5. You should now have the correct environment variables file, and the necessary dependencies installed. You can now run the app by entering the following command into the terminal:
 
