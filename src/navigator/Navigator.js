@@ -69,7 +69,7 @@ const HabitsScreen = () => {
   );
 };
 
-const ProfilesScreen = () => {
+const ProfilesScreen = ({ setIsLoggedIn }) => {
   return (
     <ProfileStack.Navigator
       initialRouteName="ProfileScreen"
@@ -77,11 +77,13 @@ const ProfilesScreen = () => {
         headerShown: false,
         cardStyle: { backgroundColor: Colors.navigator },
       }}>
-      <ProfileStack.Screen name="ProfileScreen" component={ProfileScreen} />
+      <ProfileStack.Screen name="ProfileScreen" component={ProfileScreen}/>
       <ProfileStack.Screen name="UserDataScreen" component={UserDataScreen} />
       <ProfileStack.Screen name="FollowScreen" component={FollowScreen} />
       <ProfileStack.Screen name="FollowersScreen" component={FollowersScreen} />
-      <ProfileStack.Screen name="SettingsScreen" component={SettingsScreen} />
+      <ProfileStack.Screen name="SettingsScreen">
+        {() => <SettingsScreen setIsLoggedIn={setIsLoggedIn} />}
+      </ProfileStack.Screen>
     </ProfileStack.Navigator>
   );
 };
@@ -144,7 +146,7 @@ export default function Navigator({ setIsLoggedIn }) {
       <Tab.Screen name="Habits" component={HabitsScreen} />
       <Tab.Screen name="Community" component={CommunityScreen} />
       <Tab.Screen name="Profile">
-        {() => <ProfileScreen setIsLoggedIn={setIsLoggedIn} />}
+        {() => <ProfilesScreen setIsLoggedIn={setIsLoggedIn} />}
       </Tab.Screen>
     </Tab.Navigator>
   );
@@ -152,4 +154,5 @@ export default function Navigator({ setIsLoggedIn }) {
 
 Navigator.propTypes = {
   route: PropTypes.object,
+  setIsLoggedIn: PropTypes.func,
 };

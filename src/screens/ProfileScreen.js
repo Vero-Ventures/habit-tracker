@@ -21,7 +21,7 @@ import * as Sharing from 'expo-sharing';
 import Default from '../../assets/styles/Default';
 import Colors from '../../assets/styles/Colors';
 
-export default function Account({ setIsLoggedIn }) {
+export default function Account() {
   const session = store.getState().user.session;
   const navigation = useNavigation();
   const [loading, setLoading] = useState(false);
@@ -347,33 +347,6 @@ export default function Account({ setIsLoggedIn }) {
             onPress={updateProfile}
             disabled={loading}
             buttonStyle={styles.updateButton}
-            titleStyle={Default.loginButtonBoldTitle}
-          />
-        </View>
-        <View style={styles.verticallySpaced}>
-          <Button
-            title="Sign Out"
-            onPress={() => {
-              supabase.auth.signOut();
-              setIsLoggedIn(false);
-            }}
-            buttonStyle={styles.signOutButton}
-            titleStyle={Default.loginButtonBoldTitle}
-          />
-        </View>
-        <View style={styles.verticallySpaced}>
-          <Button
-            title="Delete Account"
-            onPress={() => deleteUserAndData()}
-            buttonStyle={styles.deleteButton}
-            titleStyle={Default.loginButtonBoldTitle}
-          />
-        </View>
-        <View style={styles.verticallySpaced}>
-          <Button
-            title="Download User Data"
-            onPress={() => downloadUserData()}
-            buttonStyle={styles.downloadButton}
             titleStyle={Default.loginButtonBoldTitle}
           />
         </View>
