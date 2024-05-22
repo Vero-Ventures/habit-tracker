@@ -27,6 +27,7 @@ import Profile from '../screens/profile/Profile';
 import UpdateProfile from '../screens/profile/UpdateProfile';
 import ChatbotScreen from '../screens/ChatbotScreen';
 import UserDataScreen from '../screens/UserDataScreen';
+import FollowScreen from '../screens/FollowScreen';
 
 const Tab = createBottomTabNavigator();
 const CommunityStack = createStackNavigator();
@@ -120,6 +121,7 @@ const ProfilesScreen = () => {
       }}>
       <ProfileStack.Screen name="ProfileScreen" component={ProfileScreen} />
       <ProfileStack.Screen name="UserDataScreen" component={UserDataScreen} />
+      <ProfileStack.Screen name="FollowScreen" component={FollowScreen} />
     </ProfileStack.Navigator>
   );
 };

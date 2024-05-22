@@ -12,6 +12,7 @@ import {
 } from 'react-native';
 import { Button, Input } from 'react-native-elements';
 import { supabase } from '../config/supabaseClient';
+import { useNavigation } from '@react-navigation/native';
 
 import * as ImagePicker from 'expo-image-picker';
 import store from '../store/storeConfig';
@@ -22,13 +23,22 @@ import Colors from '../../assets/styles/Colors';
 
 export default function Account() {
   const session = store.getState().user.session;
+  const navigation = useNavigation();
   const [loading, setLoading] = useState(false);
   const [username, setUsername] = useState('');
   const [bio, setBio] = useState('');
   const [profileImage, setProfileImage] = useState(null);
+  const [postsCount, setPostsCount] = useState(0);
+  const [followingCount, setFollowingCount] = useState(0);
+  const [followerCount, setFollowerCount] = useState(0);
 
   useEffect(() => {
-    if (session) getProfile();
+    if (session) {
+      getProfile();
+      getPostsCount();
+      getFollowingCount();
+      getFollowerCount();
+    }
   }, [session]);
 
   async function getProfile() {
@@ -56,6 +66,82 @@ export default function Account() {
       setLoading(false);
     }
   }
+
+  async function getPostsCount() {
+    try {
+      setLoading(true);
+      if (!session?.user) throw new Error('No user on the session!');
+  
+      const { error, status, count } = await supabase
+        .from('Post')
+        .select('*', { count: 'exact' })
+        .eq('user_id', session?.user.id);
+  
+      if (error && status !== 406) {
+        throw error;
+      }
+  
+      if (count !== undefined) {
+        setPostsCount(count);
+      }
+    } catch (error) {
+      Alert.alert('Error fetching posts count', error.message);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function getFollowingCount() {
+    try {
+      setLoading(true);
+      if (!session?.user) throw new Error('No user on the session!');
+
+      const { count, error, status } = await supabase
+        .from('Following')
+        .select('*', { count: 'exact' })
+        .eq('follower', session?.user.id);
+
+      if (error && status !== 406) {
+        throw error;
+      }
+
+      if (count !== undefined) {
+        setFollowingCount(count);
+      }
+    } catch (error) {
+      Alert.alert('Error fetching following count', error.message);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function getFollowerCount() {
+    try {
+      setLoading(true);
+      if (!session?.user) throw new Error('No user on the session!');
+
+      const { count, error, status } = await supabase
+        .from('Following')
+        .select('*', { count: 'exact' })
+        .eq('following', session?.user.id);
+
+      if (error && status !== 406) {
+        throw error;
+      }
+
+      if (count !== undefined) {
+        setFollowerCount(count);
+      }
+    } catch (error) {
+      Alert.alert('Error fetching follower count', error.message);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  const goToFollowScreen = () => {
+    navigation.navigate('FollowScreen');
+  };
 
   const handleImagePicker = async () => {
     let result = await ImagePicker.launchImageLibraryAsync({
@@ -220,6 +306,15 @@ export default function Account() {
           <Text style={styles.textName} numberOfLines={1}>
             {`Hi, ${username || 'User'}`}
           </Text>
+          <Text style={styles.userDataContainer}>
+            <Text style={styles.userDataText}>{`Posts: ${postsCount}`}</Text>
+          </Text>
+          <Text style={styles.userDataContainer}>
+            <Text style={styles.userDataText}>{`Following: ${followingCount}`}</Text>
+          </Text>
+          <Text style={styles.userDataContainer}>
+            <Text style={styles.userDataText}>{`Followers: ${followerCount}`}</Text>
+          </Text>
         </View>
 
         <View style={styles.containerActionsHeader}>
@@ -247,6 +342,10 @@ export default function Account() {
             </View>
           </TouchableOpacity>
         </View>
+
+        <Button 
+        title={'Find Users'}
+        onPress={goToFollowScreen}/>
 
         <View style={styles.inputWrapper}>
           <Input
