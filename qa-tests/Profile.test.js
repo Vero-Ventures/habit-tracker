@@ -1,9 +1,8 @@
 import React from 'react';
 import { render, fireEvent, waitFor } from '@testing-library/react-native';
 import Account from '../src/screens/ProfileScreen';
-import Auth from '../src/screens/SignupScreen';
+import { Alert } from 'react-native';
 import { supabase } from '../src/config/supabaseClient';
-import store from '../src/store/storeConfig';
 
 // Mocking the supabase client to prevent actual API calls
 jest.mock('../src/config/supabaseClient', () => ({
@@ -16,6 +15,12 @@ jest.mock('../src/config/supabaseClient', () => ({
       signOut: jest.fn(),
     },
     rpc: jest.fn().mockResolvedValue({ data: 'data' }),
+    from: jest.fn(() => ({
+      select: jest.fn().mockReturnThis(),
+      eq: jest.fn().mockResolvedValue({}),
+      single: jest.fn().mockResolvedValue({}),
+      upsert: jest.fn().mockResolvedValue({}),
+    })),
   },
 }));
 
@@ -36,7 +41,9 @@ jest.mock('../src/store/storeConfig', () => ({
   dispatch: jest.fn(),
 }));
 
-describe('Account Component', () => {
+jest.spyOn(Alert, 'alert');
+
+describe('Account Deletion', () => {
   afterEach(() => {
     jest.clearAllMocks();
   });
@@ -49,6 +56,8 @@ describe('Account Component', () => {
 
     getAllByText('Hi, User');
     getByText('Profile Image URL');
+    getByText('Share My Profile');
+    getByText('Edit Profile');
     getByPlaceholderText('Enter profile image URL');
     getByText('Username');
     getByPlaceholderText('Enter username');
@@ -77,6 +86,47 @@ describe('Account Component', () => {
 
     await waitFor(() => {
       expect(supabase.auth.signOut).toHaveBeenCalled();
+    });
+  });
+});
+
+describe('CRUD operations on profile', () => {
+  afterEach(() => {
+    jest.clearAllMocks();
+  });
+
+  test('user updates their profile & changes persist', async () => {
+    const { getByText, getByPlaceholderText } = render(<Account />);
+
+    fireEvent.press(getByText('Edit Profile'));
+
+    fireEvent.changeText(
+      getByPlaceholderText('Enter profile image URL'),
+      'https://example.com/image.jpg'
+    );
+    fireEvent.changeText(getByPlaceholderText('Enter username'), 'testuser');
+    fireEvent.changeText(
+      getByPlaceholderText('Enter bio'),
+      'This is a test bio'
+    );
+    fireEvent.press(getByText('Update'));
+
+    // Mock the update response & check if profile is updated
+    await waitFor(() => {
+      expect(Alert.alert).toHaveBeenCalledWith(
+        'Success',
+        'Profile updated successfully!'
+      );
+
+      expect(getByPlaceholderText('Enter profile image URL').props.value).toBe(
+        'https://example.com/image.jpg'
+      );
+      expect(getByPlaceholderText('Enter username').props.value).toBe(
+        'testuser'
+      );
+      expect(getByPlaceholderText('Enter bio').props.value).toBe(
+        'This is a test bio'
+      );
     });
   });
 });
