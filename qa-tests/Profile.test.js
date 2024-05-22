@@ -43,7 +43,7 @@ jest.mock('../src/store/storeConfig', () => ({
 
 jest.spyOn(Alert, 'alert');
 
-describe('Account Deletion', () => {
+describe('Profile Component', () => {
   afterEach(() => {
     jest.clearAllMocks();
   });
@@ -67,6 +67,16 @@ describe('Account Deletion', () => {
     getByText('Sign Out');
     getByText('Delete Account');
     getByText('Download User Data');
+  });
+
+  test('user signs out of their account', async () => {
+    const { getByText } = render(<Account />);
+
+    fireEvent.press(getByText('Sign Out'));
+
+    await waitFor(() => {
+      expect(supabase.auth.signOut).toHaveBeenCalled();
+    });
   });
 
   test('user deletes their account', async () => {
