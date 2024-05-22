@@ -139,8 +139,16 @@ export default function Account() {
     }
   }
 
+  const goToFollowersScreen = () => {
+    navigation.navigate('FollowersScreen');
+  };
+
   const goToFollowScreen = () => {
     navigation.navigate('FollowScreen');
+  };
+
+  const goToSettingsScreen = () => {
+    navigation.navigate('SettingsScreen');
   };
 
   const handleImagePicker = async () => {
@@ -161,7 +169,7 @@ export default function Account() {
     const binaryString = window.atob(base64);
     const len = binaryString.length;
     const bytes = new Uint8Array(len);
-    for (let i = 0; i < len; i++) {
+    for (let i = 0; len > i; i++) {
       bytes[i] = binaryString.charCodeAt(i);
     }
     return bytes.buffer;
@@ -239,56 +247,6 @@ export default function Account() {
     }
   }
 
-  async function deleteUserAndData() {
-    try {
-      if (!session?.user) throw new Error('No user on the session!');
-
-      const { error } = await supabase.rpc('delete_user_data', {
-        user_id: session.user.id,
-      });
-
-      if (error) {
-        console.error('Error deleting user:', error);
-        return;
-      }
-
-      console.log('User and associated data deleted successfully');
-      await supabase.auth.signOut();
-    } catch (error) {
-      console.error('Error deleting user:', error);
-      Alert.alert('Error', error.message);
-    }
-  }
-
-  async function downloadUserData() {
-    try {
-      if (!session?.user) throw new Error('No user on the session!');
-
-      const { data, error } = await supabase.rpc('get_user_data', {
-        p_user_id: session.user.id,
-      });
-
-      if (error) {
-        console.error('Error fetching data:', error);
-        Alert.alert('Error', 'Error fetching data: ' + error.message);
-        return;
-      }
-
-      const jsonData = JSON.stringify(data, null, 2);
-      const fileUri = FileSystem.documentDirectory + 'user_data.json';
-
-      await FileSystem.writeAsStringAsync(fileUri, jsonData, {
-        encoding: FileSystem.EncodingType.UTF8,
-      });
-
-      Alert.alert('Success', 'User data saved as user_data.json');
-      Sharing.shareAsync(fileUri);
-    } catch (error) {
-      console.error('Error:', error);
-      Alert.alert('Error', 'Unexpected error: ' + error.message);
-    }
-  }
-
   return (
     <View style={Default.container}>
       <ScrollView contentContainerStyle={styles.scrollViewContent}>
@@ -306,22 +264,31 @@ export default function Account() {
           <Text style={styles.textName} numberOfLines={1}>
             {`Hi, ${username || 'User'}`}
           </Text>
-          <Text style={styles.userDataContainer}>
-            <Text style={styles.userDataText}>{`Posts: ${postsCount}`}</Text>
-          </Text>
-          <Text style={styles.userDataContainer}>
-            <Text style={styles.userDataText}>{`Following: ${followingCount}`}</Text>
-          </Text>
-          <Text style={styles.userDataContainer}>
-            <Text style={styles.userDataText}>{`Followers: ${followerCount}`}</Text>
-          </Text>
+          <View style={styles.statsContainer}>
+            <TouchableOpacity style={styles.stat} onPress={goToFollowersScreen}>
+              <Text style={styles.statCount}>{followerCount}</Text>
+              <Text style={styles.statLabel}>followers</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.stat} onPress={goToFollowScreen}>
+              <Text style={styles.statCount}>{followingCount}</Text>
+              <Text style={styles.statLabel}>following</Text>
+            </TouchableOpacity>
+            <View style={styles.stat}>
+              <Text style={styles.statCount}>{postsCount}</Text>
+              <Text style={styles.statLabel}>posts</Text>
+            </View>
+          </View>
         </View>
+
+        <TouchableOpacity style={styles.settingsIcon} onPress={goToSettingsScreen}>
+          <Image source={require('../../assets/icons/cog.png')} style={styles.iconsHeader} />
+        </TouchableOpacity>
 
         <View style={styles.containerActionsHeader}>
           <TouchableOpacity
             style={styles.editProfile}
             onPress={() => console.log('Share profile pressed')}>
-            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+            <View style={styles.editProfileButton}>
               <Image
                 source={require('../../assets/icons/share-profile.png')}
                 style={styles.iconsHeader}
@@ -333,7 +300,7 @@ export default function Account() {
           <TouchableOpacity
             style={styles.editProfile}
             onPress={() => console.log('Edit profile pressed')}>
-            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+            <View style={styles.editProfileButton}>
               <Image
                 source={require('../../assets/icons/edit.png')}
                 style={styles.iconsHeader}
@@ -343,9 +310,14 @@ export default function Account() {
           </TouchableOpacity>
         </View>
 
-        <Button 
-        title={'Find Users'}
-        onPress={goToFollowScreen}/>
+        <View style={styles.buttonWrapper}>
+          <Button 
+            title="Find Users"
+            onPress={goToFollowScreen}
+            buttonStyle={styles.findUserButton}
+            titleStyle={styles.findUserButtonText}
+          />
+        </View>
 
         <View style={styles.inputWrapper}>
           <Input
@@ -371,34 +343,10 @@ export default function Account() {
         </View>
         <View style={[styles.verticallySpaced, styles.mt20]}>
           <Button
-            title={loading ? 'Loading ...' : 'Update'}
+            title={loading ? 'Loading ...' : 'Update Profile'}
             onPress={updateProfile}
             disabled={loading}
             buttonStyle={styles.updateButton}
-            titleStyle={Default.loginButtonBoldTitle}
-          />
-        </View>
-        <View style={styles.verticallySpaced}>
-          <Button
-            title="Sign Out"
-            onPress={() => supabase.auth.signOut()}
-            buttonStyle={styles.signOutButton}
-            titleStyle={Default.loginButtonBoldTitle}
-          />
-        </View>
-        <View style={styles.verticallySpaced}>
-          <Button
-            title="Delete Account"
-            onPress={() => deleteUserAndData()}
-            buttonStyle={styles.deleteButton}
-            titleStyle={Default.loginButtonBoldTitle}
-          />
-        </View>
-        <View style={styles.verticallySpaced}>
-          <Button
-            title="Download User Data"
-            onPress={() => downloadUserData()}
-            buttonStyle={styles.downloadButton}
             titleStyle={Default.loginButtonBoldTitle}
           />
         </View>
@@ -416,51 +364,86 @@ const styles = StyleSheet.create({
     elevation: 1,
   },
   containerHeader: {
-    flexDirection: 'column',
-    alignSelf: 'center',
     alignItems: 'center',
     marginBottom: 32,
   },
   containerPhoto: {
-    flexDirection: 'row',
+    marginBottom: 15,
   },
   userPhoto: {
-    alignSelf: 'center',
-    width: 70,
-    height: 70,
-    borderRadius: 32,
-    marginTop: 5,
-    position: 'relative',
+    width: 90,
+    height: 90,
+    borderRadius: 45,
   },
   textName: {
-    fontSize: 24,
+    fontSize: 20,
+    fontWeight: 'bold',
     color: Colors.text,
-    marginTop: 14,
-    alignSelf: 'center',
+    marginBottom: 20,
+  },
+  statsContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    width: '100%',
+    marginBottom: 20,
+  },
+  stat: {
+    alignItems: 'center',
+  },
+  statCount: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: Colors.text,
+  },
+  statLabel: {
+    fontSize: 14,
+    color: Colors.text,
+  },
+  settingsIcon: {
+    position: 'absolute',
+    top: 40,
+    right: 20,
   },
   containerActionsHeader: {
-    flex: 1,
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 34,
+    justifyContent: 'space-around',
+    width: '100%',
+    marginBottom: 20,
+  },
+  editProfileButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 10,
+    backgroundColor: '#333333',
+    borderRadius: 5,
+    width: 150,
   },
   iconsHeader: {
-    marginRight: 4,
-    alignSelf: 'center',
-    width: 16,
-    height: 16,
-  },
-  editProfile: {
-    alignSelf: 'flex-end',
+    width: 25,
+    height: 25,
+    marginRight: 2,
   },
   editProfileText: {
-    fontSize: 14,
-    lineHeight: 19,
-    color: Colors.primary8,
-    fontWeight: '700',
+    color: 'white',
+    fontWeight: '600',
+  },
+  buttonWrapper: {
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  findUserButton: {
+    backgroundColor: '#333333',
+    borderRadius: 45,
+    width: 150,
+    paddingVertical: 10,
+  },
+  findUserButtonText: {
+    fontSize: 16,
+    color: 'white',
+    fontWeight: '600',
   },
   inputWrapper: {
-    marginTop: 15,
     marginBottom: 10,
   },
   inputContainer: {
