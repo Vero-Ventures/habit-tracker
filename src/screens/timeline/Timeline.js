@@ -36,72 +36,92 @@ const Timeline = () => {
       } else {
         setLoading(true);
       }
-
-      // Fetch posts for the currently logged-in user
+  
+      const { data: followingData, error: followingError } = await supabase
+        .from('Following')
+        .select('following')
+        .eq('follower', session?.user.id);
+  
+      if (followingError) {
+        throw followingError;
+      }
+  
+      const followedUserIds = followingData.map(following => following.following);
+  
+      if (followedUserIds.length === 0) {
+        setTimelinePosts([]);
+        setLoadMore(false);
+        setLoading(false);
+        setRefreshing(false);
+        return;
+      }
+  
       const { data: postData, error: postError } = await supabase
         .from('Post')
         .select('*')
-        .eq('user_id', session?.user.id)
+        .in('user_id', followedUserIds)
         .order('created_at', { ascending: false })
         .range(page * 10, (page + 1) * 10 - 1);
-
+  
       if (postError) {
         throw postError;
       }
-
-      console.log('Fetched post data:', postData);
-
+  
       if (postData.length === 0) {
         setLoadMore(false);
         return;
       }
-
-      // Fetch schedules
+  
+      const userIds = postData.map(post => post.user_id);
+      const { data: userData, error: userError } = await supabase
+        .from('User')
+        .select('user_id, username, profile_image')
+        .in('user_id', userIds);
+  
+      if (userError) {
+        throw userError;
+      }
+  
       const scheduleIds = postData.map(post => post.schedule_id);
       const { data: scheduleData, error: scheduleError } = await supabase
         .from('Schedule')
         .select('*')
         .in('schedule_id', scheduleIds);
-
+  
       if (scheduleError) {
         throw scheduleError;
       }
-
-      console.log('Fetched schedule data:', scheduleData);
-
-      // Fetch habits
+  
       const habitIds = scheduleData.map(schedule => schedule.habit_id);
       const { data: habitData, error: habitError } = await supabase
         .from('Habit')
         .select('*')
         .in('habit_id', habitIds);
-
+  
       if (habitError) {
         throw habitError;
       }
-
-      console.log('Fetched habit data:', habitData);
-
-      // Combine the data
+  
       const combinedData = postData.map(post => {
         const schedule = scheduleData.find(s => s.schedule_id === post.schedule_id);
         const habit = habitData.find(h => h.habit_id === schedule.habit_id);
-
+        const user = userData.find(u => u.user_id === post.user_id);
+  
         return {
           ...post,
           schedule,
           habit,
+          username: user ? user.username : 'Unknown User',
+          profile_image: user ? user.profile_image : null,
         };
       });
-
-      console.log('Combined data:', combinedData);
-
+  
       if (isInitialFetch) {
         setTimelinePosts(combinedData);
       } else {
         setTimelinePosts(prevPosts => [...prevPosts, ...combinedData]);
       }
-
+  
       setPage(prevPage => prevPage + 1);
       setLoadMore(combinedData.length === 10);
     } catch (error) {
@@ -111,39 +131,53 @@ const Timeline = () => {
       setRefreshing(false);
     }
   };
+  
+  
+  
+  
+  
 
   const onRefresh = () => {
     setRefreshing(true);
     fetchPosts(true);
   };
 
-  const renderPost = ({ item }) => (
-    <CardPost
-      post={item}
-      postUser={{
-        id: session?.user.id,
-        name: session?.user.email,
-        imageUrl: session?.user.user_metadata?.avatar_url,
-      }}
-      createdAt={item.created_at}
-      postText={item.habit.habit_title}
-      postType="new_habit"
-      actions={{
-        likeFromUser: false,
-        countLikes: 0,
-        onLikePostSuccess: () => {},
-        countComments: 0,
-        saveFromUser: false,
-        onSavePostSuccess: () => {},
-        onDeletePostSuccess: () => {},
-      }}
-      navigation={navigation}
-    />
-  );
+  const renderPost = ({ item }) => {
+    console.log(item); 
+  
+    return (
+      <CardPost
+        postId={item.post_id}
+        post={item}
+        postUser={{
+          id: item.user_id,
+          name: item.username,
+          imageUrl: item.profile_image,
+        }}
+        createdAt={item.created_at}
+        postTitle={item.post_title}
+        postDescription={item.post_description}
+        postType="new_habit"
+        actions={{
+          likeFromUser: false,
+          countLikes: 0,
+          onLikePostSuccess: () => {},
+          countComments: 0,
+          saveFromUser: false,
+          onSavePostSuccess: () => {},
+          onDeletePostSuccess: () => {},
+        }}
+        navigation={navigation}
+      />
+    );
+  };
+  
+  
+  
+  
 
   const renderFooter = () => {
     if (!loading) return null;
-
     return <ActivityIndicator size="large" color={Colors.primary} />;
   };
 

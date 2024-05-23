@@ -1,10 +1,12 @@
 import React from 'react';
-import { StyleSheet, View, Button } from 'react-native';
+import { StyleSheet, View, Button, Alert } from 'react-native';
+import * as FileSystem from 'expo-file-system';
+import * as Sharing from 'expo-sharing';
 import { supabase } from '../config/supabaseClient';
 import store from '../store/storeConfig';
 import Colors from '../../assets/styles/Colors';
 
-export default function SettingsScreen() {
+export default function SettingsScreen({setIsLoggedIn}) {
   const session = store.getState().user.session;
 
   async function deleteUserAndData() {
@@ -61,7 +63,9 @@ export default function SettingsScreen() {
     <View style={styles.container}>
       <Button
         title="Sign Out"
-        onPress={() => supabase.auth.signOut()}
+        onPress={() => {
+          supabase.auth.signOut();
+          setIsLoggedIn(false);}}
         color={Colors.primary8}
       />
 
