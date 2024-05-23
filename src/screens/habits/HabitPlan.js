@@ -9,9 +9,11 @@ import {
 import Accordion from "react-native-collapsible/Accordion";
 import Colors from "../../../assets/styles/Colors"; 
 import { AntDesign } from '@expo/vector-icons';
+
 const HabitPlan = ({ habitPlan }) => {
   const [activeSections, setActiveSections] = useState([]);
-  const [parsedHabitPlan, setParsedHabitPlan] = useState([]);
+  const [activeStages, setActiveStages] = useState([]);
+ const [parsedHabitPlan, setParsedHabitPlan] = useState([]);
 
   useEffect(() => {
     if (habitPlan) {
@@ -31,18 +33,51 @@ const HabitPlan = ({ habitPlan }) => {
     }
   }, [habitPlan]);
 
-  const updateActiveSections = (indexNumber) => {
+  const updateActiveSections = (indexNumber, stageIndex) => {
     let activeSectionsAux = [...activeSections];
-    const index = activeSections.indexOf(indexNumber);
-
-    if (index !== -1) {
-      activeSectionsAux.splice(index, 1);
+  
+    if (stageIndex !== undefined) {
+      const stageIndexInActive = activeSectionsAux.indexOf(stageIndex);
+      if (stageIndexInActive !== -1) {
+        activeSectionsAux.splice(stageIndexInActive, 1);
+      } else {
+        activeSectionsAux.push(stageIndex);
+      }
     } else {
-      activeSectionsAux.push(indexNumber);
+      const index = activeSectionsAux.indexOf(indexNumber);
+      if (index !== -1) {
+        activeSectionsAux.splice(index, 1);
+      } else {
+        activeSectionsAux.push(indexNumber);
+      }
     }
-
+  
     setActiveSections(activeSectionsAux);
   };
+  
+  const updateActiveStages = (indexNumber, stageIndex) => {
+    let activeStagesAux = [...activeStages];
+  
+    if (stageIndex !== undefined) {
+      const stageIndexInActive = activeStagesAux.indexOf(stageIndex);
+      if (stageIndexInActive !== -1) {
+        activeStagesAux.splice(stageIndexInActive, 1);
+      } else {
+        activeStagesAux.push(stageIndex);
+      }
+    } else {
+      const index = activeStagesAux.indexOf(indexNumber);
+      if (index !== -1) {
+        activeStagesAux.splice(index, 1);
+      } else {
+        activeStagesAux.push(indexNumber);
+      }
+    }
+  
+    setActiveStages(activeStagesAux);
+  };
+  
+  
 
   const _renderHeader = (section, index, isActive) => {
     return (
@@ -54,7 +89,7 @@ const HabitPlan = ({ habitPlan }) => {
           ]}
         >
           <Text style={styles.textAccordionHeader}>{section.hac_name}</Text>
-          {isActive ? <AntDesign name="caretup" size={18} color="black" /> : <AntDesign name="caretdown" size={18} color="black" />}
+          <AntDesign name={isActive ? "caretup" : "caretdown"} size={18} color="black" />
         </View>
       </TouchableOpacity>
     );
@@ -64,17 +99,26 @@ const HabitPlan = ({ habitPlan }) => {
     return (
       <View style={styles.containerAccordionContent}>
         {section.stages.map((stage, i) => (
-          <View key={i} style={styles.stageItem}>
-            <Text style={styles.stageTitle}>{stage.name}</Text>
-            <Text style={styles.stageDuration}>
-              Duration: {stage.duration_weeks} weeks
-            </Text>
-            <Text style={styles.stageGoals}>Goals: {stage.goals}</Text>
-            {stage.steps.map((step, j) => (
-              <Text key={j} style={styles.stepDescription}>
-                Step {j + 1}: {step.description}
-              </Text>
-            ))}
+          <View key={i}>
+            <TouchableOpacity onPress={() => updateActiveStages(i)}>
+              <View style={styles.stageHeader}>
+                <Text style={styles.stageTitle}>{stage.name}</Text>
+                <AntDesign name={activeStages.includes(i) ? "caretup" : "caretdown"} size={18} color="black" />
+              </View>
+            </TouchableOpacity>
+            {activeStages.includes(i) && (
+              <View style={styles.stageContent}>
+                <Text style={styles.stageDuration}>
+                  Duration: {stage.duration_weeks} weeks
+                </Text>
+                <Text style={styles.stageGoals}>Goals: {stage.goals}</Text>
+                {stage.steps.map((step, j) => (
+                  <Text key={j} style={styles.stepDescription}>
+                    Step {j + 1}: {step.description}
+                  </Text>
+                ))}
+              </View>
+            )}
           </View>
         ))}
       </View>
@@ -82,13 +126,13 @@ const HabitPlan = ({ habitPlan }) => {
   };
 
   return (
-      <Accordion
-        sections={parsedHabitPlan}
-        activeSections={activeSections}
-        renderHeader={_renderHeader}
-        renderContent={_renderContent}
-        onChange={() => null}
-      />
+    <Accordion
+      sections={parsedHabitPlan}
+      activeSections={activeSections}
+      renderHeader={_renderHeader}
+      renderContent={_renderContent}
+      onChange={() => null}
+    />
   );
 };
 
