@@ -24,14 +24,14 @@ describe('Auth Component', () => {
   });
 
   test('navigates to signup page', async () => {
-    const { getByText, getAllByText, getByPlaceholderText } = render(<Auth />);
+    const { getByText, getByPlaceholderText } = render(<Auth />);
 
-    getByText('Email');
-    getByPlaceholderText('email@address.com');
-    getByText('Password');
-    getByPlaceholderText('Password');
-    getByText('Sign in');
-    getByText('Sign up');
+    getByText('Email').toBeTruthy();
+    getByPlaceholderText('email@address.com').toBeTruthy();
+    getByText('Password').toBeTruthy();
+    getByPlaceholderText('Password').toBeTruthy();
+    getByText('Sign in').toBeTruthy();
+    getByText('Sign up').toBeTruthy();
   });
 
   test('signs up and notifies user to check email for verification', async () => {

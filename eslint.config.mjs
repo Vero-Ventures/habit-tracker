@@ -56,6 +56,7 @@ export default [
       'qa-tests/Profile.test.js',
       'qa-tests/Habits.test.js',
       'qa-tests/test.utils.js',
+      'qa-tests/Chatbot.test.js',
       '__mocks__/expo-file-system.js',
       '__mocks__/expo-sharing.js',
       '__mocks__/expo-linear-gradient.js',
