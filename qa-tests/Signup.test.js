@@ -26,12 +26,12 @@ describe('Auth Component', () => {
   test('navigates to signup page', async () => {
     const { getByText, getByPlaceholderText } = render(<Auth />);
 
-    getByText('Email').toBeTruthy();
-    getByPlaceholderText('email@address.com').toBeTruthy();
-    getByText('Password').toBeTruthy();
-    getByPlaceholderText('Password').toBeTruthy();
-    getByText('Sign in').toBeTruthy();
-    getByText('Sign up').toBeTruthy();
+    getByText('Email');
+    getByPlaceholderText('email@address.com');
+    getByText('Password');
+    getByPlaceholderText('Password');
+    getByText('Sign in');
+    getByText('Sign up');
   });
 
   test('signs up and notifies user to check email for verification', async () => {
