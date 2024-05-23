@@ -7,11 +7,15 @@ jest.mock('@google/generative-ai', () => ({
   GoogleGenerativeAI: jest.fn().mockImplementation(() => ({
     getGenerativeModel: jest.fn().mockReturnValue({
       startChat: jest.fn().mockReturnValue({
-        sendMessage: jest.fn().mockResolvedValue({
-          response: {
-            text: jest.fn().mockResolvedValue('Mocked response from the bot'),
-          },
-        }),
+        sendMessage: jest
+          .fn()
+          .mockResolvedValueOnce({
+            // For successful test
+            response: {
+              text: jest.fn().mockResolvedValue('Mocked response from the bot'),
+            },
+          })
+          .mockRejectedValueOnce(new Error('API call failed')), // For error test
       }),
     }),
   })),
@@ -24,9 +28,9 @@ describe('ChatbotScreen', () => {
   test('renders correctly', () => {
     const { getByText, getByPlaceholderText } = render(<ChatbotScreen />);
 
-    expect(getByText('Talk to Your Habit Coach!')).toBeTruthy();
-    expect(getByPlaceholderText('Type a message')).toBeTruthy();
-    expect(getByText('Send')).toBeTruthy();
+    getByText('Talk to Your Habit Coach!');
+    getByPlaceholderText('Type a message');
+    getByText('Send');
   });
 
   test('sends a message and receives a response', async () => {
@@ -40,12 +44,10 @@ describe('ChatbotScreen', () => {
     expect(getByDisplayValue('Test message')).toBeTruthy();
     fireEvent.press(sendButton);
 
-    expect(queryByText('Test message')).toBeTruthy();
-
-    // Wait for the bot's (mocked) response to appear
-    await waitFor(() =>
-      expect(queryByText('Mocked response from the bot')).toBeTruthy()
-    );
+    getByText('Test message');
+    await waitFor(() => {
+      getByText('Mocked response from the bot');
+    });
   });
 
   test('handles empty input gracefully', async () => {
@@ -61,33 +63,15 @@ describe('ChatbotScreen', () => {
   });
 
   test('displays error message when API call fails', async () => {
-    GoogleGenerativeAI.mockImplementationOnce(() => ({
-      getGenerativeModel: jest.fn().mockReturnValue({
-        startChat: jest.fn().mockReturnValue({
-          sendMessage: jest
-            .fn()
-            .mockRejectedValue(new Error('API call failed')),
-        }),
-      }),
-    }));
-
-    const { getByPlaceholderText, getByText, queryByText } = render(
-      <ChatbotScreen />
-    );
+    const { getByPlaceholderText, getByText } = render(<ChatbotScreen />);
     const input = getByPlaceholderText('Type a message');
     const sendButton = getByText('Send');
 
-    // Enter a message and send it
     fireEvent.changeText(input, 'Test message');
     fireEvent.press(sendButton);
 
-    expect(queryByText('Test message')).toBeTruthy();
-
-    // Wait for the error message to appear
-    await waitFor(() =>
-      expect(
-        queryByText('Service is currently unavailable. Please try again later.')
-      ).toBeTruthy()
-    );
+    await waitFor(() => {
+      getByText('Service is currently unavailable. Please try again later.');
+    });
   });
 });
