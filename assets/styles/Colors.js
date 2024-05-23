@@ -1,3 +1,5 @@
+import { ActivityIndicator } from "react-native-paper";
+
 export default {
     primary: '#082139',
     primary2: '#03111F',
@@ -26,4 +28,5 @@ export default {
     warning: '#e86c00',
     navigator: '#091725',
     white: '#FFFFFF',
+    ActivityIndicator: '#90E0EF',
 };

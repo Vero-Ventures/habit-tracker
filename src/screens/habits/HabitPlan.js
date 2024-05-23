@@ -13,19 +13,17 @@ import { AntDesign } from '@expo/vector-icons';
 const HabitPlan = ({ habitPlan }) => {
   const [activeSections, setActiveSections] = useState([]);
   const [activeStages, setActiveStages] = useState([]);
- const [parsedHabitPlan, setParsedHabitPlan] = useState([]);
+  const [parsedHabitPlan, setParsedHabitPlan] = useState([]);
 
   useEffect(() => {
     if (habitPlan) {
       try {
-        console.log("Raw habit plan:", habitPlan);
         const parsed = JSON.parse(habitPlan);
-        console.log("Parsed habit plan:", parsed);
         const formattedPlan = Object.keys(parsed).map((habitName) => ({
           hac_name: habitName,
           stages: parsed[habitName][0].stages,
         }));
-        console.log("Formatted habit plan:", formattedPlan);
+        // by this point setparsedhabitplan should be getting a properly formatted JSON object
         setParsedHabitPlan(formattedPlan);
       } catch (error) {
         console.error("Error parsing habit plan:", error);

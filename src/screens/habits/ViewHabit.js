@@ -32,7 +32,7 @@ const ViewHabit = () => {
   const session = store.getState().user.session;
   const [loadingDelete, setLoadingDelete] = useState(false);
   const [loadingDisable, setLoadingDisable] = useState(false);
-  const [loadingShare, setLoadingShare] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const [habitPhoto, setHabitPhoto] = useState(null);
   const [generatedSchedule, setGeneratedSchedule] = useState(null);
   const RBSDelete = useRef();
@@ -127,6 +127,8 @@ const ViewHabit = () => {
 
   const generateHabitSchedule = async () => {
     try {
+      setIsLoading(true);
+      console.log("isloading is true");
       const model = genAI.getGenerativeModel({ model: 'gemini-pro' });
   
       const chat = model.startChat({
@@ -190,8 +192,9 @@ const ViewHabit = () => {
       console.log('Cleaned habit schedule:', validJsonString);
 
       setGeneratedSchedule(validJsonString);
+      setIsLoading(false);
       await updateHabitPlan(validJsonString);
-
+      console.log("isloading is false");
     } catch (error) {
       console.error('Error generating habit schedule:', error);
       Alert.alert('Error', 'Failed to generate habit schedule. Please try again.');
@@ -289,8 +292,10 @@ const ViewHabit = () => {
             </View>
 
             <View style={styles.scheduleDetails}> 
-              <Text style={{...styles.title, paddingTop:20 }} >Your Habit Plan by Your AI Coach:</Text>
-              {generatedSchedule ? (
+              <Text style={{...styles.title, paddingTop:20 }}>Your Habit Plan by Your AI Coach:</Text>
+              {isLoading ? (
+                <ActivityIndicator size="small" color={Colors.ActivityIndicator} />
+              ) : generatedSchedule ? (
                 <HabitPlan habitPlan={generatedSchedule} />
               ) : (
                 <Text style={{...styles.textContent, paddingTop:20 }}>No generated plan yet!</Text>
