@@ -98,33 +98,6 @@ const Habits = () => {
       </Text>
     </TouchableOpacity>
   );
-
-  const temp = [
-    {
-      habit_id: 1,
-      habit_title: 'Drink Water',
-      habit_description: 'Drink 8 glasses of water daily',
-      schedule_state: 'Open',
-    },
-    {
-      habit_id: 2,
-      habit_title: 'Walk',
-      habit_description: 'Walk 30 minutes daily',
-      schedule_state: 'Open',
-    },
-    {
-      habit_id: 3,
-      habit_title: 'Read',
-      habit_description: 'Read 30 minutes daily',
-      schedule_state: 'Open',
-    },
-    {
-      habit_id: 4,
-      habit_title: 'Meditate',
-      habit_description: 'Meditate 30 minutes daily',
-      schedule_state: 'Open',
-    },
-  ];
   
   return (
     <View style={styles.container}>
@@ -133,7 +106,7 @@ const Habits = () => {
         <Fetching />
       ) : (
         <FlatList
-          data={temp}
+          data={schedules}
           keyExtractor={(item, index) => index.toString()}
           renderItem={renderSchedule}
           contentContainerStyle={styles.list}

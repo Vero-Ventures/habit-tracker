@@ -35,33 +35,49 @@ const ViewHabit = () => {
   const [loadingShare, setLoadingShare] = useState(false);
   const [habitPhoto, setHabitPhoto] = useState(null);
   const [generatedSchedule, setGeneratedSchedule] = useState(null);
-  const [jsonPlan, setJsonPlan] = useState("");
   const RBSDelete = useRef();
   const navigation = useNavigation();
   const route = useRoute();
   const { habit } = route.params;
 
-  // useEffect(() => {
-  //   const fetchHabit = async () => {
-  //     const { data: habitData, error } = await supabase
-  //       .from('Habit')
-  //       .select('*')
-  //       .eq('habit_id', habit.habit_id)
-  //       .single();
+  useEffect(() => {
+    const fetchHabit = async () => {
+      const { data: habitData, error } = await supabase
+        .from('Habit')
+        .select('*')
+        .eq('habit_id', habit.habit_id)
+        .single();
 
-  //     console.log('UserID: ',  session.user.id);
+      console.log('UserID: ',  session.user.id);
       
-  //     if (error) {
-  //       Alert.alert('Error fetching habit', error.message);
-  //       return;
-  //     }
+      if (error) {
+        Alert.alert('Error fetching habit', error.message);
+        return;
+      }
 
-  //     console.log('Habit Data:', habitData);
-  //     setHabitPhoto(habitData?.habit_photo);
-  //   };
+      console.log('Habit Data:', habitData);
+      setHabitPhoto(habitData?.habit_photo);
+      setGeneratedSchedule(habitData?.habit_plan);
+    };
 
-  //   fetchHabit();
-  // }, [habit.habit_id]);
+    fetchHabit();
+  }, [habit.habit_id]);
+
+  const updateHabitPlan = async (habitPlan) => {
+    try {
+      const { data, error } = await supabase
+      .from('Habit')
+      .update({ habit_plan: habitPlan })
+      .eq('habit_id', habit.habit_id) 
+      .single();
+  
+      console.log('Updated habit plan in Supabase:', data);
+      return data;
+    } catch (error) {
+      console.error('Error updating habit plan in Supabase:', error);
+      throw error;
+    }
+  };
 
   const onDeleteHabit = () => {
     RBSDelete.current.open();
@@ -119,7 +135,7 @@ const ViewHabit = () => {
             role: 'user',
             parts: [
               {
-                text: 'Hello, I would like you to generate a habit plan in JSON format for me to follow that will help me reach my goals for my habit of ' + habit.habit_title,
+                text: 'Hello, I would like you to generate a habit plan in JSON format for me to follow that will help me reach my goals for my habit of ' + habit.habit_description + '.',
               },
             ],
           },
@@ -172,13 +188,10 @@ const ViewHabit = () => {
       const jsonEndIndex = cleanedText.lastIndexOf('}');
       const validJsonString = cleanedText.substring(jsonStartIndex, jsonEndIndex + 1);
       console.log('Cleaned habit schedule:', validJsonString);
-      
-      try {
-        setGeneratedSchedule(validJsonString);
-      } catch (parseError) {
-        console.error('Error parsing habit plan:', parseError);
-        Alert.alert('Error', 'Failed to parse habit schedule. Please try again.');
-      }
+
+      setGeneratedSchedule(validJsonString);
+      await updateHabitPlan(validJsonString);
+
     } catch (error) {
       console.error('Error generating habit schedule:', error);
       Alert.alert('Error', 'Failed to generate habit schedule. Please try again.');
@@ -275,13 +288,14 @@ const ViewHabit = () => {
               />
             </View>
 
-            {generatedSchedule && (
-              <View style={styles.scheduleDetails}>
-                <Text style={styles.title} >Generated Habit Schedule</Text>
+            <View style={styles.scheduleDetails}> 
+              <Text style={{...styles.title, paddingTop:20 }} >Your Habit Plan by Your AI Coach:</Text>
+              {generatedSchedule ? (
                 <HabitPlan habitPlan={generatedSchedule} />
-              </View>
-            )}
-
+              ) : (
+                <Text style={{...styles.textContent, paddingTop:20 }}>No generated plan yet!</Text>
+              )}
+            </View>
 
             <View
               style={{
