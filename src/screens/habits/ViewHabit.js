@@ -20,14 +20,21 @@ import { supabase } from '../../config/supabaseClient';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 import RBSheet from 'react-native-raw-bottom-sheet';
 import moment from 'moment';
+import store from '../../store/storeConfig';
 import { systemWeights } from 'react-native-typography';
+import HabitPlan from './HabitPlan';
+
+const { GoogleGenerativeAI } = require('@google/generative-ai');
+const apikey = process.env.EXPO_PUBLIC_REACT_APP_GEMINI_KEY;
+const genAI = new GoogleGenerativeAI(apikey);
 
 const ViewHabit = () => {
+  const session = store.getState().user.session;
   const [loadingDelete, setLoadingDelete] = useState(false);
   const [loadingDisable, setLoadingDisable] = useState(false);
   const [loadingShare, setLoadingShare] = useState(false);
   const [habitPhoto, setHabitPhoto] = useState(null);
-
+  const [generatedSchedule, setGeneratedSchedule] = useState(null);
   const RBSDelete = useRef();
   const navigation = useNavigation();
   const route = useRoute();
@@ -40,6 +47,8 @@ const ViewHabit = () => {
         .select('*')
         .eq('habit_id', habit.habit_id)
         .single();
+
+      console.log('UserID: ',  session.user.id);
       
       if (error) {
         Alert.alert('Error fetching habit', error.message);
@@ -48,10 +57,27 @@ const ViewHabit = () => {
 
       console.log('Habit Data:', habitData);
       setHabitPhoto(habitData?.habit_photo);
+      setGeneratedSchedule(habitData?.habit_plan);
     };
 
     fetchHabit();
   }, [habit.habit_id]);
+
+  const updateHabitPlan = async (habitPlan) => {
+    try {
+      const { data, error } = await supabase
+      .from('Habit')
+      .update({ habit_plan: habitPlan })
+      .eq('habit_id', habit.habit_id) 
+      .single();
+  
+      console.log('Updated habit plan in Supabase:', data);
+      return data;
+    } catch (error) {
+      console.error('Error updating habit plan in Supabase:', error);
+      throw error;
+    }
+  };
 
   const onDeleteHabit = () => {
     RBSDelete.current.open();
@@ -99,58 +125,76 @@ const ViewHabit = () => {
     navigation.pop();
   };
 
-  const shareHabitToInstagram = async () => {
-    if (!habitPhoto) {
-      Alert.alert('No habit photo to share');
-      return;
-    }
-
-    setLoadingShare(true);
-
+  const generateHabitSchedule = async () => {
     try {
-      // create Media Container
-      const mediaContainerResponse = await fetch(`https://graph.facebook.com/v20.0/${YOUR_IG_USER_ID}/media`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${YOUR_ACCESS_TOKEN}`,
+      const model = genAI.getGenerativeModel({ model: 'gemini-pro' });
+  
+      const chat = model.startChat({
+        history: [
+          {
+            role: 'user',
+            parts: [
+              {
+                text: 'Hello, I would like you to generate a habit plan in JSON format for me to follow that will help me reach my goals for my habit of ' + habit.habit_description + '.',
+              },
+            ],
+          },
+          {
+            role: 'model',
+            parts: [
+              {
+                text: 'Great to meet you. I would love to design a plan for you to follow. Can you give an example of the JSON format you would like it in?',
+              },
+            ],
+          },
+        ],
+        generationConfig: {
+          maxOutputTokens: 6000,
         },
-        body: JSON.stringify({
-          image_url: habitPhoto,
-          caption: `Check out my habit: ${habit.habit_title} #MyHabit`,
-        }),
       });
-      
-      const mediaContainerData = await mediaContainerResponse.json();
-
-      if (!mediaContainerData.id) {
-        throw new Error('Failed to create media container');
+  
+      const prompt = `{
+        "${habit.habit_title}": [
+          {
+            "stages": [
+              {
+                "name": "<stage name>",
+                "duration_weeks": <stage duration in weeks>,
+                "goals": "<stage goal to reach before proceeding to next stage>",
+                "steps": [
+                  {
+                    "description": "<step 1 description>"
+                  },
+                  {
+                    "description": "<step 2 description>"
+                  },
+                  {
+                    "description": "<step 3 description>"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
       }
+      `;
+  
+      const result = await chat.sendMessage(prompt);
+      const response = await result.response;
+      const text = await response.text();
+  
+      const cleanedText = text.replace(/^```(?:json)?\n/, '').replace(/\n```$/, '').trim();
+      const jsonStartIndex = cleanedText.indexOf('{');
+      const jsonEndIndex = cleanedText.lastIndexOf('}');
+      const validJsonString = cleanedText.substring(jsonStartIndex, jsonEndIndex + 1);
+      console.log('Cleaned habit schedule:', validJsonString);
 
-      // publish Media
-      const publishResponse = await fetch(`https://graph.facebook.com/v20.0/${YOUR_IG_USER_ID}/media_publish`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${YOUR_ACCESS_TOKEN}`,
-        },
-        body: JSON.stringify({
-          creation_id: mediaContainerData.id,
-        }),
-      });
-
-      const publishData = await publishResponse.json();
-
-      if (publishData.id) {
-        Alert.alert('Success', 'Habit shared to Instagram!');
-      } else {
-        throw new Error('Failed to publish media');
-      }
+      setGeneratedSchedule(validJsonString);
+      await updateHabitPlan(validJsonString);
 
     } catch (error) {
-      Alert.alert('Error sharing habit to Instagram', error.message);
-    } finally {
-      setLoadingShare(false);
+      console.error('Error generating habit schedule:', error);
+      Alert.alert('Error', 'Failed to generate habit schedule. Please try again.');
     }
   };
 
@@ -237,6 +281,22 @@ const ViewHabit = () => {
               </Text>
             </View>
 
+            <View style={styles.containerButton}>
+              <Button
+                onPress={generateHabitSchedule}
+                title="Generate Habit Schedule"
+              />
+            </View>
+
+            <View style={styles.scheduleDetails}> 
+              <Text style={{...styles.title, paddingTop:20 }} >Your Habit Plan by Your AI Coach:</Text>
+              {generatedSchedule ? (
+                <HabitPlan habitPlan={generatedSchedule} />
+              ) : (
+                <Text style={{...styles.textContent, paddingTop:20 }}>No generated plan yet!</Text>
+              )}
+            </View>
+
             <View
               style={{
                 marginTop: 32,
@@ -273,15 +333,6 @@ const ViewHabit = () => {
                 disabledStyle={Default.loginNextButton}
               />
 
-              <Button
-                disabled={loadingShare}
-                loading={loadingShare}
-                buttonStyle={Default.loginNextButton}
-                titleStyle={Default.loginButtonBoldTitle}
-                onPress={shareHabitToInstagram}
-                title="SHARE TO INSTAGRAM"
-                disabledStyle={Default.loginNextButton}
-              />
             </View>
           </View>
         </ScrollView>

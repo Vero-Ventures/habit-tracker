@@ -132,7 +132,7 @@ const AddHabit = props => {
             return;
           }
 
-          const habitId = uuidv4(); // generate unique identifier for the new habit
+          const habitId = uuidv4(); 
 
           // insert
           const { data: insertData, error: insertError } = await supabase

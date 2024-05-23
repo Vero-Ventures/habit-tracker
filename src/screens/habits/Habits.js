@@ -32,7 +32,7 @@ const Habits = () => {
   const fetchSchedules = async () => {
     try {
       setLoading(true);
-      if (!session?.user) throw new Error('No user on the session!');
+      // if (!session?.user) throw new Error('No user on the session!');
 
       const { data: scheduleData, error: scheduleError } = await supabase
         .from('Schedule')
@@ -74,7 +74,7 @@ const Habits = () => {
       }
     } catch (error) {
       console.error('Error fetching schedules or habits:', error);
-      Alert.alert('Error fetching schedules or habits', error.message);
+      // Alert.alert('Error fetching schedules or habits', error.message);
     } finally {
       setLoading(false);
     }
@@ -98,7 +98,7 @@ const Habits = () => {
       </Text>
     </TouchableOpacity>
   );
-
+  
   return (
     <View style={styles.container}>
       <Header title="My Habits" />
