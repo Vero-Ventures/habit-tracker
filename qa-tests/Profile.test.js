@@ -16,7 +16,15 @@ jest.mock('../src/config/supabaseClient', () => ({
     },
     rpc: jest.fn().mockResolvedValue({ data: 'data' }),
     from: jest.fn(() => ({
-      select: jest.fn().mockReturnThis(),
+      single: jest
+        .fn()
+        .mockResolvedValue({
+          data: {
+            username: 'testuser',
+            bio: 'This is a test bio',
+            profile_image: 'https://example.com/image.jpg',
+          },
+        }),
       eq: jest.fn().mockResolvedValue({}),
       single: jest.fn().mockResolvedValue({}),
       upsert: jest.fn().mockResolvedValue({}),
@@ -39,6 +47,18 @@ jest.mock('../src/store/storeConfig', () => ({
   }),
   subscribe: jest.fn(),
   dispatch: jest.fn(),
+}));
+
+jest.mock('expo-file-system', () => ({
+  documentDirectory: 'mockDocumentDirectory/',
+  writeAsStringAsync: jest.fn(),
+  EncodingType: {
+    UTF8: 'utf8',
+  },
+}));
+
+jest.mock('expo-sharing', () => ({
+  shareAsync: jest.fn(),
 }));
 
 jest.spyOn(Alert, 'alert');
@@ -140,26 +160,26 @@ describe('CRUD operations on profile', () => {
     });
   });
 
-  //   describe('Data export', () => {
-  //     afterEach(() => {
-  //       jest.clearAllMocks();
-  //     });
+  describe('Data export', () => {
+    afterEach(() => {
+      jest.clearAllMocks();
+    });
 
-  // test case fails because functionality does not work properly
-  // test('user downloads their data', async () => {
-  //   const { getByText } = render(<Account />);
+    // test case fails because functionality does not work properly
+    test('user downloads their data', async () => {
+      const { getByText } = render(<Account />);
 
-  //   fireEvent.press(getByText('Download User Data'));
+      fireEvent.press(getByText('Download User Data'));
 
-  //   await waitFor(() => {
-  //     expect(supabase.rpc).toHaveBeenCalledWith('get_user_data', {
-  //       p_user_id: 'test-user-id',
-  //     });
-  //     expect(Alert.alert).toHaveBeenCalledWith(
-  //       'Success',
-  //       'User data saved as user_data.json'
-  //     );
-  //   });
-  // });
-  //   });
+      await waitFor(() => {
+        expect(supabase.rpc).toHaveBeenCalledWith('get_user_data', {
+          p_user_id: 'test-user-id',
+        });
+        expect(Alert.alert).toHaveBeenCalledWith(
+          'Success',
+          'User data saved as user_data.json'
+        );
+      });
+    });
+  });
 });
