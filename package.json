@@ -16,7 +16,8 @@
     "habit": "jest qa-tests/Habits.test.js",
     "profile": "jest qa-tests/Profile.test.js",
     "signup": "jest qa-tests/Signup.test.js",
-    "timeline": "jest qa-tests/Timeline.test.js"
+    "timeline": "jest qa-tests/Timeline.test.js",
+    "coverage": "nyc --reporter=lcov --reporter=text npm run chatbot"
   },
   "husky": {
     "hooks": {
@@ -98,6 +99,7 @@
     "husky": "^9.0.11",
     "jest": "^29.7.0",
     "jest-expo": "^51.0.1",
+    "nyc": "^15.1.0",
     "prettier": "3.2.5"
   },
   "lint-staged": {
