@@ -21,8 +21,7 @@ import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view
 import RBSheet from 'react-native-raw-bottom-sheet';
 import moment from 'moment';
 import store from '../../store/storeConfig';
-import { systemWeights } from 'react-native-typography';
-import HabitPlan from './HabitPlan';
+import StepIndicator from 'react-native-step-indicator';
 
 const { GoogleGenerativeAI } = require('@google/generative-ai');
 const apikey = process.env.EXPO_PUBLIC_REACT_APP_GEMINI_KEY;
@@ -35,6 +34,7 @@ const ViewHabit = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [habitPhoto, setHabitPhoto] = useState(null);
   const [generatedSchedule, setGeneratedSchedule] = useState(null);
+  const [currentPosition, setCurrentPosition] = useState(0);
   const RBSDelete = useRef();
   const navigation = useNavigation();
   const route = useRoute();
@@ -48,8 +48,8 @@ const ViewHabit = () => {
         .eq('habit_id', habit.habit_id)
         .single();
 
-      console.log('UserID: ',  session.user.id);
-      
+      console.log('UserID: ', session.user.id);
+
       if (error) {
         Alert.alert('Error fetching habit', error.message);
         return;
@@ -57,7 +57,9 @@ const ViewHabit = () => {
 
       console.log('Habit Data:', habitData);
       setHabitPhoto(habitData?.habit_photo);
-      setGeneratedSchedule(habitData?.habit_plan);
+      if (habitData?.habit_plan) {
+        setGeneratedSchedule(JSON.parse(habitData.habit_plan));
+      }
     };
 
     fetchHabit();
@@ -66,11 +68,11 @@ const ViewHabit = () => {
   const updateHabitPlan = async (habitPlan) => {
     try {
       const { data, error } = await supabase
-      .from('Habit')
-      .update({ habit_plan: habitPlan })
-      .eq('habit_id', habit.habit_id) 
-      .single();
-  
+        .from('Habit')
+        .update({ habit_plan: habitPlan })
+        .eq('habit_id', habit.habit_id)
+        .single();
+
       console.log('Updated habit plan in Supabase:', data);
       return data;
     } catch (error) {
@@ -128,9 +130,9 @@ const ViewHabit = () => {
   const generateHabitSchedule = async () => {
     try {
       setIsLoading(true);
-      console.log("isloading is true");
+      console.log('isloading is true');
       const model = genAI.getGenerativeModel({ model: 'gemini-pro' });
-  
+
       const chat = model.startChat({
         history: [
           {
@@ -154,7 +156,7 @@ const ViewHabit = () => {
           maxOutputTokens: 6000,
         },
       });
-  
+
       const prompt = `{
         "${habit.habit_title}": [
           {
@@ -180,26 +182,62 @@ const ViewHabit = () => {
         ]
       }
       `;
-  
+
       const result = await chat.sendMessage(prompt);
       const response = await result.response;
       const text = await response.text();
-  
+
       const cleanedText = text.replace(/^```(?:json)?\n/, '').replace(/\n```$/, '').trim();
       const jsonStartIndex = cleanedText.indexOf('{');
       const jsonEndIndex = cleanedText.lastIndexOf('}');
       const validJsonString = cleanedText.substring(jsonStartIndex, jsonEndIndex + 1);
       console.log('Cleaned habit schedule:', validJsonString);
 
-      setGeneratedSchedule(validJsonString);
+      const parsedSchedule = JSON.parse(validJsonString);
+      setGeneratedSchedule(parsedSchedule);
       setIsLoading(false);
       await updateHabitPlan(validJsonString);
-      console.log("isloading is false");
+      console.log('isloading is false');
     } catch (error) {
       console.error('Error generating habit schedule:', error);
       Alert.alert('Error', 'Failed to generate habit schedule. Please try again.');
+      setIsLoading(false);
     }
   };
+
+  const customStyles = {
+    stepIndicatorSize: 25,
+    currentStepIndicatorSize: 30,
+    separatorStrokeWidth: 2,
+    currentStepStrokeWidth: 3,
+    stepStrokeCurrentColor: Colors.primary,
+    stepStrokeWidth: 3,
+    stepStrokeFinishedColor: Colors.primary,
+    stepStrokeUnFinishedColor: '#aaaaaa',
+    separatorFinishedColor: Colors.primary,
+    separatorUnFinishedColor: '#aaaaaa',
+    stepIndicatorFinishedColor: Colors.primary,
+    stepIndicatorUnFinishedColor: '#ffffff',
+    stepIndicatorCurrentColor: '#ffffff',
+    stepIndicatorLabelFontSize: 0, 
+    currentStepIndicatorLabelFontSize: 0, 
+    labelColor: '#999999',
+    labelSize: 13,
+    currentStepLabelColor: Colors.primary,
+  };
+
+  const renderStepContent = (step) => (
+    <View key={step.name} style={styles.stepContent}>
+      <Text style={styles.stepTitle}>{step.name}</Text>
+      <Text style={styles.stepText}>Duration: {step.duration_weeks} weeks</Text>
+      <Text style={styles.stepText}>Goals: {step.goals}</Text>
+      {step.steps.map((item, index) => (
+        <Text key={index} style={styles.stepText}>
+          Step {index + 1}: {item.description}
+        </Text>
+      ))}
+    </View>
+  );
 
   return (
     <View style={Default.container}>
@@ -236,7 +274,7 @@ const ViewHabit = () => {
           ) : null}
 
           <View style={styles.container}>
-            <View style={{ flex: 1 }}>
+            <View style={styles.card}>
               <Text style={styles.title}>Habit Title</Text>
               <Text style={styles.textContent}>
                 {habit?.habit_title || 'N/A'}
@@ -288,26 +326,45 @@ const ViewHabit = () => {
               <Button
                 onPress={generateHabitSchedule}
                 title="Generate Habit Schedule"
+                buttonStyle={styles.generateButton}
               />
             </View>
 
-            <View style={styles.scheduleDetails}> 
-              <Text style={{...styles.title, paddingTop:20 }}>Your Habit Plan by Your AI Coach:</Text>
+            <View style={styles.scheduleDetails}>
+              <Text style={{ ...styles.title, paddingTop: 20, paddingBottom: 20, }}>Your Habit Plan by Your AI Coach:</Text>
               {isLoading ? (
                 <ActivityIndicator size="small" color={Colors.ActivityIndicator} />
               ) : generatedSchedule ? (
-                <HabitPlan habitPlan={generatedSchedule} />
+                <>
+                  <StepIndicator
+                    customStyles={customStyles}
+                    currentPosition={currentPosition}
+                    stepCount={generatedSchedule[habit.habit_title][0].stages.length}
+                    labels={generatedSchedule[habit.habit_title][0].stages.map((stage) => stage.name)}
+                  />
+                  <ScrollView
+                    horizontal
+                    showsHorizontalScrollIndicator={false}
+                    style={styles.stepContentContainer}
+                    onScroll={(e) => {
+                      const contentOffsetX = e.nativeEvent.contentOffset.x;
+                      const screenWidth = Dimensions.get('window').width;
+                      const currentStep = Math.round(contentOffsetX / screenWidth);
+                      setCurrentPosition(currentStep);
+                    }}
+                    scrollEventThrottle={16}
+                  >
+                    {generatedSchedule[habit.habit_title][0].stages.map((stage, index) =>
+                      renderStepContent(stage)
+                    )}
+                  </ScrollView>
+                </>
               ) : (
-                <Text style={{...styles.textContent, paddingTop:20 }}>No generated plan yet!</Text>
+                <Text style={{ ...styles.textContent, paddingTop: 20 }}>No generated plan yet!</Text>
               )}
             </View>
 
-            <View
-              style={{
-                marginTop: 32,
-                flexDirection: 'column',
-                alignItems: 'center',
-              }}>
+            <View style={styles.buttonContainer}>
               {loadingDisable ? (
                 <ActivityIndicator
                   style={{ paddingVertical: 16 }}
@@ -315,14 +372,8 @@ const ViewHabit = () => {
                   color={Colors.text}
                 />
               ) : (
-                <TouchableOpacity onPress={onToggleHabit}>
-                  <Text
-                    style={{
-                      paddingVertical: 16,
-                      fontSize: 16,
-                      fontWeight: '700',
-                      color: Colors.text,
-                    }}>
+                <TouchableOpacity onPress={onToggleHabit} style={styles.toggleButton}>
+                  <Text style={styles.toggleButtonText}>
                     {habit?.enabled ? 'DISABLE HABIT' : 'ENABLE HABIT'}
                   </Text>
                 </TouchableOpacity>
@@ -331,50 +382,48 @@ const ViewHabit = () => {
               <Button
                 disabled={loadingDelete}
                 loading={loadingDelete}
-                buttonStyle={Default.loginNextButton}
-                titleStyle={Default.loginButtonBoldTitle}
+                buttonStyle={styles.deleteButton}
+                titleStyle={styles.deleteButtonTitle}
                 onPress={onDeleteHabit}
                 title="DELETE HABIT"
-                disabledStyle={Default.loginNextButton}
               />
-
             </View>
           </View>
         </ScrollView>
 
         <RBSheet
           ref={RBSDelete}
-          height={200}
+          height={Dimensions.get('window').height * 0.12} 
           openDuration={250}
           customStyles={{
             container: {
               justifyContent: 'center',
               alignItems: 'center',
-              backgroundColor: Colors.background,
+              borderRadius: 45,
+              padding: 20,
+              width: Dimensions.get('window').width - 40, 
+              marginHorizontal: 20,
             },
           }}>
-          <View style={{ flex: 1, justifyContent: 'space-evenly' }}>
-            <Text
-              style={{
-                textAlign: 'center',
-                fontSize: 18,
-                fontWeight: 'bold',
-                color: Colors.text,
-              }}>
-              Are you sure you want to delete this habit?
-            </Text>
+          <View style={styles.absolute}>
+            <View style={styles.overlay} />
+            <View style={styles.sheetContainer}>
+              <Text style={styles.sheetTitle}>
+                Are you sure you want to delete this habit?
+              </Text>
 
-            <View style={{ flexDirection: 'row', justifyContent: 'space-evenly' }}>
-              <Button
-                title="Cancel"
-                onPress={() => RBSDelete.current.close()}
-                buttonStyle={{ backgroundColor: Colors.secondary }}
-              />
-              <Button
-                title="Delete"
-                onPress={deleteHabit}
-                buttonStyle={{ backgroundColor: Colors.primary }}
-              />
+              <View style={styles.sheetButtonContainer}>
+                <Button
+                  title="Cancel"
+                  onPress={() => RBSDelete.current.close()}
+                  buttonStyle={styles.sheetCancelButton}
+                />
+                <Button
+                  title="Delete"
+                  onPress={deleteHabit}
+                  buttonStyle={styles.sheetDeleteButton}
+                />
+              </View>
             </View>
           </View>
         </RBSheet>
@@ -388,15 +437,26 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: 16,
   },
+  card: {
+    backgroundColor: Colors.cardBackground,
+    borderRadius: 45,
+    padding: 16,
+    marginBottom: 16,
+    shadowColor: Colors.shadow,
+    shadowOpacity: 0.2,
+    shadowOffset: { width: 0, height: 4 },
+    shadowRadius: 10,
+    elevation: 5,
+  },
   title: {
     fontSize: 16,
     fontWeight: 'bold',
-    color: Colors.text,
+    color: Colors.white, 
     marginBottom: 8,
   },
   textContent: {
     fontSize: 14,
-    color: Colors.text,
+    color: Colors.white, 
     marginBottom: 16,
   },
   photoContainer: {
@@ -405,10 +465,136 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 16,
+    marginTop: 20,
   },
   habitPhoto: {
     width: '100%',
     height: '100%',
+    borderRadius: 45,
+  },
+  containerButton: {
+    marginBottom: 16,
+    width: '100',
+    justifyContent: 'center',
+    alignContent: 'center',
+    alignItems: 'center',
+
+  },
+  generateButton: {
+    backgroundColor: 'green',
+    borderRadius: 45,
+    paddingHorizontal: 32,
+    paddingVertical: 12,
+  },
+  scheduleDetails: {
+    backgroundColor: Colors.scheduleBackground,
+    borderRadius: 45,
+    padding: 0,
+    marginBottom: 35,
+    marginTop: 25,
+    
+    
+  },
+  stepContentContainer: {
+    marginTop: 20,
+    width: Dimensions.get('window').width - 50,
+
+  },
+  stepContent: {
+    width: Dimensions.get('window').width - 50,
+    padding: 16,
+    backgroundColor: 'rgba(220, 260, 255, 0.26)', 
+    borderRadius: 10,
+    marginHorizontal: 8,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.3)',
+    width: Dimensions.get('window').width - 90,
+
+  },
+  stepTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: Colors.white, 
+    marginBottom: 8,
+  },
+  stepText: {
+    fontSize: 16,
+    padding: 10,
+    color: Colors.white, 
+  },
+  buttonContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: 20,
+  },
+  toggleButton: {
+    flex: 1,
+    backgroundColor: Colors.primary,
+    padding: 12,
+    borderRadius: 30,
+    marginRight: 8,
+    alignItems: 'center',
+  },
+  toggleButtonText: {
+    color: Colors.white, 
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  deleteButton: {
+    flex: 1,
+    backgroundColor: '#d9534f', 
+    padding: 12,
+    borderRadius: 45,
+    alignItems: 'left',
+    marginRight: 25,
+  },
+  deleteButtonTitle: {
+    color: Colors.white, 
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  sheetContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  sheetTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: Colors.white,
+    marginBottom: 16,
+  },
+  sheetButtonContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    width: '100%',
+    paddingHorizontal: 16,
+  },
+  sheetCancelButton: {
+    flex: 1,
+    backgroundColor: Colors.secondary,
+    padding: 12,
+    borderRadius: 30,
+    marginRight: 8,
+    alignItems: 'center',
+  },
+  sheetDeleteButton: {
+    flex: 1,
+    backgroundColor: '#d9534f', 
+    padding: 12,
+    borderRadius: 30,
+    alignItems: 'center',
+  },
+  absolute: {
+    ...StyleSheet.absoluteFillObject,
+    borderRadius: 45,
+  },
+  overlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(255, 255, 255, 0.5)', 
+    borderRadius: 40,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.5)',
   },
 });
 
