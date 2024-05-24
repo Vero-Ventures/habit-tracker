@@ -1,8 +1,7 @@
 import React from 'react';
-import { Provider } from 'react-redux'; // Import Provider from react-redux
-import { render, fireEvent, waitFor } from '@testing-library/react-native';
-import { store } from '../src/store/storeConfig'; // Import your Redux store
-import { supabase } from '../src/config/supabaseClient';
+import { Provider } from 'react-redux';
+import { render } from '@testing-library/react-native';
+import store from '../src/store/storeConfig';
 import Timeline from '../src/screens/timeline/Timeline';
 
 // Mocking the supabase client to prevent actual API calls
