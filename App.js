@@ -103,7 +103,7 @@ export default function App() {
         </Stack.Navigator>
         {session && (
           <>
-            <Modal
+            {/* <Modal
               isVisible={isChatVisible}
               onBackdropPress={() => setIsChatVisible(false)}
               style={styles.modal}>
@@ -112,19 +112,19 @@ export default function App() {
                   navigation={{ goBack: () => setIsChatVisible(false) }}
                 />
               </View>
-            </Modal>
-            <Animated.View
+            </Modal> */}
+            {/* <Animated.View
               {...panResponder.panHandlers}
-              style={[pan.getLayout(), styles.tooltipButton]}>
-              <TouchableOpacity
+              style={[pan.getLayout(), styles.tooltipButton]}> */}
+              {/* <TouchableOpacity
                 style={styles.tooltipCircle}
                 onPress={handlePress}>
                 <Image
                   source={require('./assets/images/Chatbot.png')}
                   style={styles.tooltipImage}
                 />
-              </TouchableOpacity>
-            </Animated.View>
+              </TouchableOpacity> */}
+            {/* </Animated.View> */}
           </>
         )}
       </NavigationContainer>
