@@ -3,6 +3,7 @@ import { StyleSheet, View, Text, TextInput, FlatList, TouchableOpacity, Image, A
 import { supabase } from '../config/supabaseClient';
 import store from '../store/storeConfig';
 import Colors from '../../assets/styles/Colors';
+import { useNavigation } from '@react-navigation/native';
 
 export default function FollowersScreen() {
   const session = store.getState().user.session;
@@ -10,6 +11,7 @@ export default function FollowersScreen() {
   const [searchResults, setSearchResults] = useState([]);
   const [followersList, setFollowersList] = useState([]);
   const [loading, setLoading] = useState(true);
+  const navigation = useNavigation();
 
   useEffect(() => {
     if (session) {
@@ -52,7 +54,6 @@ export default function FollowersScreen() {
         throw error;
       }
 
-      // Combine search results with follow status
       const updatedResults = data.map(user => ({
         ...user,
         isFollower: followersList.some(follower => follower.user_id === user.user_id),
@@ -83,21 +84,29 @@ export default function FollowersScreen() {
     }
   };
 
-  const renderSearchResultItem = ({ item }) => {
-    return (
-      <View style={styles.resultItem}>
-        <Image source={{ uri: item.profile_image }} style={styles.profileImage} />
-        <Text style={styles.username}>{item.username}</Text>
-        {item.isFollower ? (
-          <Text style={styles.alreadyFollowing}>This user follows you</Text>
-        ) : (
-          <TouchableOpacity onPress={() => followUser(item.user_id)}>
-            <Text style={styles.followButton}>Follow</Text>
-          </TouchableOpacity>
-        )}
-      </View>
-    );
-  };
+  const renderSearchResultItem = ({ item }) => (
+    <View style={styles.resultItem}>
+      <Image source={{ uri: item.profile_image }} style={styles.profileImage} />
+      <Text style={styles.username}>{item.username}</Text>
+      {item.isFollower ? (
+        <Text style={styles.alreadyFollowing}>This user follows you</Text>
+      ) : (
+        <TouchableOpacity onPress={() => followUser(item.user_id)}>
+          <Text style={styles.followButton}>Follow</Text>
+        </TouchableOpacity>
+      )}
+    </View>
+  );
+
+  const renderFollowerItem = ({ item }) => (
+    <TouchableOpacity
+      style={styles.resultItem}
+      onPress={() => navigation.navigate('UserProfile', { userId: item.user_id })}
+    >
+      <Image source={{ uri: item.profile_image }} style={styles.profileImage} />
+      <Text style={styles.username}>{item.username}</Text>
+    </TouchableOpacity>
+  );
 
   return (
     <View style={styles.container}>
@@ -119,12 +128,7 @@ export default function FollowersScreen() {
           <FlatList
             data={followersList}
             keyExtractor={(item) => String(item.user_id)}
-            renderItem={({ item }) => (
-              <View style={styles.resultItem}>
-                <Image source={{ uri: item.profile_image }} style={styles.profileImage} />
-                <Text style={styles.username}>{item.username}</Text>
-              </View>
-            )}
+            renderItem={renderFollowerItem}
             style={styles.followersList}
           />
         ) : (
@@ -145,8 +149,8 @@ export default function FollowersScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.background,
     padding: 20,
+    backgroundColor: Colors.background,
   },
   searchBar: {
     height: 40,
@@ -154,9 +158,8 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     marginBottom: 20,
     paddingHorizontal: 10,
-    borderRadius: 5,
-    backgroundColor: 'white',
     borderRadius: 45,
+    backgroundColor: 'white',
   },
   followersList: {
     marginBottom: 20,
