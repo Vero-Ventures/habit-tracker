@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { StyleSheet, View, Text, TextInput, FlatList, TouchableOpacity, Image, Alert } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
 import { supabase } from '../config/supabaseClient';
 import store from '../store/storeConfig';
 import Colors from '../../assets/styles/Colors';
-import { useNavigation } from '@react-navigation/native';
+import Header from '../components/Header'; 
 
 export default function FollowScreen() {
   const session = store.getState().user.session;
@@ -77,37 +78,77 @@ export default function FollowScreen() {
       Alert.alert('Success', 'You are now following this user');
       fetchFollowingList();
     } catch (error) {
+      Alert.alert('You are already following this person');
+    }
+  };
+
+  const unfollowUser = async (userId) => {
+    try {
+      if (!session?.user) throw new Error('No user on the session!');
+
+      const { error } = await supabase
+        .from('Following')
+        .delete()
+        .eq('follower', session.user.id)
+        .eq('following', userId);
+
+      if (error) {
+        throw error;
+      }
+
+      Alert.alert('Success', 'You have unfollowed this user');
+      fetchFollowingList(); 
+    } catch (error) {
       Alert.alert('Error', error.message);
     }
   };
 
-  const renderSearchResultItem = ({ item }) => (
-    <View style={styles.resultItem}>
-      <Image source={{ uri: item.profile_image }} style={styles.profileImage} />
-      <Text style={styles.username}>{item.username}</Text>
-      {item.isFollowing ? (
-        <Text style={styles.alreadyFollowing}>You already follow this user</Text>
-      ) : (
-        <TouchableOpacity onPress={() => followUser(item.user_id)}>
-          <Text style={styles.followButton}>Follow</Text>
-        </TouchableOpacity>
-      )}
-    </View>
-  );
 
-  const renderFollowingItem = ({ item }) => (
-    <TouchableOpacity
-      style={styles.resultItem}
-      onPress={() => navigation.navigate('UserProfile', { userId: item.user_id })}
-    >
-      <Image source={{ uri: item.profile_image }} style={styles.profileImage} />
-      <Text style={styles.username}>{item.username}</Text>
-    </TouchableOpacity>
-  );
+
+  
+  const renderFollowingItem = ({ item }) => {
+    return (
+      <TouchableOpacity
+        style={styles.resultItem}
+        onPress={() => navigation.navigate('UserProfile', { userId: item.user_id })}
+      >
+        <Image source={{ uri: item.profile_image }} style={styles.profileImage} />
+        <Text style={styles.username}>{item.username}</Text>
+        <TouchableOpacity onPress={() => unfollowUser(item.user_id)}>
+          <Text style={styles.unfollowButton}>Unfollow</Text>
+        </TouchableOpacity>
+      </TouchableOpacity>
+    );
+  };
+  
+
+  const renderSearchResultItem = ({ item }) => {
+    return (
+      <TouchableOpacity
+        style={styles.resultItem}
+        onPress={() => navigation.navigate('UserProfile', { userId: item.user_id })}
+      >
+        <Image source={{ uri: item.profile_image }} style={styles.profileImage} />
+        <Text style={styles.username}>{item.username}</Text>
+        {item.isFollowing ? (
+          <Text style={styles.alreadyFollowing}>You already follow this user</Text>
+        ) : (
+          <TouchableOpacity onPress={() => followUser(item.user_id)}>
+            <Text style={styles.followButton}>Follow</Text>
+          </TouchableOpacity>
+        )}
+      </TouchableOpacity>
+    );
+  };
+  
 
   return (
     <View style={styles.container}>
-      <Text style={styles.sectionTitle}>Users You Are Following</Text>
+      <Header
+        title="Users You Are Following"
+        navigation={navigation}
+        backButton
+      />
       <TextInput
         style={styles.searchBar}
         placeholder="Search by username"
@@ -151,6 +192,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     marginBottom: 20,
     paddingHorizontal: 10,
+    backgroundColor: 'white',
     borderRadius: 45,
     backgroundColor: 'white',
   },
@@ -177,6 +219,10 @@ const styles = StyleSheet.create({
   },
   followButton: {
     color: Colors.primary8,
+    fontWeight: 'bold',
+  },
+  unfollowButton: {
+    color: Colors.secondary,
     fontWeight: 'bold',
   },
   alreadyFollowing: {

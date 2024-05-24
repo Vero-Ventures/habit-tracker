@@ -10,6 +10,7 @@ import AddHabit from '../screens/habits/AddHabit';
 import ProfileScreen from '../screens/ProfileScreen';
 import FollowScreen from '../screens/FollowScreen';
 import FollowersScreen from '../screens/FollowersScreen';
+import EditProfile from '../screens/EditProfile';
 import SettingsScreen from '../screens/SettingsScreen';
 import UserProfile from '../screens/UserProfile';
 import homeSelected from '../../assets/icons/home-selected.png';
@@ -86,6 +87,7 @@ const ProfilesScreen = ({ setIsLoggedIn }) => {
       <ProfileStack.Screen name="FollowersScreen" component={FollowersScreen} />
       <ProfileStack.Screen name="UserProfile" component={UserProfile} />
 
+      <ProfileStack.Screen name="EditProfile" component={EditProfile} />
       <ProfileStack.Screen name="SettingsScreen">
         {() => <SettingsScreen setIsLoggedIn={setIsLoggedIn} />}
       </ProfileStack.Screen>
@@ -149,7 +151,6 @@ export default function Navigator({ setIsLoggedIn }) {
       <Tab.Screen name="Timeline" component={Timeline} />
       <Tab.Screen name="Checklist" component={ChecklistScreen} />
       <Tab.Screen name="Habits" component={HabitsScreen} />
-      <Tab.Screen name="Community" component={CommunityScreen} />
       <Tab.Screen name="Profile">
         {() => <ProfilesScreen setIsLoggedIn={setIsLoggedIn} />}
       </Tab.Screen>

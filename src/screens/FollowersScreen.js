@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { StyleSheet, View, Text, TextInput, FlatList, TouchableOpacity, Image, ActivityIndicator, Alert } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
 import { supabase } from '../config/supabaseClient';
 import store from '../store/storeConfig';
 import Colors from '../../assets/styles/Colors';
-import { useNavigation } from '@react-navigation/native';
+import Header from '../components/Header'; 
 
 export default function FollowersScreen() {
   const session = store.getState().user.session;
@@ -110,7 +111,11 @@ export default function FollowersScreen() {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.sectionTitle}>Users Who Follow You</Text>
+      <Header
+        title="Users Who Follow You"
+        navigation={navigation}
+        backButton
+      />
       <TextInput
         style={styles.searchBar}
         placeholder="Search by username"
@@ -158,6 +163,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     marginBottom: 20,
     paddingHorizontal: 10,
+    backgroundColor: 'white',
     borderRadius: 45,
     backgroundColor: 'white',
   },
