@@ -78,7 +78,7 @@ export default function FollowScreen() {
       Alert.alert('Success', 'You are now following this user');
       fetchFollowingList(); 
     } catch (error) {
-      Alert.alert('Error', error.message);
+      Alert.alert('You are already following this person');
     }
   };
 

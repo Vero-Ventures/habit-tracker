@@ -10,6 +10,7 @@ import AddHabit from '../screens/habits/AddHabit';
 import ProfileScreen from '../screens/ProfileScreen';
 import FollowScreen from '../screens/FollowScreen';
 import FollowersScreen from '../screens/FollowersScreen';
+import EditProfile from '../screens/EditProfile';
 import SettingsScreen from '../screens/SettingsScreen';
 import homeSelected from '../../assets/icons/home-selected.png';
 import home from '../../assets/icons/home.png';
@@ -83,6 +84,7 @@ const ProfilesScreen = ({ setIsLoggedIn }) => {
       <ProfileStack.Screen name="UserDataScreen" component={UserDataScreen} />
       <ProfileStack.Screen name="FollowScreen" component={FollowScreen} />
       <ProfileStack.Screen name="FollowersScreen" component={FollowersScreen} />
+      <ProfileStack.Screen name="EditProfile" component={EditProfile} />
       <ProfileStack.Screen name="SettingsScreen">
         {() => <SettingsScreen setIsLoggedIn={setIsLoggedIn} />}
       </ProfileStack.Screen>
