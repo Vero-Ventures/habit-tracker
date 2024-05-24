@@ -8,6 +8,9 @@ import Habits from '../screens/habits/Habits';
 import ViewHabit from '../screens/habits/ViewHabit';
 import AddHabit from '../screens/habits/AddHabit';
 import ProfileScreen from '../screens/ProfileScreen';
+import FollowScreen from '../screens/FollowScreen';
+import FollowersScreen from '../screens/FollowersScreen';
+import SettingsScreen from '../screens/SettingsScreen';
 import homeSelected from '../../assets/icons/home-selected.png';
 import home from '../../assets/icons/home.png';
 import infoSelected from '../../assets/icons/info-selected.png';
@@ -20,17 +23,20 @@ import usersSelected from '../../assets/icons/users-selected.png';
 import users from '../../assets/icons/users.png';
 import userSelected from '../../assets/icons/user-selected.png';
 import user from '../../assets/icons/user.png';
+import clipboardCheckSelected from '../../assets/icons/clipboard-check-selected.png';
+import clipboardCheck from '../../assets/icons/clipboard-check.png';
 import Timeline from '../screens/timeline/Timeline';
 import Community from '../screens/community/Community';
 import CreateCommunity from '../screens/community/CreateCommunity';
 import Profile from '../screens/profile/Profile';
 import UpdateProfile from '../screens/profile/UpdateProfile';
 import ChatbotScreen from '../screens/ChatbotScreen';
+import UserDataScreen from '../screens/UserDataScreen';
+import ChecklistScreen from '../screens/checklist/Checklist';
 
 const Tab = createBottomTabNavigator();
 const CommunityStack = createStackNavigator();
-
-// const ProfileStack = createStackNavigator();
+const ProfileStack = createStackNavigator();
 const HabitsStack = createStackNavigator();
 
 const CommunityScreen = () => {
@@ -50,50 +56,6 @@ const CommunityScreen = () => {
   );
 };
 
-// const ProfileScreen = () => {
-//   return (
-//     <ProfileStack.Navigator
-//       initialRouteName="ProfileIndex"
-//       screenOptions={{
-//         headerShown: false,
-//         cardStyle: { backgroundColor: Colors.navigator },
-//       }}>
-//       <ProfileStack.Screen name="ProfileIndex" component={Profile} />
-//       <ProfileStack.Screen name="UpdateProfile" component={UpdateProfile} />
-//       {/* <ProfileStack.Screen name="MyProducts" component={MyProducts} />
-//       <ProfileStack.Screen name="AddProducts" component={AddProducts} />
-//       <ProfileStack.Screen name="Success" component={Success} />
-//       <ProfileStack.Screen name="ScoreForm" component={ScoreForm} />
-//       <ProfileStack.Screen name="Connections" component={Connections} />
-//       <ProfileStack.Screen
-//         name="UserConnections"
-//         component={UserConnections}
-//       />
-//       <ProfileStack.Screen name="UserProfile" component={UserProfile} />
-//       <ProfileStack.Screen name="Ranking" component={Ranking} />
-//       <ProfileStack.Screen
-//         name="HealthHabitReport"
-//         component={HealthHabitReport}
-//       />
-//       <ProfileStack.Screen
-//         name="HealthHabitReportDetails"
-//         component={HealthHabitReportDetails}
-//       />
-//       <ProfileStack.Screen name="UserCommunity" component={UserCommunity} />
-//       <ProfileStack.Screen name="UserHabit" component={UserHabit} />
-//       <ProfileStack.Screen
-//         name="UpdateFavoriteFood"
-//         component={UpdateFavoriteFood}
-//       />
-//       <ProfileStack.Screen
-//         name="UpdateFavoriteBook"
-//         component={UpdateFavoriteBook}
-//       />
-//       <ProfileStack.Screen name="SavedPost" component={SavedPost} /> */}
-//     </ProfileStack.Navigator>
-//   );
-// };
-
 const HabitsScreen = () => {
   return (
     <HabitsStack.Navigator
@@ -109,7 +71,26 @@ const HabitsScreen = () => {
   );
 };
 
-export default function Navigator() {
+const ProfilesScreen = ({ setIsLoggedIn }) => {
+  return (
+    <ProfileStack.Navigator
+      initialRouteName="ProfileScreen"
+      screenOptions={{
+        headerShown: false,
+        cardStyle: { backgroundColor: Colors.navigator },
+      }}>
+      <ProfileStack.Screen name="ProfileScreen" component={ProfileScreen} />
+      <ProfileStack.Screen name="UserDataScreen" component={UserDataScreen} />
+      <ProfileStack.Screen name="FollowScreen" component={FollowScreen} />
+      <ProfileStack.Screen name="FollowersScreen" component={FollowersScreen} />
+      <ProfileStack.Screen name="SettingsScreen">
+        {() => <SettingsScreen setIsLoggedIn={setIsLoggedIn} />}
+      </ProfileStack.Screen>
+    </ProfileStack.Navigator>
+  );
+};
+
+export default function Navigator({ setIsLoggedIn }) {
   const icons = (route, focused) => {
     const sizeStyle = { width: 24, height: 24 };
 
@@ -122,9 +103,12 @@ export default function Navigator() {
         return (
           <Image source={focused ? infoSelected : info} style={sizeStyle} />
         );
-      case 'Stakes':
+      case 'Checklist':
         return (
-          <Image source={focused ? stakesSelected : stakes} style={sizeStyle} />
+          <Image
+            source={focused ? clipboardCheckSelected : clipboardCheck}
+            style={sizeStyle}
+          />
         );
       case 'Habits':
         return (
@@ -163,15 +147,17 @@ export default function Navigator() {
         },
       })}>
       <Tab.Screen name="Timeline" component={Timeline} />
-      <Tab.Screen name="Stakes" component={ChatbotScreen} />
-      {/* Used to be the stakes screen, but I am putting the chatbot screen here temporarily */}
+      <Tab.Screen name="Checklist" component={ChecklistScreen} />
       <Tab.Screen name="Habits" component={HabitsScreen} />
       <Tab.Screen name="Community" component={CommunityScreen} />
-      <Tab.Screen name="Profile" component={ProfileScreen} />
+      <Tab.Screen name="Profile">
+        {() => <ProfilesScreen setIsLoggedIn={setIsLoggedIn} />}
+      </Tab.Screen>
     </Tab.Navigator>
   );
 }
 
 Navigator.propTypes = {
   route: PropTypes.object,
+  setIsLoggedIn: PropTypes.func,
 };

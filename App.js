@@ -17,6 +17,8 @@ const Stack = createStackNavigator();
 export default function App() {
   const [session, setSession] = useState(null);
   const [isChatVisible, setIsChatVisible] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
 
   useEffect(() => {
     const checkSession = async () => {
@@ -26,6 +28,10 @@ export default function App() {
       if (session) {
         setSession(session);
         store.dispatch(userLogin(session));
+        setIsLoggedIn(true);
+        setIsLoading(false);
+      } else {
+        setIsLoading(false);
       }
     };
 
@@ -47,34 +53,52 @@ export default function App() {
       <NavigationContainer>
         <StatusBar style="auto" />
         <Stack.Navigator screenOptions={{ headerShown: false }}>
-          {!session ? (
-            <Stack.Screen name="Signup" component={SignupScreen} />
+          {isLoggedIn ? (
+            <Stack.Screen name="Navigator">
+              {() => <Navigator setIsLoggedIn={setIsLoggedIn} />}
+            </Stack.Screen>
+          ) : isLoading ? (
+            <Stack.Screen name="Loading" component={LoadingScreen} />
           ) : (
-            <Stack.Screen name="Navigator" component={Navigator} />
+            <Stack.Screen name="Signup">
+              {() => <SignupScreen setIsLoggedIn={setIsLoggedIn} />}
+            </Stack.Screen>
           )}
         </Stack.Navigator>
-        <Modal
-          isVisible={isChatVisible}
-          onBackdropPress={() => setIsChatVisible(false)}
-          style={styles.modal}>
-          <View style={styles.modalContent}>
-            <ChatBotScreen
-              navigation={{ goBack: () => setIsChatVisible(false) }}
-            />
-          </View>
-        </Modal>
-        <TouchableOpacity
-          style={styles.tooltipButton}
-          onPress={() => setIsChatVisible(true)}>
-          <View style={styles.tooltipCircle}>
-            <Image
-              source={require('./assets/images/Chatbot.png')}
-              style={styles.tooltipImage}
-            />
-          </View>
-        </TouchableOpacity>
+        {session && (
+          <>
+            <Modal
+              isVisible={isChatVisible}
+              onBackdropPress={() => setIsChatVisible(false)}
+              style={styles.modal}>
+              <View style={styles.modalContent}>
+                <ChatBotScreen
+                  navigation={{ goBack: () => setIsChatVisible(false) }}
+                />
+              </View>
+            </Modal>
+            <TouchableOpacity
+              style={styles.tooltipButton}
+              onPress={() => setIsChatVisible(true)}>
+              <View style={styles.tooltipCircle}>
+                <Image
+                  source={require('./assets/images/Chatbot.png')}
+                  style={styles.tooltipImage}
+                />
+              </View>
+            </TouchableOpacity>
+          </>
+        )}
       </NavigationContainer>
     </Provider>
+  );
+}
+
+export function LoadingScreen() {
+  return (
+    <View>
+      <Text>Loading...</Text>
+    </View>
   );
 }
 

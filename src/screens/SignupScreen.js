@@ -18,7 +18,7 @@ AppState.addEventListener('change', state => {
   }
 });
 
-export default function Auth() {
+export default function Auth({ setIsLoggedIn }) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
@@ -35,6 +35,7 @@ export default function Auth() {
       Alert.alert('Login Error', error.message);
     } else if (data.session) {
       store.dispatch(userLogin(data.session));
+      setIsLoggedIn(true);
     }
   }
 
@@ -102,5 +103,5 @@ const styles = StyleSheet.create({
 });
 
 Auth.propTypes = {
-  onSignIn: PropTypes.func,
+  setIsLoggedIn: PropTypes.func,
 };

@@ -20,23 +20,64 @@ import { supabase } from '../../config/supabaseClient';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 import RBSheet from 'react-native-raw-bottom-sheet';
 import moment from 'moment';
+import store from '../../store/storeConfig';
 import { systemWeights } from 'react-native-typography';
-import { LinearGradient } from 'expo-linear-gradient';
+import HabitPlan from './HabitPlan';
+
+const { GoogleGenerativeAI } = require('@google/generative-ai');
+const apikey = process.env.EXPO_PUBLIC_REACT_APP_GEMINI_KEY;
+const genAI = new GoogleGenerativeAI(apikey);
 
 const ViewHabit = () => {
+  const session = store.getState().user.session;
   const [loadingDelete, setLoadingDelete] = useState(false);
   const [loadingDisable, setLoadingDisable] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const [habitPhoto, setHabitPhoto] = useState(null);
-
+  const [generatedSchedule, setGeneratedSchedule] = useState(null);
   const RBSDelete = useRef();
   const navigation = useNavigation();
   const route = useRoute();
   const { habit } = route.params;
 
   useEffect(() => {
-    console.log('Habit Data:', habit);
-    setHabitPhoto(habit?.image);
-  }, [habit]);
+    const fetchHabit = async () => {
+      const { data: habitData, error } = await supabase
+        .from('Habit')
+        .select('*')
+        .eq('habit_id', habit.habit_id)
+        .single();
+
+      console.log('UserID: ', session.user.id);
+
+      if (error) {
+        Alert.alert('Error fetching habit', error.message);
+        return;
+      }
+
+      console.log('Habit Data:', habitData);
+      setHabitPhoto(habitData?.habit_photo);
+      setGeneratedSchedule(habitData?.habit_plan);
+    };
+
+    fetchHabit();
+  }, [habit.habit_id]);
+
+  const updateHabitPlan = async habitPlan => {
+    try {
+      const { data, error } = await supabase
+        .from('Habit')
+        .update({ habit_plan: habitPlan })
+        .eq('habit_id', habit.habit_id)
+        .single();
+
+      console.log('Updated habit plan in Supabase:', data);
+      return data;
+    } catch (error) {
+      console.error('Error updating habit plan in Supabase:', error);
+      throw error;
+    }
+  };
 
   const onDeleteHabit = () => {
     RBSDelete.current.open();
@@ -84,6 +125,94 @@ const ViewHabit = () => {
     navigation.pop();
   };
 
+  const generateHabitSchedule = async () => {
+    try {
+      setIsLoading(true);
+      console.log('isloading is true');
+      const model = genAI.getGenerativeModel({ model: 'gemini-pro' });
+
+      const chat = model.startChat({
+        history: [
+          {
+            role: 'user',
+            parts: [
+              {
+                text:
+                  'Hello, I would like you to generate a habit plan in JSON format for me to follow that will help me reach my goals for my habit of ' +
+                  habit.habit_description +
+                  '.',
+              },
+            ],
+          },
+          {
+            role: 'model',
+            parts: [
+              {
+                text: 'Great to meet you. I would love to design a plan for you to follow. Can you give an example of the JSON format you would like it in?',
+              },
+            ],
+          },
+        ],
+        generationConfig: {
+          maxOutputTokens: 6000,
+        },
+      });
+
+      const prompt = `{
+        "${habit.habit_title}": [
+          {
+            "stages": [
+              {
+                "name": "<stage name>",
+                "duration_weeks": <stage duration in weeks>,
+                "goals": "<stage goal to reach before proceeding to next stage>",
+                "steps": [
+                  {
+                    "description": "<step 1 description>"
+                  },
+                  {
+                    "description": "<step 2 description>"
+                  },
+                  {
+                    "description": "<step 3 description>"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+      `;
+
+      const result = await chat.sendMessage(prompt);
+      const response = await result.response;
+      const text = await response.text();
+
+      const cleanedText = text
+        .replace(/^```(?:json)?\n/, '')
+        .replace(/\n```$/, '')
+        .trim();
+      const jsonStartIndex = cleanedText.indexOf('{');
+      const jsonEndIndex = cleanedText.lastIndexOf('}');
+      const validJsonString = cleanedText.substring(
+        jsonStartIndex,
+        jsonEndIndex + 1
+      );
+      console.log('Cleaned habit schedule:', validJsonString);
+
+      setGeneratedSchedule(validJsonString);
+      setIsLoading(false);
+      await updateHabitPlan(validJsonString);
+      console.log('isloading is false');
+    } catch (error) {
+      console.error('Error generating habit schedule:', error);
+      Alert.alert(
+        'Error',
+        'Failed to generate habit schedule. Please try again.'
+      );
+    }
+  };
+
   return (
     <View style={Default.container}>
       <KeyboardAwareScrollView
@@ -109,19 +238,13 @@ const ViewHabit = () => {
           />
 
           {habitPhoto ? (
-            <LinearGradient
-              colors={['rgba(114, 198, 239, 0.3)', 'rgba(0, 78, 143, 0.138)']}
-              start={{ x: 0, y: 0.5 }}
-              end={{ x: 1, y: 0.5 }}
-              style={styles.containerHeaderImage}>
-              <View style={styles.habitImage}>
-                <Image
-                  source={{ uri: habitPhoto }}
-                  style={styles.habitImage}
-                  resizeMode="cover"
-                />
-              </View>
-            </LinearGradient>
+            <View style={styles.photoContainer}>
+              <Image
+                source={{ uri: habitPhoto }}
+                style={styles.habitPhoto}
+                resizeMode="cover"
+              />
+            </View>
           ) : null}
 
           <View style={styles.container}>
@@ -173,6 +296,31 @@ const ViewHabit = () => {
               </Text>
             </View>
 
+            <View style={styles.containerButton}>
+              <Button
+                onPress={generateHabitSchedule}
+                title="Generate Habit Schedule"
+              />
+            </View>
+
+            <View style={styles.scheduleDetails}>
+              <Text style={{ ...styles.title, paddingTop: 20 }}>
+                Your Habit Plan by Your AI Coach:
+              </Text>
+              {isLoading ? (
+                <ActivityIndicator
+                  size="small"
+                  color={Colors.ActivityIndicator}
+                />
+              ) : generatedSchedule ? (
+                <HabitPlan habitPlan={generatedSchedule} />
+              ) : (
+                <Text style={{ ...styles.textContent, paddingTop: 20 }}>
+                  No generated plan yet!
+                </Text>
+              )}
+            </View>
+
             <View
               style={{
                 marginTop: 32,
@@ -210,46 +358,45 @@ const ViewHabit = () => {
               />
             </View>
           </View>
-
-          <RBSheet
-            ref={RBSDelete}
-            height={350}
-            openDuration={250}
-            customStyles={{ container: styles.containerBottomSheet }}>
-            <View style={styles.containerTextBottomSheet}>
-              <Image
-                style={styles.warningIconStyle}
-                source={require('../../../assets/icons/wrong.png')}
-              />
-              <Text style={styles.textDelete}>
-                Are you sure to delete this habit?
-              </Text>
-            </View>
-
-            <View style={styles.buttonContainer}>
-              <Button
-                disabled={loadingDelete}
-                loading={loadingDelete}
-                buttonStyle={Default.loginNextButton}
-                titleStyle={Default.loginButtonBoldTitle}
-                onPress={deleteHabit}
-                title="DELETE"
-                disabledStyle={Default.loginNextButton}
-              />
-
-              <TouchableOpacity
-                disabled={loadingDelete}
-                style={{ marginTop: 16 }}
-                onPress={() => RBSDelete.current.close()}>
-                <View style={{ alignItems: 'center' }}>
-                  <Text style={[systemWeights.bold, styles.createAccountText]}>
-                    Cancel
-                  </Text>
-                </View>
-              </TouchableOpacity>
-            </View>
-          </RBSheet>
         </ScrollView>
+
+        <RBSheet
+          ref={RBSDelete}
+          height={200}
+          openDuration={250}
+          customStyles={{
+            container: {
+              justifyContent: 'center',
+              alignItems: 'center',
+              backgroundColor: Colors.background,
+            },
+          }}>
+          <View style={{ flex: 1, justifyContent: 'space-evenly' }}>
+            <Text
+              style={{
+                textAlign: 'center',
+                fontSize: 18,
+                fontWeight: 'bold',
+                color: Colors.text,
+              }}>
+              Are you sure you want to delete this habit?
+            </Text>
+
+            <View
+              style={{ flexDirection: 'row', justifyContent: 'space-evenly' }}>
+              <Button
+                title="Cancel"
+                onPress={() => RBSDelete.current.close()}
+                buttonStyle={{ backgroundColor: Colors.secondary }}
+              />
+              <Button
+                title="Delete"
+                onPress={deleteHabit}
+                buttonStyle={{ backgroundColor: Colors.primary }}
+              />
+            </View>
+          </View>
+        </RBSheet>
       </KeyboardAwareScrollView>
     </View>
   );
@@ -258,125 +405,29 @@ const ViewHabit = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    paddingVertical: 32,
-    paddingHorizontal: 22,
-  },
-  containerBackButton: {
-    flexDirection: 'row',
-  },
-  textBackButton: {
-    fontSize: 16,
-    color: Colors.primary4,
-    marginLeft: 6,
-    fontStyle: 'normal',
-  },
-  textCreate: {
-    color: '#FCFCFC',
-    fontSize: 24,
-    marginTop: 8,
-    marginBottom: 32,
-  },
-  containerButton: {
-    flex: 1,
-    justifyContent: 'flex-end',
-    marginTop: 60,
-  },
-  pickerStyle: {
-    width: Dimensions.get('window').width - 44,
-    backgroundColor: Colors.primary,
-    borderRadius: 2,
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: '#455c8a',
-    marginHorizontal: 10,
-    paddingHorizontal: 16,
-    paddingVertical: 15,
-    marginBottom: 32,
-    fontSize: 16,
-    color: Colors.text,
-  },
-  containerHeaderImage: {
-    height: 189,
-    width: Dimensions.get('window').width,
-    zIndex: 0,
-    elevation: 0,
-    marginTop: 16,
-  },
-  habitImage: {
-    width: '100%',
-    height: '100%',
-    position: 'absolute',
-  },
-  addPhoto: {
-    width: 50,
-    height: 50,
-    marginBottom: 8,
-  },
-  textAddPhoto: {
-    fontWeight: '400',
-    fontSize: 16,
-    lineHeight: 19,
-    color: '#FCFCFC',
-  },
-  pickerStyleAndroid: {
-    marginHorizontal: 0,
-    paddingVertical: 15,
-    marginBottom: 0,
-    color: Colors.primary4,
-  },
-  pickerStyleIOS: {
-    paddingHorizontal: 0,
-    color: Colors.primary4,
-  },
-  buttonBottom: {
-    position: 'absolute',
-    bottom: 0,
-    right: 0,
-    left: 0,
-    paddingBottom: 16,
-    paddingHorizontal: 22,
-  },
-  containerBottomSheet: {
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
-    paddingVertical: 32,
-    paddingHorizontal: 22,
-  },
-  containerTextBottomSheet: {
-    alignItems: 'center',
-  },
-  warningIconStyle: {
-    width: 80,
-    height: 80,
-    marginBottom: 16,
-  },
-  textDelete: {
-    color: '#000000',
-    fontSize: 18,
-    fontWeight: '600',
-    marginBottom: 24,
-  },
-  buttonContainer: {
-    alignItems: 'center',
-    marginTop: 16,
-  },
-  createAccountText: {
-    fontSize: 14,
-    color: '#4A4A4A',
+    padding: 16,
   },
   title: {
-    color: Colors.text,
     fontSize: 16,
-    fontWeight: '400',
-    marginBottom: 12,
+    fontWeight: 'bold',
+    color: Colors.text,
+    marginBottom: 8,
   },
   textContent: {
-    fontSize: 16,
-    color: Colors.primary4,
-    fontWeight: '400',
-    marginBottom: 32,
+    fontSize: 14,
+    color: Colors.text,
+    marginBottom: 16,
   },
-  scheduleDetails: {
-    marginTop: 16,
+  photoContainer: {
+    width: Dimensions.get('window').width,
+    height: Dimensions.get('window').width,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  habitPhoto: {
+    width: '100%',
+    height: '100%',
   },
 });
 

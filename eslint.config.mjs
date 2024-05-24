@@ -29,6 +29,18 @@ export default [
   pluginJs.configs.recommended,
   pluginReactConfig,
   {
+    rules: {
+      'no-unused-vars': 'off',
+      'react/react-in-jsx-scope': 'off',
+      'react/prop-types': 'off',
+      'no-undef': 'off',
+      'react/no-unescaped-entities': 'off',
+      'no-empty': 'off',
+      'no-dupe-keys': 'off',
+      'no-warning-comments': 'off',
+    },
+  },
+  {
     settings: {
       react: {
         version: 'detect', // automatically detect the React version
@@ -67,15 +79,5 @@ export default [
       '__mocks__/expo-av.js',
       '__mocks__/react-native-gesture-handler.js',
     ],
-    rules: {
-      'no-unused-vars': 'off',
-      'react/react-in-jsx-scope': 'off',
-      'react/prop-types': 'off',
-      'no-undef': 'off',
-      'react/no-unescaped-entities': 'off',
-      'no-empty': 'off',
-      'no-dupe-keys': 'off',
-      'no-warning-comments': 'off',
-    },
   },
 ];
