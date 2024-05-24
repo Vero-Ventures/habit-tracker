@@ -62,30 +62,34 @@ const ViewHabit = () => {
         .select('*')
         .eq('habit_id', habit.habit_id)
         .single();
-
+  
       if (habitError) {
         Alert.alert('Error fetching habit', habitError.message);
         return;
       }
-
+  
       setHabitPhoto(habitData?.habit_photo);
       if (habitData?.habit_plan) {
         setGeneratedSchedule(JSON.parse(habitData.habit_plan));
       }
-
+  
       const { data: imagesData, error: imagesError } = await supabase
         .from('HabitImages')
         .select('*')
         .eq('habit_id', habit.habit_id);
-
+  
       if (imagesError) {
         Alert.alert('Error fetching images', imagesError.message);
         return;
       }
 
-      setHabitImages(imagesData);
+      const combinedImages = [
+        ...(habitData?.habit_photo ? [{ image_photo: habitData.habit_photo, id: 'habitPhoto' }] : []),
+        ...imagesData
+      ];
+      setHabitImages(combinedImages );
     };
-
+  
     fetchHabit();
   }, [habit.habit_id]);
 
@@ -370,7 +374,13 @@ const ViewHabit = () => {
     setModalVisible(false);
     setSelectedImage(null);
   };
-
+  const renderImageItem = ({ item }) => {
+    return (
+      <TouchableOpacity key={item.id} onPress={() => openModal(item)}>
+        <Image source={{ uri: item.image_photo }} style={styles.gridImage} />
+      </TouchableOpacity>
+    );
+  };
   return (
     <View style={Default.container}>
       <KeyboardAwareScrollView extraHeight={120} contentContainerStyle={Default.container}>
@@ -388,25 +398,15 @@ const ViewHabit = () => {
               />
             }
           />
-
           <View style={styles.gridContainer}>
-            {habitPhoto && (
-              <TouchableOpacity onPress={() => openModal({ image_photo: habitPhoto })}>
-                <Image source={{ uri: habitPhoto }} style={styles.gridImage} />
-              </TouchableOpacity>
-            )}
-            <FlatList
-              data={habitImages}
-              keyExtractor={(item, index) => index.toString()}
-              numColumns={3}
-              renderItem={({ item }) => (
-                <TouchableOpacity onPress={() => openModal(item)}>
-                  <Image source={{ uri: item.image_photo }} style={styles.gridImage} />
-                </TouchableOpacity>
-              )}
-            />
+           <FlatList
+            data={habitImages}
+            renderItem={renderImageItem}
+            keyExtractor={(item) => item.description}
+            numColumns={3}
+            contentContainerStyle={styles.scrollContainer}
+          />
           </View>
-
           <Modal
             animationType="slide"
             transparent={true}
@@ -612,14 +612,14 @@ const ViewHabit = () => {
 
 const styles = StyleSheet.create({
   container: {
+    width: Dimensions.get("window").width,
+    backgroundColor: Colors.primary,
     flex: 1,
     padding: 16,
   },
   gridContainer: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'space-between',
     marginBottom: 16,
+    flex: 3,
   },
   gridImage: {
     width: imageSize - 10,
