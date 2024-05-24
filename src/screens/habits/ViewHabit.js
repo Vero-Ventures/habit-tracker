@@ -327,6 +327,33 @@ const ViewHabit = () => {
     }
   };
 
+  const deleteImage = async (image) => {
+    try {
+      const { error: deleteError } = await supabase
+        .from('HabitImages')
+        .delete()
+        .eq('habit_image_id', image.habit_image_id);
+
+      if (deleteError) {
+        throw deleteError;
+      }
+
+      const { error: bucketError } = await supabase.storage
+        .from('habit')
+        .remove([image.image_photo.split('/').pop()]);
+
+      if (bucketError) {
+        throw bucketError;
+      }
+
+      setHabitImages(habitImages.filter(img => img.habit_image_id!== image.habit_image_id));
+      Alert.alert('Success', 'Photo has been successfully deleted');
+      closeModal();
+    } catch (error) {
+      Alert.alert('Error', error.message);
+    }
+  };
+
   const customStyles = {
     stepIndicatorSize: 25,
     currentStepIndicatorSize: 30,
@@ -421,6 +448,7 @@ const ViewHabit = () => {
                     <>
                       <Image source={{ uri: selectedImage.image_photo }} style={styles.fullImage} />
                       <Text style={styles.imageDescription}>{selectedImage.description}</Text>
+                      <Button title="Delete Photo" onPress={() => deleteImage(selectedImage)} />
                       <Button title="Close" onPress={closeModal} />
                     </>
                   )}
