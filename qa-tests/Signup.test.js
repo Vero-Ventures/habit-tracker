@@ -19,6 +19,7 @@ jest.mock('../src/config/supabaseClient', () => ({
 jest.spyOn(Alert, 'alert');
 
 describe('Auth Component', () => {
+  const setIsLoggedIn = jest.fn();
   afterEach(() => {
     jest.clearAllMocks();
   });
@@ -62,7 +63,9 @@ describe('Auth Component', () => {
   });
 
   test('signs in successfully', async () => {
-    const { getByPlaceholderText, getByText } = render(<Auth />);
+    const { getByPlaceholderText, getByText } = render(
+      <Auth setIsLoggedIn={setIsLoggedIn} />
+    );
 
     fireEvent.changeText(
       getByPlaceholderText('email@address.com'),
