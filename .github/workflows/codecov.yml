@@ -1,6 +1,8 @@
 name: Upload coverage reports
 
-on: [push]
+on:
+  push:
+    branches: [main, dev, devops/qa-tests]
 
 jobs:
   upload-coverage:
