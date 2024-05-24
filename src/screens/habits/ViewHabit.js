@@ -778,6 +778,7 @@ import {
   ScrollView,
   StyleSheet,
   Dimensions,
+  FlatList,
   Text,
   TouchableOpacity,
   ActivityIndicator,
@@ -805,7 +806,8 @@ import { decode } from 'base64-arraybuffer';
 const { GoogleGenerativeAI } = require('@google/generative-ai');
 const apikey = process.env.EXPO_PUBLIC_REACT_APP_GEMINI_KEY;
 const genAI = new GoogleGenerativeAI(apikey);
-
+const { width } = Dimensions.get('window');
+const imageSize = width / 3;
 const ViewHabit = () => {
   const session = store.getState().user.session;
   const [loadingDelete, setLoadingDelete] = useState(false);
@@ -1123,9 +1125,7 @@ const ViewHabit = () => {
 
   return (
     <View style={Default.container}>
-      <KeyboardAwareScrollView
-        extraHeight={120}
-        contentContainerStyle={Default.container}>
+      <KeyboardAwareScrollView extraHeight={120} contentContainerStyle={Default.container}>
         <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
           <Header
             title="Habit Details"
@@ -1133,11 +1133,7 @@ const ViewHabit = () => {
             backButton
             customRightIcon={
               <Icon
-                onPress={() =>
-                  navigation.navigate('EditHabit', {
-                    habit_id: habit.habit_id,
-                  })
-                }
+                onPress={() => navigation.navigate('EditHabit', { habit_id: habit.habit_id })}
                 size={20}
                 color={Colors.text}
                 name="edit"
@@ -1151,11 +1147,16 @@ const ViewHabit = () => {
                 <Image source={{ uri: habitPhoto }} style={styles.gridImage} />
               </TouchableOpacity>
             )}
-            {habitImages.map((image, index) => (
-              <TouchableOpacity key={index} onPress={() => openModal(image)}>
-                <Image source={{ uri: image.image_photo }} style={styles.gridImage} />
-              </TouchableOpacity>
-            ))}
+            <FlatList
+              data={habitImages}
+              keyExtractor={(item, index) => index.toString()}
+              numColumns={3}
+              renderItem={({ item }) => (
+                <TouchableOpacity onPress={() => openModal(item)}>
+                  <Image source={{ uri: item.image_photo }} style={styles.gridImage} />
+                </TouchableOpacity>
+              )}
+            />
           </View>
 
           <Modal
@@ -1365,10 +1366,9 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   gridImage: {
-    width: '30%',
-    aspectRatio: 1,
-    marginBottom: 16,
-    borderRadius: 10,
+    width: imageSize - 10,
+    height: imageSize - 10,
+    margin: 5,
   },
   modalContainer: {
     flex: 1,
