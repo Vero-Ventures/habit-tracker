@@ -146,7 +146,6 @@ export default function Navigator({ setIsLoggedIn }) {
       <Tab.Screen name="Timeline" component={Timeline} />
       <Tab.Screen name="Checklist" component={ChecklistScreen} />
       <Tab.Screen name="Habits" component={HabitsScreen} />
-      <Tab.Screen name="Community" component={CommunityScreen} />
       <Tab.Screen name="Profile">
         {() => <ProfilesScreen setIsLoggedIn={setIsLoggedIn} />}
       </Tab.Screen>
