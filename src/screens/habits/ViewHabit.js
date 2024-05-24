@@ -26,9 +26,9 @@ import moment from 'moment';
 import store from '../../store/storeConfig';
 import StepIndicator from 'react-native-step-indicator';
 import * as ImagePicker from 'expo-image-picker';
-import ActionSheet from 'react-native-actionsheet';
 import { v4 as uuidv4 } from 'uuid';
 import { decode } from 'base64-arraybuffer';
+import ActionSheet from 'react-native-actionsheet';
 
 const { GoogleGenerativeAI } = require('@google/generative-ai');
 const apikey = process.env.EXPO_PUBLIC_REACT_APP_GEMINI_KEY;
@@ -225,7 +225,7 @@ const ViewHabit = () => {
     }
   };
 
-  const handleActionSheet = async index => {
+  const handleActionSheet = async (index) => {
     if (index === 0) {
       let { status } = await ImagePicker.requestCameraPermissionsAsync();
       if (status === 'granted') {
@@ -341,8 +341,8 @@ const ViewHabit = () => {
     stepIndicatorFinishedColor: Colors.primary,
     stepIndicatorUnFinishedColor: '#ffffff',
     stepIndicatorCurrentColor: '#ffffff',
-    stepIndicatorLabelFontSize: 0, 
-    currentStepIndicatorLabelFontSize: 0, 
+    stepIndicatorLabelFontSize: 0,
+    currentStepIndicatorLabelFontSize: 0,
     labelColor: '#999999',
     labelSize: 13,
     currentStepLabelColor: Colors.primary,
@@ -476,7 +476,7 @@ const ViewHabit = () => {
             </View>
 
             <TouchableOpacity onPress={() => ASPhotoOptions.current.show()} style={styles.pickImageButton}>
-              <Text style={styles.pickImageButtonText}>Upload progess image</Text>
+              <Text style={styles.pickImageButtonText}>Pick an image</Text>
             </TouchableOpacity>
 
             <ActionSheet
@@ -484,13 +484,7 @@ const ViewHabit = () => {
               options={['Camera', 'Library', 'Cancel']}
               cancelButtonIndex={2}
               destructiveButtonIndex={2}
-              buttonUnderlayColor={Colors.grey1}
               onPress={index => handleActionSheet(index)}
-              styles={{
-                buttonBox: Default.actionSheetButtonBox,
-                body: Default.actionSheetBody,
-                cancelButtonBox: Default.actionSheetCancelButtonBox,
-              }}
             />
 
             {newPhoto && (
@@ -577,7 +571,7 @@ const ViewHabit = () => {
 
         <RBSheet
           ref={RBSDelete}
-          height={Dimensions.get('window').height * 0.12} 
+          height={Dimensions.get('window').height * 0.12}
           openDuration={250}
           customStyles={{
             container: {
@@ -585,7 +579,7 @@ const ViewHabit = () => {
               alignItems: 'center',
               borderRadius: 45,
               padding: 20,
-              width: Dimensions.get('window').width - 40, 
+              width: Dimensions.get('window').width - 40,
               marginHorizontal: 20,
             },
           }}>
@@ -680,27 +674,22 @@ const styles = StyleSheet.create({
     borderRadius: 45,
   },
   pickImageButton: {
-    backgroundColor: Colors.primary,
+    backgroundColor: '#5c6bc0',
     padding: 12,
     borderRadius: 30,
     alignItems: 'center',
     marginVertical: 16,
   },
   pickImageButtonText: {
-    color: '#FFFFFF',
+    color: Colors.white,
     fontSize: 16,
     fontWeight: 'bold',
     letterSpacing: 1,
     paddingVertical: 10,
     paddingHorizontal: 20,
-    backgroundColor: '#FF6347', 
-
+    borderRadius: 25,
     overflow: 'hidden',
-    textAlign: 'center',
-    marginVertical: 10,
-  }
-  ,
-  
+  },
   newImageContainer: {
     alignItems: 'center',
   },
