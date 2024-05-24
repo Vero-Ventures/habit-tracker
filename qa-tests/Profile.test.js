@@ -6,6 +6,8 @@ import SettingsScreen from '../src/screens/SettingsScreen';
 import { Alert } from 'react-native';
 import { supabase } from '../src/config/supabaseClient';
 
+const setIsLoggedIn = jest.fn();
+
 // Mocking the supabase client to prevent actual API calls
 jest.mock('../src/config/supabaseClient', () => ({
   supabase: {
@@ -91,7 +93,6 @@ describe('Profile Component', () => {
   });
 
   test('user signs out of their account', async () => {
-    const setIsLoggedIn = jest.fn();
     const { getByText } = render(
       <NavigationContainer>
         <SettingsScreen setIsLoggedIn={setIsLoggedIn} />
@@ -105,98 +106,91 @@ describe('Profile Component', () => {
     });
   });
 
-  //   test('user deletes their account', async () => {
-  //     const { getByText } = render(
-  //       <NavigationContainer>
-  //         <Account />
-  //       </NavigationContainer>
-  //     );
+  test('user deletes their account', async () => {
+    const { getByText } = render(
+      <NavigationContainer>
+        <SettingsScreen setIsLoggedIn={setIsLoggedIn} />
+      </NavigationContainer>
+    );
 
-  //     fireEvent.press(getByText('Delete Account'));
+    fireEvent.press(getByText('Delete Account'));
 
-  //     await waitFor(() => {
-  //       expect(supabase.auth.signOut).toHaveBeenCalled();
-  //     });
+    await waitFor(() => {
+      expect(supabase.auth.signOut).toHaveBeenCalled();
+    });
 
-  //     await waitFor(() => {
-  //       expect(supabase.rpc).toHaveBeenCalledWith('delete_user_data', {
-  //         user_id: 'test-user-id',
-  //       });
-  //     });
+    await waitFor(() => {
+      expect(supabase.rpc).toHaveBeenCalledWith('delete_user_data', {
+        user_id: 'test-user-id',
+      });
+    });
 
-  //     await waitFor(() => {
-  //       expect(supabase.auth.signOut).toHaveBeenCalled();
-  //     });
-  //   });
-  // });
+    await waitFor(() => {
+      expect(supabase.auth.signOut).toHaveBeenCalled();
+    });
+  });
+});
 
-  // describe('CRUD operations on profile', () => {
-  //   afterEach(() => {
-  //     jest.clearAllMocks();
-  //   });
+describe('CRUD operations on profile', () => {
+  afterEach(() => {
+    jest.clearAllMocks();
+  });
 
-  //   test('user updates their profile & changes persist', async () => {
-  //     const { getByText, getByPlaceholderText } = render(
-  //       <NavigationContainer>
-  //         <Account />
-  //       </NavigationContainer>
-  //     );
+  test('user updates their profile & changes persist', async () => {
+    const { getByText, getByPlaceholderText } = render(
+      <NavigationContainer>
+        <Account />
+      </NavigationContainer>
+    );
 
-  //     fireEvent.press(getByText('Edit Profile'));
+    fireEvent.press(getByText('Edit Profile'));
 
-  //     fireEvent.changeText(
-  //       getByPlaceholderText('Enter profile image URL'),
-  //       'https://example.com/image.jpg'
-  //     );
-  //     fireEvent.changeText(getByPlaceholderText('Enter username'), 'testuser');
-  //     fireEvent.changeText(
-  //       getByPlaceholderText('Enter bio'),
-  //       'This is a test bio'
-  //     );
-  //     fireEvent.press(getByText('Update'));
+    fireEvent.changeText(getByPlaceholderText('Enter username'), 'testuser');
+    fireEvent.changeText(
+      getByPlaceholderText('Enter bio'),
+      'This is a test bio'
+    );
+    fireEvent.press(getByText('Update Profile'));
 
-  //     // Mock the update response & check if profile is updated
-  //     await waitFor(() => {
-  //       expect(Alert.alert).toHaveBeenCalledWith(
-  //         'Success',
-  //         'Profile updated successfully!'
-  //       );
+    // Mock the update response & check if profile is updated
+    await waitFor(() => {
+      expect(Alert.alert).toHaveBeenCalledWith(
+        'Success',
+        'Profile updated successfully!'
+      );
 
-  //       expect(getByPlaceholderText('Enter profile image URL').props.value).toBe(
-  //         'https://example.com/image.jpg'
-  //       );
-  //       expect(getByPlaceholderText('Enter username').props.value).toBe(
-  //         'testuser'
-  //       );
-  //       expect(getByPlaceholderText('Enter bio').props.value).toBe(
-  //         'This is a test bio'
-  //       );
-  //     });
-  //   });
+      expect(getByPlaceholderText('Enter username').props.value).toBe(
+        'testuser'
+      );
+      expect(getByPlaceholderText('Enter bio').props.value).toBe(
+        'This is a test bio'
+      );
+    });
+  });
+});
 
-  //   describe('Data export', () => {
-  //     afterEach(() => {
-  //       jest.clearAllMocks();
-  //     });
+describe('Data export', () => {
+  afterEach(() => {
+    jest.clearAllMocks();
+  });
 
-  // test('user downloads their data', async () => {
-  //   const { getByText } = render(
-  //     <NavigationContainer>
-  //       <Account />
-  //     </NavigationContainer>
-  //   );
+  test('user downloads their data', async () => {
+    const { getByText } = render(
+      <NavigationContainer>
+        <SettingsScreen setIsLoggedIn={setIsLoggedIn} />
+      </NavigationContainer>
+    );
 
-  //   fireEvent.press(getByText('Download User Data'));
+    fireEvent.press(getByText('Download User Data'));
 
-  //   await waitFor(() => {
-  //     expect(supabase.rpc).toHaveBeenCalledWith('get_user_data', {
-  //       p_user_id: 'test-user-id',
-  //     });
-  //     expect(Alert.alert).toHaveBeenCalledWith(
-  //       'Success',
-  //       'User data saved as user_data.json'
-  //     );
-  //   });
-  // });
-  // });
+    await waitFor(() => {
+      expect(supabase.rpc).toHaveBeenCalledWith('get_user_data', {
+        p_user_id: 'test-user-id',
+      });
+      expect(Alert.alert).toHaveBeenCalledWith(
+        'Success',
+        'User data saved as user_data.json'
+      );
+    });
+  });
 });
