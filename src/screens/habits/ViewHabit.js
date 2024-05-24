@@ -399,13 +399,13 @@ const ViewHabit = () => {
             }
           />
           <View style={styles.gridContainer}>
-           <FlatList
-            data={habitImages}
-            renderItem={renderImageItem}
-            keyExtractor={(item) => item.description}
-            numColumns={3}
-            contentContainerStyle={styles.scrollContainer}
-          />
+            <FlatList
+              data={habitImages}
+              renderItem={renderImageItem}
+              keyExtractor={(item) => item.description}
+              numColumns={3}
+              contentContainerStyle={styles.scrollContainer}
+            />
           </View>
           <Modal
             animationType="slide"
