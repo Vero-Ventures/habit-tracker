@@ -11,7 +11,12 @@
     "format": "prettier --write .",
     "prepare": "husky",
     "postinstall": "node --eval \"require('fs').writeFileSync('.husky/pre-commit', 'npx lint-staged .\\n')\"",
-    "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js"
+    "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js",
+    "chatbot": "jest qa-tests/Chatbot.test.js",
+    "habit": "jest qa-tests/Habits.test.js",
+    "profile": "jest qa-tests/Profile.test.js",
+    "signup": "jest qa-tests/Signup.test.js",
+    "timeline": "jest qa-tests/Timeline.test.js"
   },
   "husky": {
     "hooks": {
@@ -69,6 +74,7 @@
     "react-native-paper": "^5.12.3",
     "react-native-raw-bottom-sheet": "^3.0.0",
     "react-native-reanimated": "^3.11.0",
+    "react-native-safe-area-context": "^4.10.1",
     "react-native-select-dropdown": "^4.0.1",
     "react-native-svg": "^15.3.0",
     "react-native-swipeable": "^0.6.0",

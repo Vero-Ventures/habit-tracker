@@ -1,5 +1,7 @@
 import React from 'react';
+import { Provider } from 'react-redux'; // Import Provider from react-redux
 import { render, fireEvent, waitFor } from '@testing-library/react-native';
+import { store } from '../src/store/storeConfig'; // Import your Redux store
 import { supabase } from '../src/config/supabaseClient';
 import Timeline from '../src/screens/timeline/Timeline';
 
@@ -26,7 +28,11 @@ describe('Timeline Component', () => {
   });
 
   test('navigates to timeline page', async () => {
-    const { getByText } = render(<Timeline />);
+    const { getByText } = render(
+      <Provider store={store}>
+        <Timeline />
+      </Provider>
+    );
 
     getByText('Timeline');
     getByText('No posts to show'); // initial state
