@@ -327,33 +327,6 @@ const ViewHabit = () => {
     }
   };
 
-  const deleteImage = async (image) => {
-    try {
-      const { error: deleteError } = await supabase
-        .from('HabitImages')
-        .delete()
-        .eq('habit_image_id', image.habit_image_id);
-
-      if (deleteError) {
-        throw deleteError;
-      }
-
-      const { error: bucketError } = await supabase.storage
-        .from('habit')
-        .remove([image.image_photo.split('/').pop()]);
-
-      if (bucketError) {
-        throw bucketError;
-      }
-
-      setHabitImages(habitImages.filter(img => img.habit_image_id!== image.habit_image_id));
-      Alert.alert('Success', 'Photo has been successfully deleted');
-      closeModal();
-    } catch (error) {
-      Alert.alert('Error', error.message);
-    }
-  };
-
   const customStyles = {
     stepIndicatorSize: 25,
     currentStepIndicatorSize: 30,
@@ -396,6 +369,33 @@ const ViewHabit = () => {
   const closeModal = () => {
     setModalVisible(false);
     setSelectedImage(null);
+  };
+
+  const deleteImage = async () => {
+    if (!selectedImage) return;
+
+    const { error } = await supabase
+      .from('HabitImages')
+      .delete()
+      .eq('image_photo', selectedImage.image_photo);
+
+    if (error) {
+      Alert.alert('Error', 'Failed to delete the image from the database');
+      return;
+    }
+
+    const { error: storageError } = await supabase.storage
+      .from('habit')
+      .remove([selectedImage.image_photo]);
+
+    if (storageError) {
+      Alert.alert('Error', 'Failed to delete the image from the storage');
+      return;
+    }
+
+    setHabitImages(habitImages.filter((image) => image.image_photo !== selectedImage.image_photo));
+    closeModal();
+    Alert.alert('Success', 'Photo has been successfully deleted');
   };
 
   return (
@@ -448,8 +448,8 @@ const ViewHabit = () => {
                     <>
                       <Image source={{ uri: selectedImage.image_photo }} style={styles.fullImage} />
                       <Text style={styles.imageDescription}>{selectedImage.description}</Text>
-                      <Button title="Delete Photo" onPress={() => deleteImage(selectedImage)} />
                       <Button title="Close" onPress={closeModal} />
+                      <Button title="Delete Photo" onPress={deleteImage} buttonStyle={styles.deleteButton} />
                     </>
                   )}
                 </View>
@@ -626,6 +626,19 @@ const ViewHabit = () => {
             </RBSheet>
           </>
         }
+      />
+      <ActionSheet
+        ref={ASPhotoOptions}
+        options={['Camera', 'Library', 'Cancel']}
+        cancelButtonIndex={2}
+        destructiveButtonIndex={2}
+        buttonUnderlayColor={Colors.grey1}
+        onPress={(index) => handleActionSheet(index)}
+        styles={{
+          buttonBox: Default.actionSheetButtonBox,
+          body: Default.actionSheetBody,
+          cancelButtonBox: Default.actionSheetCancelButtonBox,
+        }}
       />
     </View>
   );
