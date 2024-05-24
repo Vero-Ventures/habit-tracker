@@ -4,7 +4,7 @@ import { useNavigation } from '@react-navigation/native';
 import { supabase } from '../config/supabaseClient';
 import store from '../store/storeConfig';
 import Colors from '../../assets/styles/Colors';
-import Header from '../components/Header'; // Assuming you have a Header component
+import Header from '../components/Header'; 
 
 export default function FollowScreen() {
   const session = store.getState().user.session;
@@ -76,7 +76,7 @@ export default function FollowScreen() {
       }
 
       Alert.alert('Success', 'You are now following this user');
-      fetchFollowingList(); 
+      fetchFollowingList();
     } catch (error) {
       Alert.alert('You are already following this person');
     }
@@ -103,21 +103,31 @@ export default function FollowScreen() {
     }
   };
 
+
+
+  
   const renderFollowingItem = ({ item }) => {
     return (
-      <View style={styles.resultItem}>
+      <TouchableOpacity
+        style={styles.resultItem}
+        onPress={() => navigation.navigate('UserProfile', { userId: item.user_id })}
+      >
         <Image source={{ uri: item.profile_image }} style={styles.profileImage} />
         <Text style={styles.username}>{item.username}</Text>
         <TouchableOpacity onPress={() => unfollowUser(item.user_id)}>
           <Text style={styles.unfollowButton}>Unfollow</Text>
         </TouchableOpacity>
-      </View>
+      </TouchableOpacity>
     );
   };
+  
 
   const renderSearchResultItem = ({ item }) => {
     return (
-      <View style={styles.resultItem}>
+      <TouchableOpacity
+        style={styles.resultItem}
+        onPress={() => navigation.navigate('UserProfile', { userId: item.user_id })}
+      >
         <Image source={{ uri: item.profile_image }} style={styles.profileImage} />
         <Text style={styles.username}>{item.username}</Text>
         {item.isFollowing ? (
@@ -127,9 +137,10 @@ export default function FollowScreen() {
             <Text style={styles.followButton}>Follow</Text>
           </TouchableOpacity>
         )}
-      </View>
+      </TouchableOpacity>
     );
   };
+  
 
   return (
     <View style={styles.container}>
@@ -183,6 +194,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     backgroundColor: 'white',
     borderRadius: 45,
+    backgroundColor: 'white',
   },
   followingList: {
     marginBottom: 20,

@@ -4,7 +4,7 @@ import { useNavigation } from '@react-navigation/native';
 import { supabase } from '../config/supabaseClient';
 import store from '../store/storeConfig';
 import Colors from '../../assets/styles/Colors';
-import Header from '../components/Header'; // Assuming you have a Header component
+import Header from '../components/Header'; 
 
 export default function FollowersScreen() {
   const session = store.getState().user.session;
@@ -85,21 +85,29 @@ export default function FollowersScreen() {
     }
   };
 
-  const renderSearchResultItem = ({ item }) => {
-    return (
-      <View style={styles.resultItem}>
-        <Image source={{ uri: item.profile_image }} style={styles.profileImage} />
-        <Text style={styles.username}>{item.username}</Text>
-        {item.isFollower ? (
-          <Text style={styles.alreadyFollowing}>This user follows you</Text>
-        ) : (
-          <TouchableOpacity onPress={() => followUser(item.user_id)}>
-            <Text style={styles.followButton}>Follow</Text>
-          </TouchableOpacity>
-        )}
-      </View>
-    );
-  };
+  const renderSearchResultItem = ({ item }) => (
+    <View style={styles.resultItem}>
+      <Image source={{ uri: item.profile_image }} style={styles.profileImage} />
+      <Text style={styles.username}>{item.username}</Text>
+      {item.isFollower ? (
+        <Text style={styles.alreadyFollowing}>This user follows you</Text>
+      ) : (
+        <TouchableOpacity onPress={() => followUser(item.user_id)}>
+          <Text style={styles.followButton}>Follow</Text>
+        </TouchableOpacity>
+      )}
+    </View>
+  );
+
+  const renderFollowerItem = ({ item }) => (
+    <TouchableOpacity
+      style={styles.resultItem}
+      onPress={() => navigation.navigate('UserProfile', { userId: item.user_id })}
+    >
+      <Image source={{ uri: item.profile_image }} style={styles.profileImage} />
+      <Text style={styles.username}>{item.username}</Text>
+    </TouchableOpacity>
+  );
 
   return (
     <View style={styles.container}>
@@ -125,12 +133,7 @@ export default function FollowersScreen() {
           <FlatList
             data={followersList}
             keyExtractor={(item) => String(item.user_id)}
-            renderItem={({ item }) => (
-              <View style={styles.resultItem}>
-                <Image source={{ uri: item.profile_image }} style={styles.profileImage} />
-                <Text style={styles.username}>{item.username}</Text>
-              </View>
-            )}
+            renderItem={renderFollowerItem}
             style={styles.followersList}
           />
         ) : (
@@ -151,8 +154,8 @@ export default function FollowersScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.background,
     padding: 20,
+    backgroundColor: Colors.background,
   },
   searchBar: {
     height: 40,
@@ -162,6 +165,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     backgroundColor: 'white',
     borderRadius: 45,
+    backgroundColor: 'white',
   },
   followersList: {
     marginBottom: 20,
