@@ -62,30 +62,34 @@ const ViewHabit = () => {
         .select('*')
         .eq('habit_id', habit.habit_id)
         .single();
-
+  
       if (habitError) {
         Alert.alert('Error fetching habit', habitError.message);
         return;
       }
-
+  
       setHabitPhoto(habitData?.habit_photo);
       if (habitData?.habit_plan) {
         setGeneratedSchedule(JSON.parse(habitData.habit_plan));
       }
-
+  
       const { data: imagesData, error: imagesError } = await supabase
         .from('HabitImages')
         .select('*')
         .eq('habit_id', habit.habit_id);
-
+  
       if (imagesError) {
         Alert.alert('Error fetching images', imagesError.message);
         return;
       }
 
-      setHabitImages(imagesData);
+      const combinedImages = [
+        ...(habitData?.habit_photo ? [{ image_photo: habitData.habit_photo, id: 'habitPhoto' }] : []),
+        ...imagesData
+      ];
+      setHabitImages(combinedImages );
     };
-
+  
     fetchHabit();
   }, [habit.habit_id]);
 
@@ -240,11 +244,8 @@ const ViewHabit = () => {
       } else {
         Alert.alert('Ops', 'You need to allow access to the library first.');
       }
-    } else if (index === 2) {
-      setNewPhoto(null);
     }
   };
-  
 
   const pickCamera = async () => {
     let result = await ImagePicker.launchCameraAsync({ mediaTypes: ImagePicker.MediaTypeOptions.Images });
@@ -373,299 +374,252 @@ const ViewHabit = () => {
     setModalVisible(false);
     setSelectedImage(null);
   };
-
-  const deleteImage = async () => {
-    if (!selectedImage) return;
-
-    const { error } = await supabase
-      .from('HabitImages')
-      .delete()
-      .eq('image_photo', selectedImage.image_photo);
-
-    if (error) {
-      Alert.alert('Error', 'Failed to delete the image from the database');
-      return;
-    }
-
-    const { error: storageError } = await supabase.storage
-      .from('habit')
-      .remove([selectedImage.image_photo]);
-
-    if (storageError) {
-      Alert.alert('Error', 'Failed to delete the image from the storage');
-      return;
-    }
-
-    setHabitImages(habitImages.filter((image) => image.image_photo !== selectedImage.image_photo));
-    closeModal();
-    Alert.alert('Success', 'Photo has been successfully deleted');
+  const renderImageItem = ({ item }) => {
+    return (
+      <TouchableOpacity key={item.id} onPress={() => openModal(item)}>
+        <Image source={{ uri: item.image_photo }} style={styles.gridImage} />
+      </TouchableOpacity>
+    );
   };
-
   return (
     <View style={Default.container}>
-      <Header
-        title="Habit Details"
-        navigation={navigation}
-        backButton
-        customRightIcon={
-          <Icon
-            onPress={() => navigation.navigate('EditHabit', { habit_id: habit.habit_id })}
-            size={20}
-            color={Colors.text}
-            name="edit"
+      <KeyboardAwareScrollView extraHeight={120} contentContainerStyle={Default.container}>
+        <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
+          <Header
+            title="Habit Details"
+            navigation={navigation}
+            backButton
+            customRightIcon={
+              <Icon
+                onPress={() => navigation.navigate('EditHabit', { habit_id: habit.habit_id })}
+                size={20}
+                color={Colors.text}
+                name="edit"
+              />
+            }
           />
-        }
-      />
+          <View style={styles.gridContainer}>
+            <FlatList
+              data={habitImages}
+              renderItem={renderImageItem}
+              keyExtractor={(item) => item.description}
+              numColumns={3}
+              contentContainerStyle={styles.scrollContainer}
+            />
+          </View>
+          <Modal
+            animationType="slide"
+            transparent={true}
+            visible={modalVisible}
+            onRequestClose={closeModal}
+          >
+            <View style={styles.modalContainer}>
+              <View style={styles.modalContent}>
+                {selectedImage && (
+                  <>
+                    <Image source={{ uri: selectedImage.image_photo }} style={styles.fullImage} />
+                    <Text style={styles.imageDescription}>{selectedImage.description}</Text>
+                    <Button title="Close" onPress={closeModal} />
+                  </>
+                )}
+              </View>
+            </View>
+          </Modal>
 
-      <FlatList
-        ListHeaderComponent={
-          <>
-            <View style={styles.gridContainer}>
-              {habitPhoto && (
-                <TouchableOpacity onPress={() => openModal({ image_photo: habitPhoto })}>
-                  <Image source={{ uri: habitPhoto }} style={styles.gridImage} />
-                </TouchableOpacity>
+          <View style={styles.container}>
+            <View style={styles.card}>
+              <Text style={styles.title}>Habit Title</Text>
+              <Text style={styles.textContent}>
+                {habit?.habit_title || 'N/A'}
+              </Text>
+
+              <Text style={styles.title}>Habit Description</Text>
+              <Text style={styles.textContent}>
+                {habit?.habit_description || 'N/A'}
+              </Text>
+
+              <Text style={styles.title}>Quantity</Text>
+              <Text style={styles.textContent}>
+                {habit?.schedule_quantity || 'N/A'}
+              </Text>
+
+              <Text style={styles.title}>Start Date</Text>
+              <Text style={styles.textContent}>
+                {habit?.schedule_start_date
+                  ? moment(habit.schedule_start_date).format('MMMM Do YYYY')
+                  : 'N/A'}
+              </Text>
+
+              <Text style={styles.title}>End Date</Text>
+              <Text style={styles.textContent}>
+                {habit?.schedule_end_date
+                  ? moment(habit.schedule_end_date).format('MMMM Do YYYY')
+                  : 'N/A'}
+              </Text>
+
+              <Text style={styles.title}>Active Days</Text>
+              <Text style={styles.textContent}>
+                {habit?.schedule_active_days || 'N/A'}
+              </Text>
+
+              <Text style={styles.title}>State</Text>
+              <Text style={styles.textContent}>
+                {habit?.schedule_state || 'N/A'}
+              </Text>
+
+              <Text style={styles.title}>Created At</Text>
+              <Text style={styles.textContent}>
+                {habit?.created_at
+                  ? moment(habit.created_at).format('MMMM Do YYYY, h:mm:ss a')
+                  : 'N/A'}
+              </Text>
+            </View>
+
+            <TouchableOpacity onPress={() => ASPhotoOptions.current.show()} style={styles.pickImageButton}>
+              <Text style={styles.pickImageButtonText}>Pick an image</Text>
+            </TouchableOpacity>
+
+            <ActionSheet
+              ref={ASPhotoOptions}
+              options={['Camera', 'Library', 'Cancel']}
+              cancelButtonIndex={2}
+              destructiveButtonIndex={2}
+              onPress={index => handleActionSheet(index)}
+            />
+
+            {newPhoto && (
+              <View style={styles.newImageContainer}>
+                <Image source={{ uri: newPhoto.uri }} style={styles.newImage} />
+                <TextInput
+                  style={styles.newDescriptionInput}
+                  placeholder="Add a description"
+                  value={newDescription}
+                  onChangeText={setNewDescription}
+                />
+                <Button title="Add Image" onPress={addImage} />
+              </View>
+            )}
+
+            <View style={styles.containerButton}>
+              <Button
+                onPress={generateHabitSchedule}
+                title="Generate Habit Schedule"
+                buttonStyle={styles.generateButton}
+              />
+            </View>
+
+            <View style={styles.scheduleDetails}>
+              <Text style={{ ...styles.title, paddingTop: 20, paddingBottom: 20, }}>Your Habit Plan by Your AI Coach:</Text>
+              {isLoading ? (
+                <ActivityIndicator size="small" color={Colors.ActivityIndicator} />
+              ) : generatedSchedule ? (
+                <>
+                  <StepIndicator
+                    customStyles={customStyles}
+                    currentPosition={currentPosition}
+                    stepCount={generatedSchedule[habit.habit_title][0].stages.length}
+                    labels={generatedSchedule[habit.habit_title][0].stages.map((stage) => stage.name)}
+                  />
+                  <ScrollView
+                    horizontal
+                    showsHorizontalScrollIndicator={false}
+                    style={styles.stepContentContainer}
+                    onScroll={(e) => {
+                      const contentOffsetX = e.nativeEvent.contentOffset.x;
+                      const screenWidth = Dimensions.get('window').width;
+                      const currentStep = Math.round(contentOffsetX / screenWidth);
+                      setCurrentPosition(currentStep);
+                    }}
+                    scrollEventThrottle={16}
+                  >
+                    {generatedSchedule[habit.habit_title][0].stages.map((stage, index) =>
+                      renderStepContent(stage)
+                    )}
+                  </ScrollView>
+                </>
+              ) : (
+                <Text style={{ ...styles.textContent, paddingTop: 20 }}>No generated plan yet!</Text>
               )}
             </View>
-          </>
-        }
-        data={habitImages}
-        keyExtractor={(item, index) => index.toString()}
-        numColumns={3}
-        renderItem={({ item }) => (
-          <TouchableOpacity onPress={() => openModal(item)}>
-            <Image source={{ uri: item.image_photo }} style={styles.gridImage} />
-          </TouchableOpacity>
-        )}
-        ListFooterComponent={
-          <>
-            <Modal
-              animationType="slide"
-              transparent={true}
-              visible={modalVisible}
-              onRequestClose={closeModal}
-            >
-              <View style={styles.modalContainer}>
-                <View style={styles.modalContent}>
-                  {selectedImage && (
-                    <>
-                      <Image source={{ uri: selectedImage.image_photo }} style={styles.fullImage} />
-                      <Text style={styles.imageDescription}>{selectedImage.description}</Text>
-                      <Button title="Close" onPress={closeModal} />
-                      <Button title="Delete Photo" onPress={deleteImage} buttonStyle={styles.deleteButton} />
-                    </>
-                  )}
-                </View>
-              </View>
-            </Modal>
 
-            <View style={styles.container}>
-              <View style={styles.card}>
-                <Text style={styles.title}>Habit Title</Text>
-                <Text style={styles.textContent}>
-                  {habit?.habit_title || 'N/A'}
-                </Text>
-
-                <Text style={styles.title}>Habit Description</Text>
-                <Text style={styles.textContent}>
-                  {habit?.habit_description || 'N/A'}
-                </Text>
-
-                <Text style={styles.title}>Quantity</Text>
-                <Text style={styles.textContent}>
-                  {habit?.schedule_quantity || 'N/A'}
-                </Text>
-
-                <Text style={styles.title}>Start Date</Text>
-                <Text style={styles.textContent}>
-                  {habit?.schedule_start_date
-                    ? moment(habit.schedule_start_date).format('MMMM Do YYYY')
-                    : 'N/A'}
-                </Text>
-
-                <Text style={styles.title}>End Date</Text>
-                <Text style={styles.textContent}>
-                  {habit?.schedule_end_date
-                    ? moment(habit.schedule_end_date).format('MMMM Do YYYY')
-                    : 'N/A'}
-                </Text>
-
-                <Text style={styles.title}>Active Days</Text>
-                <Text style={styles.textContent}>
-                  {habit?.schedule_active_days || 'N/A'}
-                </Text>
-
-                <Text style={styles.title}>State</Text>
-                <Text style={styles.textContent}>
-                  {habit?.schedule_state || 'N/A'}
-                </Text>
-
-                <Text style={styles.title}>Created At</Text>
-                <Text style={styles.textContent}>
-                  {habit?.created_at
-                    ? moment(habit.created_at).format('MMMM Do YYYY, h:mm:ss a')
-                    : 'N/A'}
-                </Text>
-              </View>
-
-              <TouchableOpacity onPress={() => ASPhotoOptions.current.show()} style={styles.pickImageButton}>
-                <Text style={styles.pickImageButtonText}>Pick an image</Text>
-              </TouchableOpacity>
-
-              {newPhoto && (
-  <View style={styles.newImageContainer}>
-    <Image source={{ uri: newPhoto.uri }} style={styles.newImage} />
-    <TextInput
-  style={styles.newDescriptionInput}
-  placeholder="Add a description"
-  placeholderTextColor="#aaa"
-  value={newDescription}
-  onChangeText={setNewDescription}
-/>
-    <Button title="Add Image" onPress={addImage} />
-    <Button title="Cancel" onPress={() => setNewPhoto(null)} buttonStyle={styles.cancelButton} />
-  </View>
-)}
-
-
-              <View style={styles.containerButton}>
-                <Button
-                  onPress={generateHabitSchedule}
-                  title="Generate Habit Schedule"
-                  buttonStyle={styles.generateButton}
+            <View style={styles.buttonContainer}>
+              {loadingDisable ? (
+                <ActivityIndicator
+                  style={{ paddingVertical: 16 }}
+                  size="small"
+                  color={Colors.text}
                 />
-              </View>
+              ) : (
+                <TouchableOpacity onPress={onToggleHabit} style={styles.toggleButton}>
+                  <Text style={styles.toggleButtonText}>
+                    {habit?.enabled ? 'DISABLE HABIT' : 'ENABLE HABIT'}
+                  </Text>
+                </TouchableOpacity>
+              )}
 
-              <View style={styles.scheduleDetails}>
-                <Text style={{ ...styles.title, paddingTop: 20, paddingBottom: 20, }}>Your Habit Plan by Your AI Coach:</Text>
-                {isLoading ? (
-                  <ActivityIndicator size="small" color={Colors.ActivityIndicator} />
-                ) : generatedSchedule ? (
-                  <>
-                    <StepIndicator
-                      customStyles={customStyles}
-                      currentPosition={currentPosition}
-                      stepCount={generatedSchedule[habit.habit_title][0].stages.length}
-                      labels={generatedSchedule[habit.habit_title][0].stages.map((stage) => stage.name)}
-                    />
-                    <FlatList
-                      horizontal
-                      showsHorizontalScrollIndicator={false}
-                      data={generatedSchedule[habit.habit_title][0].stages}
-                      keyExtractor={(item) => item.name}
-                      renderItem={({ item }) => renderStepContent(item)}
-                      onScroll={(e) => {
-                        const contentOffsetX = e.nativeEvent.contentOffset.x;
-                        const screenWidth = Dimensions.get('window').width;
-                        const currentStep = Math.round(contentOffsetX / screenWidth);
-                        setCurrentPosition(currentStep);
-                      }}
-                      scrollEventThrottle={16}
-                    />
-                  </>
-                ) : (
-                  <Text style={{ ...styles.textContent, paddingTop: 20 }}>No generated plan yet!</Text>
-                )}
-              </View>
+              <Button
+                disabled={loadingDelete}
+                loading={loadingDelete}
+                buttonStyle={styles.deleteButton}
+                titleStyle={styles.deleteButtonTitle}
+                onPress={onDeleteHabit}
+                title="DELETE HABIT"
+              />
+            </View>
+          </View>
+        </ScrollView>
 
-              <View style={styles.buttonContainer}>
-                {loadingDisable ? (
-                  <ActivityIndicator
-                    style={{ paddingVertical: 16 }}
-                    size="small"
-                    color={Colors.text}
-                  />
-                ) : (
-                  <TouchableOpacity onPress={onToggleHabit} style={styles.toggleButton}>
-                    <Text style={styles.toggleButtonText}>
-                      {habit?.enabled ? 'DISABLE HABIT' : 'ENABLE HABIT'}
-                    </Text>
-                  </TouchableOpacity>
-                )}
+        <RBSheet
+          ref={RBSDelete}
+          height={Dimensions.get('window').height * 0.12}
+          openDuration={250}
+          customStyles={{
+            container: {
+              justifyContent: 'center',
+              alignItems: 'center',
+              borderRadius: 45,
+              padding: 20,
+              width: Dimensions.get('window').width - 40,
+              marginHorizontal: 20,
+            },
+          }}>
+          <View style={styles.absolute}>
+            <View style={styles.overlay} />
+            <View style={styles.sheetContainer}>
+              <Text style={styles.sheetTitle}>
+                Are you sure you want to delete this habit?
+              </Text>
 
+              <View style={styles.sheetButtonContainer}>
                 <Button
-                  disabled={loadingDelete}
-                  loading={loadingDelete}
-                  buttonStyle={styles.deleteButton}
-                  titleStyle={styles.deleteButtonTitle}
-                  onPress={onDeleteHabit}
-                  title="DELETE HABIT"
+                  title="Cancel"
+                  onPress={() => RBSDelete.current.close()}
+                  buttonStyle={styles.sheetCancelButton}
+                />
+                <Button
+                  title="Delete"
+                  onPress={deleteHabit}
+                  buttonStyle={styles.sheetDeleteButton}
                 />
               </View>
             </View>
-
-            <RBSheet
-              ref={RBSDelete}
-              height={Dimensions.get('window').height * 0.12} 
-              openDuration={250}
-              customStyles={{
-                container: {
-                  justifyContent: 'center',
-                  alignItems: 'center',
-                  borderRadius: 45,
-                  padding: 20,
-                  width: Dimensions.get('window').width - 40, 
-                  marginHorizontal: 20,
-                },
-              }}>
-              <View style={styles.absolute}>
-                <View style={styles.overlay} />
-                <View style={styles.sheetContainer}>
-                  <Text style={styles.sheetTitle}>
-                    Are you sure you want to delete this habit?
-                  </Text>
-
-                  <View style={styles.sheetButtonContainer}>
-                    <Button
-                      title="Cancel"
-                      onPress={() => RBSDelete.current.close()}
-                      buttonStyle={styles.sheetCancelButton}
-                    />
-                    <Button
-                      title="Delete"
-                      onPress={deleteHabit}
-                      buttonStyle={styles.sheetDeleteButton}
-                    />
-                  </View>
-                </View>
-              </View>
-            </RBSheet>
-          </>
-        }
-      />
-      <ActionSheet
-        ref={ASPhotoOptions}
-        options={['Camera', 'Library', 'Cancel']}
-        cancelButtonIndex={2}
-        destructiveButtonIndex={2}
-        buttonUnderlayColor={Colors.grey1}
-        onPress={(index) => handleActionSheet(index)}
-        styles={{
-          buttonBox: Default.actionSheetButtonBox,
-          body: Default.actionSheetBody,
-          cancelButtonBox: Default.actionSheetCancelButtonBox,
-        }}
-      />
+          </View>
+        </RBSheet>
+      </KeyboardAwareScrollView>
     </View>
   );
 };
 
 const styles = StyleSheet.create({
-  cancelButton: {
-  backgroundColor: 'red',
-  borderRadius: 10,
-  marginTop: 10,
-},
-
   container: {
+    width: Dimensions.get("window").width,
+    backgroundColor: Colors.primary,
     flex: 1,
     padding: 16,
   },
   gridContainer: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'space-between',
     marginBottom: 16,
+    flex: 3,
   },
   gridImage: {
     width: imageSize - 10,
@@ -747,13 +701,11 @@ const styles = StyleSheet.create({
     borderColor: Colors.border,
     borderWidth: 1,
     borderRadius: 10,
-    padding: 10,
-    marginVertical: 10,
+    padding: 8,
+    marginVertical: 8,
     width: '100%',
-    color: Colors.text,
-    backgroundColor: Colors.background,
+    color: Colors.white,
   },
-  
   containerButton: {
     marginBottom: 16,
     width: '100%',
@@ -818,9 +770,9 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
   deleteButton: {
-
+    flex: 1,
     backgroundColor: '#d9534f',
-
+    padding: 12,
     borderRadius: 45,
     alignItems: 'left',
     marginRight: 25,
