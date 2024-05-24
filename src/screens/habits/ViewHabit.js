@@ -240,8 +240,11 @@ const ViewHabit = () => {
       } else {
         Alert.alert('Ops', 'You need to allow access to the library first.');
       }
+    } else if (index === 2) {
+      setNewPhoto(null);
     }
   };
+  
 
   const pickCamera = async () => {
     let result = await ImagePicker.launchCameraAsync({ mediaTypes: ImagePicker.MediaTypeOptions.Images });
@@ -510,17 +513,20 @@ const ViewHabit = () => {
               </TouchableOpacity>
 
               {newPhoto && (
-                <View style={styles.newImageContainer}>
-                  <Image source={{ uri: newPhoto.uri }} style={styles.newImage} />
-                  <TextInput
-                    style={styles.newDescriptionInput}
-                    placeholder="Add a description"
-                    value={newDescription}
-                    onChangeText={setNewDescription}
-                  />
-                  <Button title="Add Image" onPress={addImage} />
-                </View>
-              )}
+  <View style={styles.newImageContainer}>
+    <Image source={{ uri: newPhoto.uri }} style={styles.newImage} />
+    <TextInput
+  style={styles.newDescriptionInput}
+  placeholder="Add a description"
+  placeholderTextColor="#aaa"
+  value={newDescription}
+  onChangeText={setNewDescription}
+/>
+    <Button title="Add Image" onPress={addImage} />
+    <Button title="Cancel" onPress={() => setNewPhoto(null)} buttonStyle={styles.cancelButton} />
+  </View>
+)}
+
 
               <View style={styles.containerButton}>
                 <Button
@@ -645,6 +651,12 @@ const ViewHabit = () => {
 };
 
 const styles = StyleSheet.create({
+  cancelButton: {
+  backgroundColor: 'red',
+  borderRadius: 10,
+  marginTop: 10,
+},
+
   container: {
     flex: 1,
     padding: 16,
@@ -735,11 +747,13 @@ const styles = StyleSheet.create({
     borderColor: Colors.border,
     borderWidth: 1,
     borderRadius: 10,
-    padding: 8,
-    marginVertical: 8,
+    padding: 10,
+    marginVertical: 10,
     width: '100%',
-    color: Colors.white,
+    color: Colors.text,
+    backgroundColor: Colors.background,
   },
+  
   containerButton: {
     marginBottom: 16,
     width: '100%',
@@ -804,9 +818,9 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
   deleteButton: {
-    flex: 1,
+
     backgroundColor: '#d9534f',
-    padding: 12,
+
     borderRadius: 45,
     alignItems: 'left',
     marginRight: 25,
