@@ -36,6 +36,8 @@ const AddHabit = props => {
   const [frequency_type, setFrequencyType] = useState('EVERYDAY');
   const [frequency_type_ios, setFrequencyTypeIos] = useState('EVERYDAY');
   const [habitPhoto, setHabitPhoto] = useState(null);
+  const [showPostPopup, setShowPostPopup] = useState(false);
+  const [currentHabit, setCurrentHabit] = useState(null);
 
   const RBSFrequency = useRef();
   const RBSFillFrequencyDays = useRef();
@@ -73,40 +75,42 @@ const AddHabit = props => {
     });
   };
 
+
+
+  
+
   const addHabit = async () => {
     const { data: user, error: userError } = await supabase.auth.getUser();
     if (userError || !user) {
       Alert.alert('Error', 'User not authenticated');
       setSending(false);
       return;
-    } else {
-      Alert.alert('Success', 'Habit created successfully!');
     }
-
+  
     const userId = user.user.id;
     console.log('User ID:', userId);
-
+  
     if (name.trim() === '' || habit_description === '' || frequency_type === '') {
       Alert.alert('Oops!', 'All fields are required.');
       return;
     }
-
+  
     setSending(true);
-
+  
     let habitPhotoUrl = null;
     if (habitPhoto && habitPhoto.uri) {
       const fileName = `${Date.now()}_${habitPhoto.uri.split('/').pop()}`;
       console.log('Uploading file:', fileName);
-
+  
       try {
         const response = await fetch(habitPhoto.uri);
         const blob = await response.blob();
-
+  
         const reader = new FileReader();
         reader.onloadend = async () => {
           const base64data = reader.result.split(',')[1];
           const arrayBuffer = decode(base64data);
-
+  
           const { data: uploadData, error: uploadError } = await supabase.storage
             .from('habit')
             .upload(fileName, arrayBuffer, {
@@ -114,7 +118,7 @@ const AddHabit = props => {
               upsert: false,
               contentType: 'image/jpeg',
             });
-
+  
           if (uploadError) {
             console.error('Upload error:', uploadError);
             Alert.alert('Error', uploadError.message);
@@ -122,26 +126,26 @@ const AddHabit = props => {
             return;
           }
           console.log('Upload data:', uploadData);
-
+  
           const publicUrlResponse = supabase.storage.from('habit').getPublicUrl(fileName);
           console.log('getPublicUrl:', publicUrlResponse);
           habitPhotoUrl = publicUrlResponse.data.publicUrl;
           console.log('publicUrl:', habitPhotoUrl);
-
+  
           if (!habitPhotoUrl) {
             Alert.alert('Error', 'Failed to generate public URL for the image');
             setSending(false);
             return;
           }
-
-          const habitId = uuidv4(); 
-
+  
+          const habitId = uuidv4();
+  
           // insert
           const { data: insertData, error: insertError } = await supabase
             .from('Habit')
             .insert([{ habit_id: habitId, habit_title: name, habit_description, habit_photo: habitPhotoUrl }])
             .select();
-
+  
           if (insertError) {
             console.error('Insert error:', insertError);
             Alert.alert('Error', insertError.message);
@@ -149,13 +153,13 @@ const AddHabit = props => {
             return;
           }
           console.log('Inserted Habit:', insertData);
-
+  
           if (!insertData || insertData.length === 0) {
             Alert.alert('Error', 'Failed to insert habit');
             setSending(false);
             return;
           }
-
+  
           const { data: scheduleData, error: scheduleError } = await supabase
             .from('Schedule')
             .insert([{
@@ -167,15 +171,21 @@ const AddHabit = props => {
               schedule_quantity: '10',
             }])
             .select();
-
+  
           if (scheduleError) {
             console.error('Schedule insert error:', scheduleError);
             Alert.alert('Error', scheduleError.message);
           } else {
             console.log('Schedule Data:', scheduleData);
-            props.navigation.navigate('Habits');
+            setCurrentHabit({
+              habit_id: habitId,
+              habit_title: name,
+              habit_description,
+              habit_photo: habitPhotoUrl,
+            });
+            setShowPostPopup(true); 
           }
-
+  
           setSending(false);
         };
         reader.readAsDataURL(blob);
@@ -186,14 +196,14 @@ const AddHabit = props => {
         return;
       }
     } else {
-      const habitId = uuidv4(); // generate unique identifier for the new habit
-
+      const habitId = uuidv4();
+  
       // insert
       const { data: insertData, error: insertError } = await supabase
         .from('Habit')
         .insert([{ habit_id: habitId, habit_title: name, habit_description, habit_photo: habitPhotoUrl }])
         .select();
-
+  
       if (insertError) {
         console.error('Insert error:', insertError);
         Alert.alert('Error', insertError.message);
@@ -201,13 +211,13 @@ const AddHabit = props => {
         return;
       }
       console.log('Inserted Habit:', insertData);
-
+  
       if (!insertData || insertData.length === 0) {
         Alert.alert('Error', 'Failed to insert habit');
         setSending(false);
         return;
       }
-
+  
       const { data: scheduleData, error: scheduleError } = await supabase
         .from('Schedule')
         .insert([{
@@ -219,18 +229,296 @@ const AddHabit = props => {
           schedule_quantity: '10',
         }])
         .select();
-
+  
       if (scheduleError) {
         console.error('Schedule insert error:', scheduleError);
         Alert.alert('Error', scheduleError.message);
       } else {
         console.log('Schedule Data:', scheduleData);
-        props.navigation.navigate('Habits');
+        setCurrentHabit({
+          habit_id: habitId,
+          habit_title: name,
+          habit_description,
+          habit_photo: habitPhotoUrl,
+        });
+        setShowPostPopup(true); 
       }
-
+  
       setSending(false);
     }
   };
+  
+
+  // const addHabit = async () => {
+  //   const { data: user, error: userError } = await supabase.auth.getUser();
+  //   if (userError || !user) {
+  //     Alert.alert('Error', 'User not authenticated');
+  //     setSending(false);
+  //     return;
+  //   }
+
+  //   const userId = user.user.id;
+  //   console.log('User ID:', userId);
+
+  //   if (name.trim() === '' || habit_description === '' || frequency_type === '') {
+  //     Alert.alert('Oops!', 'All fields are required.');
+  //     return;
+  //   }
+
+  //   setSending(true);
+
+  //   let habitPhotoUrl = null;
+  //   if (habitPhoto && habitPhoto.uri) {
+  //     const fileName = `${Date.now()}_${habitPhoto.uri.split('/').pop()}`;
+  //     console.log('Uploading file:', fileName);
+
+  //     try {
+  //       const response = await fetch(habitPhoto.uri);
+  //       const blob = await response.blob();
+
+  //       const reader = new FileReader();
+  //       reader.onloadend = async () => {
+  //         const base64data = reader.result.split(',')[1];
+  //         const arrayBuffer = decode(base64data);
+
+  //         const { data: uploadData, error: uploadError } = await supabase.storage
+  //           .from('habit')
+  //           .upload(fileName, arrayBuffer, {
+  //             cacheControl: '3600',
+  //             upsert: false,
+  //             contentType: 'image/jpeg',
+  //           });
+
+  //         if (uploadError) {
+  //           console.error('Upload error:', uploadError);
+  //           Alert.alert('Error', uploadError.message);
+  //           setSending(false);
+  //           return;
+  //         }
+  //         console.log('Upload data:', uploadData);
+
+  //         const publicUrlResponse = supabase.storage.from('habit').getPublicUrl(fileName);
+  //         console.log('getPublicUrl:', publicUrlResponse);
+  //         habitPhotoUrl = publicUrlResponse.data.publicUrl;
+  //         console.log('publicUrl:', habitPhotoUrl);
+
+  //         if (!habitPhotoUrl) {
+  //           Alert.alert('Error', 'Failed to generate public URL for the image');
+  //           setSending(false);
+  //           return;
+  //         }
+
+  //         const habitId = uuidv4();
+
+  //         // insert
+  //         const { data: insertData, error: insertError } = await supabase
+  //           .from('Habit')
+  //           .insert([{ habit_id: habitId, habit_title: name, habit_description, habit_photo: habitPhotoUrl }])
+  //           .select();
+
+  //         if (insertError) {
+  //           console.error('Insert error:', insertError);
+  //           Alert.alert('Error', insertError.message);
+  //           setSending(false);
+  //           return;
+  //         }
+  //         console.log('Inserted Habit:', insertData);
+
+  //         if (!insertData || insertData.length === 0) {
+  //           Alert.alert('Error', 'Failed to insert habit');
+  //           setSending(false);
+  //           return;
+  //         }
+
+  //         const { data: scheduleData, error: scheduleError } = await supabase
+  //           .from('Schedule')
+  //           .insert([{
+  //             habit_id: habitId,
+  //             user_id: userId,
+  //             created_at: new Date().toISOString(),
+  //             schedule_state: 'Open',
+  //             schedule_active_days: 0,
+  //             schedule_quantity: '10',
+  //           }])
+  //           .select();
+
+  //         if (scheduleError) {
+  //           console.error('Schedule insert error:', scheduleError);
+  //           Alert.alert('Error', scheduleError.message);
+  //         } else {
+  //           console.log('Schedule Data:', scheduleData);
+  //           setCurrentHabit({
+  //             habit_id: habitId,
+  //             habit_title: name,
+  //             habit_description,
+  //             habit_photo: habitPhotoUrl,
+  //           });
+  //           setShowPostPopup(true);
+  //         }
+
+  //         setSending(false);
+  //       };
+  //       reader.readAsDataURL(blob);
+  //     } catch (fetchError) {
+  //       console.error('Fetch error:', fetchError);
+  //       Alert.alert('Error', 'Failed to create Blob from the image URI');
+  //       setSending(false);
+  //       return;
+  //     }
+  //   } else {
+  //     const habitId = uuidv4();
+
+  //     // insert
+  //     const { data: insertData, error: insertError } = await supabase
+  //       .from('Habit')
+  //       .insert([{ habit_id: habitId, habit_title: name, habit_description, habit_photo: habitPhotoUrl }])
+  //       .select();
+
+  //     if (insertError) {
+  //       console.error('Insert error:', insertError);
+  //       Alert.alert('Error', insertError.message);
+  //       setSending(false);
+  //       return;
+  //     }
+  //     console.log('Inserted Habit:', insertData);
+
+  //     if (!insertData || insertData.length === 0) {
+  //       Alert.alert('Error', 'Failed to insert habit');
+  //       setSending(false);
+  //       return;
+  //     }
+
+  //     const { data: scheduleData, error: scheduleError } = await supabase
+  //       .from('Schedule')
+  //       .insert([{
+  //         habit_id: habitId,
+  //         user_id: userId,
+  //         created_at: new Date().toISOString(),
+  //         schedule_state: 'Open',
+  //         schedule_active_days: 0,
+  //         schedule_quantity: '10',
+  //       }])
+  //       .select();
+
+  //     if (scheduleError) {
+  //       console.error('Schedule insert error:', scheduleError);
+  //       Alert.alert('Error', scheduleError.message);
+  //     } else {
+  //       console.log('Schedule Data:', scheduleData);
+  //       setCurrentHabit({
+  //         habit_id: habitId,
+  //         habit_title: name,
+  //         habit_description,
+  //         habit_photo: habitPhotoUrl,
+  //       });
+  //       setShowPostPopup(true); 
+  //     }
+
+  //     setSending(false);
+  //   }
+  // };
+
+
+
+  const postHabitToTimeline = async (habit) => {
+    if (!habit) return;
+  
+    const { data: user, error: userError } = await supabase.auth.getUser();
+    if (userError || !user) {
+      Alert.alert('Error', 'User not authenticated');
+      return;
+    }
+  
+    const userId = user.user.id;
+  
+    const { data: schedule, error: scheduleError } = await supabase
+      .from('Schedule')
+      .select('schedule_id')
+      .eq('habit_id', habit.habit_id)
+      .eq('user_id', userId)
+      .single();
+  
+    if (scheduleError || !schedule) {
+      Alert.alert('Error', 'Failed to retrieve schedule');
+      return;
+    }
+  
+    const scheduleId = schedule.schedule_id;
+  
+    const { data: postData, error: postError } = await supabase
+      .from('Post')
+      .insert([{
+        post_id: uuidv4(),
+        schedule_id: scheduleId,
+        post_description: habit.habit_description,
+        post_date: new Date().toISOString(),
+        post_title: habit.habit_title,
+        user_id: userId,
+        like_count: 0,
+        created_at: new Date().toISOString(),
+      }])
+      .select();
+  
+    if (postError) {
+      Alert.alert('Error', 'Failed to post habit to timeline');
+      return;
+    }
+  
+    Alert.alert('Success', 'Habit posted to timeline');
+    props.navigation.goBack();
+  };
+  
+
+
+
+
+  // const postHabitToTimeline = async (habit) => {
+  //   if (!habit) return;
+
+  //   const { data: user, error: userError } = await supabase.auth.getUser();
+  //   if (userError || !user) {
+  //     Alert.alert('Error', 'User not authenticated');
+  //     return;
+  //   }
+
+  //   const userId = user.user.id;
+
+  //   const { data: schedule, error: scheduleError } = await supabase
+  //     .from('Schedule')
+  //     .select('schedule_id')
+  //     .eq('habit_id', habit.habit_id)
+  //     .eq('user_id', userId)
+  //     .single();
+
+  //   if (scheduleError || !schedule) {
+  //     Alert.alert('Error', 'Failed to retrieve schedule');
+  //     return;
+  //   }
+
+  //   const scheduleId = schedule.schedule_id;
+
+  //   const { data: postData, error: postError } = await supabase
+  //     .from('Post')
+  //     .insert([{
+  //       post_id: uuidv4(),
+  //       schedule_id: scheduleId,
+  //       post_description: habit.habit_description,
+  //       post_date: new Date().toISOString(),
+  //       post_title: habit.habit_title,
+  //       user_id: userId,
+  //       like_count: 0,
+  //       habit_photo: habit.habit_photo,  
+  //     }])
+  //     .select();
+
+  //   if (postError) {
+  //     Alert.alert('Error', 'Failed to post habit to timeline');
+  //     return;
+  //   }
+
+  //   Alert.alert('Success', 'Habit posted to timeline');
+  //   props.navigation.goBack();
+  // };
 
   const handleActionSheet = async index => {
     if (index === 0) {
@@ -265,7 +553,7 @@ const AddHabit = props => {
       setHabitPhoto(result.assets[0]);
     }
   };
-  
+
   return (
     <View style={Default.container}>
       <Header navigation={props.navigation} backButton title="Create Habit" />
@@ -433,6 +721,28 @@ const AddHabit = props => {
           </View>
         </ScrollView>
       </KeyboardAwareScrollView>
+
+      {showPostPopup && (
+        <View style={styles.popupContainer}>
+          <Text style={styles.popupText}>Post habit to Timeline?</Text>
+          <Button
+            title="Yes"
+            onPress={() => {
+              postHabitToTimeline(currentHabit);
+              setShowPostPopup(false);
+            }}
+            buttonStyle={styles.popupButton}
+          />
+          <Button
+            title="No"
+            onPress={() => {
+              Alert.alert('Success', 'Habit created successfully!');
+              setShowPostPopup(false);
+            }}
+            buttonStyle={styles.popupButton}
+          />
+        </View>
+      )}
     </View>
   );
 };
@@ -606,6 +916,29 @@ const styles = StyleSheet.create({
     color: Colors.text,
     fontWeight: '400',
   },
+  popupContainer: {
+    position: 'absolute',
+    bottom: 20,
+    left: 20,
+    right: 20,
+    backgroundColor: 'white',
+    padding: 20,
+    borderRadius: 10,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.8,
+    shadowRadius: 2,
+    elevation: 5,
+  },
+  popupText: {
+    fontSize: 18,
+    marginBottom: 20,
+    textAlign: 'center',
+  },
+  popupButton: {
+    backgroundColor: Colors.primary,
+    marginVertical: 5,
+  },
 });
 
 AddHabit.propTypes = {
@@ -614,4 +947,3 @@ AddHabit.propTypes = {
 };
 
 export default AddHabit;
-
