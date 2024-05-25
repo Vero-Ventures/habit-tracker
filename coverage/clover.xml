@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<coverage generated="1716600598384" clover="3.2.0">
-  <project timestamp="1716600598384" name="All files">
-    <metrics statements="451" coveredstatements="226" conditionals="179" coveredconditionals="51" methods="115" coveredmethods="31" elements="745" coveredelements="308" complexity="0" loc="451" ncloc="451" packages="10" files="20" classes="20"/>
+<coverage generated="1716601528293" clover="3.2.0">
+  <project timestamp="1716601528293" name="All files">
+    <metrics statements="451" coveredstatements="230" conditionals="179" coveredconditionals="51" methods="115" coveredmethods="31" elements="745" coveredelements="312" complexity="0" loc="451" ncloc="451" packages="10" files="20" classes="20"/>
     <package name="assets.icons">
       <metrics statements="3" coveredstatements="3" conditionals="0" coveredconditionals="0" methods="0" coveredmethods="0"/>
       <file name="cog.png" path="/Users/josh/Desktop/habit-tracker/assets/icons/cog.png">
@@ -115,7 +115,7 @@
       </file>
     </package>
     <package name="src.screens">
-      <metrics statements="195" coveredstatements="122" conditionals="76" coveredconditionals="30" methods="29" coveredmethods="19"/>
+      <metrics statements="195" coveredstatements="126" conditionals="76" coveredconditionals="30" methods="29" coveredmethods="19"/>
       <file name="ChatbotScreen.js" path="/Users/josh/Desktop/habit-tracker/src/screens/ChatbotScreen.js">
         <metrics statements="26" coveredstatements="25" conditionals="8" coveredconditionals="6" methods="5" coveredmethods="4"/>
         <line num="12" count="1" type="stmt"/>
@@ -264,21 +264,21 @@
         <line num="512" count="1" type="stmt"/>
       </file>
       <file name="SettingsScreen.js" path="/Users/josh/Desktop/habit-tracker/src/screens/SettingsScreen.js">
-        <metrics statements="29" coveredstatements="20" conditionals="8" coveredconditionals="4" methods="4" coveredmethods="4"/>
-        <line num="10" count="3" type="stmt"/>
-        <line num="13" count="1" type="stmt"/>
-        <line num="14" count="1" type="cond" truecount="1" falsecount="1"/>
-        <line num="16" count="1" type="stmt"/>
+        <metrics statements="29" coveredstatements="24" conditionals="8" coveredconditionals="4" methods="4" coveredmethods="4"/>
+        <line num="10" count="5" type="stmt"/>
+        <line num="13" count="2" type="stmt"/>
+        <line num="14" count="2" type="cond" truecount="1" falsecount="1"/>
+        <line num="16" count="2" type="stmt"/>
         <line num="20" count="1" type="cond" truecount="1" falsecount="1"/>
         <line num="21" count="0" type="stmt"/>
         <line num="22" count="0" type="stmt"/>
         <line num="25" count="1" type="stmt"/>
         <line num="26" count="1" type="stmt"/>
-        <line num="28" count="0" type="stmt"/>
-        <line num="29" count="0" type="stmt"/>
-        <line num="34" count="1" type="stmt"/>
-        <line num="35" count="1" type="cond" truecount="1" falsecount="1"/>
-        <line num="37" count="1" type="stmt"/>
+        <line num="28" count="1" type="stmt"/>
+        <line num="29" count="1" type="stmt"/>
+        <line num="34" count="2" type="stmt"/>
+        <line num="35" count="2" type="cond" truecount="1" falsecount="1"/>
+        <line num="37" count="2" type="stmt"/>
         <line num="41" count="1" type="cond" truecount="1" falsecount="1"/>
         <line num="42" count="0" type="stmt"/>
         <line num="43" count="0" type="stmt"/>
@@ -288,9 +288,9 @@
         <line num="50" count="1" type="stmt"/>
         <line num="54" count="1" type="stmt"/>
         <line num="55" count="1" type="stmt"/>
-        <line num="57" count="0" type="stmt"/>
-        <line num="58" count="0" type="stmt"/>
-        <line num="62" count="3" type="stmt"/>
+        <line num="57" count="1" type="stmt"/>
+        <line num="58" count="1" type="stmt"/>
+        <line num="62" count="5" type="stmt"/>
         <line num="67" count="1" type="stmt"/>
         <line num="68" count="1" type="stmt"/>
         <line num="88" count="1" type="stmt"/>

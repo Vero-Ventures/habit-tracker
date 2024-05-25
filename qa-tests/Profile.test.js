@@ -129,6 +129,21 @@ describe('Profile Component', () => {
       expect(supabase.auth.signOut).toHaveBeenCalled();
     });
   });
+
+  test('catches error when deleting account', async () => {
+    supabase.rpc.mockRejectedValueOnce(new Error('Error deleting user'));
+    const { getByText } = render(
+      <NavigationContainer>
+        <SettingsScreen setIsLoggedIn={setIsLoggedIn} />
+      </NavigationContainer>
+    );
+
+    fireEvent.press(getByText('Delete Account'));
+
+    await waitFor(() => {
+      expect(Alert.alert).toHaveBeenCalledWith('Error', 'Error deleting user');
+    });
+  });
 });
 
 describe('CRUD operations on profile', () => {
@@ -190,6 +205,24 @@ describe('Data export', () => {
       expect(Alert.alert).toHaveBeenCalledWith(
         'Success',
         'User data saved as user_data.json'
+      );
+    });
+  });
+
+  test('catches error when downloading data', async () => {
+    supabase.rpc.mockRejectedValueOnce(new Error('Error fetching data'));
+    const { getByText } = render(
+      <NavigationContainer>
+        <SettingsScreen setIsLoggedIn={setIsLoggedIn} />
+      </NavigationContainer>
+    );
+
+    fireEvent.press(getByText('Download User Data'));
+
+    await waitFor(() => {
+      expect(Alert.alert).toHaveBeenCalledWith(
+        'Error',
+        'Unexpected error: Error fetching data'
       );
     });
   });
