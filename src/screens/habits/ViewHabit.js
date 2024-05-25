@@ -30,6 +30,7 @@ import * as ImagePicker from 'expo-image-picker';
 import { v4 as uuidv4 } from 'uuid';
 import { decode } from 'base64-arraybuffer';
 import ActionSheet from 'react-native-actionsheet';
+import { updateHabitDataInSchedules } from './Habits';
 
 const { GoogleGenerativeAI } = require('@google/generative-ai');
 const apikey = process.env.EXPO_PUBLIC_REACT_APP_GEMINI_KEY;
@@ -39,15 +40,12 @@ const imageSize = width / 3;
 
 const ViewHabit = () => {
   const session = store.getState().user.session;
-  const [loadingDelete, setLoadingDelete] = useState(false);
-  const [loadingDisable, setLoadingDisable] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [habitPhoto, setHabitPhoto] = useState(null);
   const [generatedSchedule, setGeneratedSchedule] = useState(null);
   const [currentPosition, setCurrentPosition] = useState(0);
   const [habitImages, setHabitImages] = useState([]);
   const [newPhoto, setNewPhoto] = useState(null);
-  const [newDescription, setNewDescription] = useState('');
   const [modalVisible, setModalVisible] = useState(false);
   const [selectedImage, setSelectedImage] = useState(null);
   const RBSDelete = useRef();
@@ -55,42 +53,60 @@ const ViewHabit = () => {
   const navigation = useNavigation();
   const route = useRoute();
   const { habit } = route.params;
+  const [editable, setEditable] = useState(false);
+  const [newTitle, setNewTitle] = useState(habit.habit_title);
+  const [newDescription, setNewDescription] = useState(habit.habit_description);
+  const [loadingDisable, setLoadingDisable] = useState(false);
+  const [loadingDelete, setLoadingDelete] = useState(false);
 
   useEffect(() => {
     const fetchHabit = async () => {
+      // console.log("Fetching habit");
       const { data: habitData, error: habitError } = await supabase
         .from('Habit')
         .select('*')
         .eq('habit_id', habit.habit_id)
         .single();
-  
+
       if (habitError) {
         Alert.alert('Error fetching habit', habitError.message);
         return;
       }
-  
+
+      // console.log("This is the habit data: " + JSON.stringify(habitData));
+      // console.log("This is the route: " + JSON.stringify(route));
+
+      // console.log("Setting habit photo");
       setHabitPhoto(habitData?.habit_photo);
+      // console.log("Done setting habit photo");
       if (habitData?.habit_plan) {
+        // console.log("Setting generated schedule");
         setGeneratedSchedule(JSON.parse(habitData.habit_plan));
+        // console.log("Done setting generated schedule")
       }
-  
+
+      console.log("Fetching habit images");
       const { data: imagesData, error: imagesError } = await supabase
         .from('HabitImages')
         .select('*')
         .eq('habit_id', habit.habit_id);
-  
+
       if (imagesError) {
         Alert.alert('Error fetching images', imagesError.message);
         return;
       }
 
+      // console.log("This is the images data: " + JSON.stringify(imagesData));
+
       const combinedImages = [
         ...(habitData?.habit_photo ? [{ image_photo: habitData.habit_photo, id: 'habitPhoto' }] : []),
         ...imagesData
       ];
-      setHabitImages(combinedImages );
+      // console.log("Setting habit images with: " + JSON.stringify(combinedImages));
+      setHabitImages(combinedImages);
+      // console.log("Done setting habit images");
     };
-  
+
     fetchHabit();
   }, [habit.habit_id]);
 
@@ -119,21 +135,21 @@ const ViewHabit = () => {
         .from('HabitImages')
         .delete()
         .eq('habit_image_id', imageId);
-  
+
       if (error) {
         Alert.alert('Error', 'Failed to delete photo from database');
         return;
       }
-  
+
       const { error: storageError } = await supabase.storage
         .from('habit')
         .remove([imageUrl]);
-  
+
       if (storageError) {
         Alert.alert('Error', 'Failed to delete photo from storage');
         return;
       }
-  
+
       Alert.alert('Success', 'Photo successfully deleted');
       setHabitImages(habitImages.filter((image) => image.habit_image_id !== imageId));
       setModalVisible(false);
@@ -166,7 +182,7 @@ const ViewHabit = () => {
     habit.enabled = !habit.enabled;
     setLoadingDisable(false);
   };
-  
+
   const deleteHabit = async () => {
     setLoadingDelete(true);
 
@@ -417,6 +433,40 @@ const ViewHabit = () => {
       </TouchableOpacity>
     );
   };
+
+  const toggleEdit = () => {
+    setEditable(!editable);
+  };
+
+  const saveChanges = () => {
+    try {
+      supabase
+        .from('Habit')
+        .update({ habit_title: newTitle, habit_description: newDescription })
+        .eq('habit_id', habit.habit_id)
+        .then(({ data, error }) => {
+          if (error) {
+            throw error;
+          }
+
+          Alert.alert('Habit updated successfully');
+          setEditable(false);
+
+          const updatedHabitData = {
+            ...habit,
+            habit_title: newTitle,
+            habit_description: newDescription,
+          };
+          setHabit
+        })
+        .catch((error) => {
+          Alert.alert('Error updating habit', error.message);
+        });
+    } catch (error) {
+      Alert.alert('Error updating habit', error.message);
+    }
+  };
+
   return (
     <View style={Default.container}>
       <KeyboardAwareFlatList
@@ -430,12 +480,16 @@ const ViewHabit = () => {
                 navigation={navigation}
                 backButton
                 customRightIcon={
-                  <Icon
-                    onPress={() => navigation.navigate('EditHabit', { habit_id: habit.habit_id })}
-                    size={20}
-                    color={Colors.text}
-                    name="edit"
-                  />
+                  editable ? (
+                    <Button title="Save" onPress={saveChanges} />
+                  ) : (
+                    <Icon
+                      onPress={toggleEdit}
+                      size={20}
+                      color={Colors.text}
+                      name="edit"
+                    />
+                  )
                 }
               />
             );
@@ -473,9 +527,17 @@ const ViewHabit = () => {
                 <View style={styles.container}>
                   <View style={styles.card}>
                     <Text style={styles.title}>Habit Title</Text>
-                    <Text style={styles.textContent}>
-                      {habit?.habit_title || 'N/A'}
-                    </Text>
+                    {editable ? (
+                      <TextInput
+                        style={styles.textInput}
+                        value={newTitle}
+                        onChangeText={setNewTitle}
+                      />
+                    ) : (
+                      <Text style={styles.textContent}>
+                        {habit?.habit_title || 'N/A'}
+                      </Text>
+                    )}
 
                     <Text style={styles.title}>Habit Description</Text>
                     <Text style={styles.textContent}>
@@ -685,7 +747,7 @@ const styles = StyleSheet.create({
     borderColor: '#FFF',
     borderWidth: 1,
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    color: '#FFF', 
+    color: '#FFF',
     fontSize: 16,
     marginBottom: 16,
   },
@@ -699,6 +761,16 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: Colors.white,
     marginBottom: 16,
+  },
+  textInput: {
+    fontSize: 16,
+    marginBottom: 10,
+    borderWidth: 1,
+    borderColor: '#ccc',
+    padding: 10,
+    borderRadius: 5,
+    color: Colors.black,
+    backgroundColor: Colors.white,
   },
   photoContainer: {
     width: Dimensions.get('window').width,
