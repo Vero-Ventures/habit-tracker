@@ -205,17 +205,21 @@ const ViewHabit = () => {
   };
 
   const generateHabitSchedule = async () => {
+    const MAX_RETRIES = 5; 
+    let attempt = 0;
+    let success = false;
+    
     try {
       setIsLoading(true);
       const model = genAI.getGenerativeModel({ model: 'gemini-pro' });
-
+  
       const chat = model.startChat({
         history: [
           {
             role: 'user',
             parts: [
               {
-                text: 'Hello, I would like you to generate a habit plan in JSON format for me to follow that will help me reach my goals for my habit of ' + habit.habit_description + '.',
+                text: 'Hello, I would like you to generate a habit plan in strictly correct JSON format for me to follow that will help me reach my goals for my habit of ' + habit.habit_description + '.',
               },
             ],
           },
@@ -232,7 +236,7 @@ const ViewHabit = () => {
           maxOutputTokens: 6000,
         },
       });
-
+  
       const prompt = `{
         "${habit.habit_title}": [
           {
@@ -258,23 +262,34 @@ const ViewHabit = () => {
         ]
       }
       `;
-
-      const result = await chat.sendMessage(prompt);
-      const response = await result.response;
-      const text = await response.text();
-
-      const cleanedText = text.replace(/^```(?:json)?\n/, '').replace(/\n```$/, '').trim();
-      const jsonStartIndex = cleanedText.indexOf('{');
-      const jsonEndIndex = cleanedText.lastIndexOf('}');
-      const validJsonString = cleanedText.substring(jsonStartIndex, jsonEndIndex + 1);
-
-      const parsedSchedule = JSON.parse(validJsonString);
-      setGeneratedSchedule(parsedSchedule);
-      setIsLoading(false);
-      await updateHabitPlan(validJsonString);
+  
+      while (attempt < MAX_RETRIES && !success) {
+        try {
+          const result = await chat.sendMessage(prompt);
+          const response = await result.response;
+          const text = await response.text();
+  
+          const cleanedText = text.replace(/^```(?:json)?\n/, '').replace(/\n```$/, '').trim();
+          const jsonStartIndex = cleanedText.indexOf('{');
+          const jsonEndIndex = cleanedText.lastIndexOf('}');
+          const validJsonString = cleanedText.substring(jsonStartIndex, jsonEndIndex + 1);
+  
+          const parsedSchedule = JSON.parse(validJsonString);
+          setGeneratedSchedule(parsedSchedule);
+          await updateHabitPlan(validJsonString);
+          success = true; 
+        } catch (parseError) {
+          attempt++;
+          console.error(`Error parsing JSON on attempt ${attempt}:`, parseError);
+          if (attempt >= MAX_RETRIES) {
+            throw new Error('Maximum retries reached. Unable to generate a valid habit schedule.');
+          }
+        }
+      }
     } catch (error) {
       console.error('Error generating habit schedule:', error);
       Alert.alert('Error', 'Failed to generate habit schedule. Please try again.');
+    } finally {
       setIsLoading(false);
     }
   };
