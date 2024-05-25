@@ -639,11 +639,11 @@ const ViewHabit = () => {
                   </View>
 
                   <View style={styles.scheduleDetails}>
-                    <Text style={{ ...styles.title, paddingTop: 20, paddingBottom: 20, }}>Your Habit Plan by Your AI Coach:</Text>
                     {isLoading ? (
                       <ActivityIndicator size="small" color={Colors.ActivityIndicator} />
                     ) : generatedSchedule ? (
                       <>
+                      <Text style={{ ...styles.title, paddingTop: 20, paddingBottom: 20, }}>Your Habit Plan by Your AI Coach:</Text>
                         <StepIndicator
                           customStyles={customStyles}
                           currentPosition={currentPosition}
