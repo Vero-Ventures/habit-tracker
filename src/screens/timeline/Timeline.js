@@ -143,7 +143,7 @@ const Timeline = () => {
   };
 
   const renderPost = ({ item }) => {
-    console.log(item); 
+    // console.log(item); 
   
     return (
       <CardPost
