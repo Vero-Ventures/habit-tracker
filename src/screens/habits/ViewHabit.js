@@ -80,6 +80,8 @@ const ViewHabit = () => {
       setHabitPhoto(habitData?.habit_photo);
       // console.log("Done setting habit photo");
       if (habitData?.habit_plan) {
+        // TODO: verify that generated plan is valid JSON
+
         // console.log("Setting generated schedule");
         setGeneratedSchedule(JSON.parse(habitData.habit_plan));
         // console.log("Done setting generated schedule")
