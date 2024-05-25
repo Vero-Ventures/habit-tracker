@@ -131,16 +131,6 @@ const CardPost = (props) => {
             {props.actions.countComments > 0 ? props.actions.countComments : null}
           </Text>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.buttonActions} onPress={onPressSave}>
-          <Image
-            source={
-              props.actions.saveFromUser
-                ? require('../../assets/icons/bookmark-selected.png')
-                : require('../../assets/icons/bookmark.png')
-            }
-            style={styles.imageMedal}
-          />
-        </TouchableOpacity>
       </View>
     </LinearGradient>
   );
@@ -160,15 +150,6 @@ const CardPost = (props) => {
     var postData = { description: props.postDescription, id: props.postId};
     props.navigation.navigate('Comments', { navigation: props.navigation, postId: props.postId,
       userData, postData});
-  };
-
-  const onPressSave = async () => {
-    try {
-      await savePost(props.postId);
-      props.actions.onSavePostSuccess(props.postId);
-    } catch (error) {
-      Alert.alert('Error', 'Something went wrong with saving the post');
-    }
   };
 
   const toggleModalOptions = () => {

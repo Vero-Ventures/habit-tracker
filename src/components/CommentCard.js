@@ -8,9 +8,6 @@ import { Image } from 'react-native';
 import moment from 'moment';
 
 export default function CommentCard({ commentData }) {
-
-    console.log('comment Card props:', commentData);
-
     return (
         <View style={styles.container}>
             <View style={styles.headerContainer}>

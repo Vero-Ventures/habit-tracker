@@ -285,21 +285,10 @@ export default function Account() {
         </TouchableOpacity>
 
         <View style={styles.containerActionsHeader}>
-          <TouchableOpacity
-            style={styles.editProfile}
-            onPress={() => console.log('Share profile pressed')}>
-            <View style={styles.editProfileButton}>
-              <Image
-                source={require('../../assets/icons/share-profile.png')}
-                style={styles.iconsHeader}
-              />
-              <Text style={styles.editProfileText}>Share My Profile</Text>
-            </View>
-          </TouchableOpacity>
 
           <TouchableOpacity
             style={styles.editProfile}
-            onPress={() => console.log('Edit profile pressed')}>
+            onPress={() => navigation.navigate('EditProfile')}>
             <View style={styles.editProfileButton}>
               <Image
                 source={require('../../assets/icons/edit.png')}
@@ -320,35 +309,12 @@ export default function Account() {
         </View>
 
         <View style={styles.inputWrapper}>
-          <Input
-            label="Username"
-            value={username || ''}
-            onChangeText={setUsername}
-            placeholder="Enter username"
-            containerStyle={styles.inputContainer}
-            inputStyle={styles.input}
-            labelStyle={styles.inputLabel}
-          />
+          <Text style={styles.title}>Username</Text>
+          <Text style={styles.textContent}>{username}</Text>
         </View>
         <View style={styles.inputWrapper}>
-          <Input
-            label="Bio"
-            value={bio || ''}
-            onChangeText={setBio}
-            placeholder="Enter bio"
-            containerStyle={styles.inputContainer}
-            inputStyle={styles.input}
-            labelStyle={styles.inputLabel}
-          />
-        </View>
-        <View style={[styles.verticallySpaced, styles.mt20]}>
-          <Button
-            title={loading ? 'Loading ...' : 'Update Profile'}
-            onPress={updateProfile}
-            disabled={loading}
-            buttonStyle={styles.updateButton}
-            titleStyle={Default.loginButtonBoldTitle}
-          />
+          <Text style={styles.title}>Bio</Text>
+          <Text style={styles.textContent}>{bio}</Text>
         </View>
       </ScrollView>
     </View>
@@ -461,6 +427,17 @@ const styles = StyleSheet.create({
     height: 40,
     backgroundColor: Colors.primary,
     textAlignVertical: 'top',
+  },
+  title: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: Colors.white,
+    marginBottom: 8,
+  },
+  textContent: {
+    fontSize: 14,
+    color: Colors.white,
+    marginBottom: 16,
   },
   inputLabel: {
     color: Colors.text,

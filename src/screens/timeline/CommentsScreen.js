@@ -21,7 +21,6 @@ export default function CommentsScreen({ route }) {
     useEffect(() => {
         async function fetchData() {
             try {
-                console.log('postId:', postId);
                 const { data: commentData, error } = await supabase
                 .from('Comments')
                 .select('*, user_id(*)')
@@ -31,10 +30,7 @@ export default function CommentsScreen({ route }) {
                 if (error) {
                     throw error;
                 }
-                console.log('data:', commentData);
                 setComments(commentData);
-                console.log('Comments: :', comments);
-
             } catch (error) {
                 console.log('error', error);
             }
@@ -47,19 +43,13 @@ export default function CommentsScreen({ route }) {
 
     const addComment = async () => {
         if (isAddingComment) {
-            // save comment
             try {
                 const userId = route.params.userData.id;
-                console.log('userId:', userId);
-                console.log('postId:', postId);
-                console.log('comment:', comment);
                 const { data: commentInsertData, error: commentInsertError} = await supabase
                 .from('Comments')
                 .insert([{ user_id: userId, post_id: postId, content: comment }])
                 .select();
 
-                console.log('comment data:', commentInsertData);
-                console.log('comment error:', commentInsertError);
                 setComment('');
                 setIsAddingComment(false);
             } catch (error) {

@@ -1,5 +1,14 @@
-import React, { useState, useEffect } from 'react';
-import { Image, Text, View, TouchableOpacity, StyleSheet } from 'react-native';
+import React, { useState, useEffect, useRef } from 'react';
+import {
+  Image,
+  Text,
+  View,
+  TouchableOpacity,
+  StyleSheet,
+  Animated,
+  Dimensions,
+  PanResponder,
+} from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import Navigator from './src/navigator/Navigator';
 import { supabase } from './src/config/supabaseClient';
@@ -14,11 +23,15 @@ import Modal from 'react-native-modal';
 
 const Stack = createStackNavigator();
 
+const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
+const TOOLTIP_SIZE = 60;
+
 export default function App() {
   const [session, setSession] = useState(null);
   const [isChatVisible, setIsChatVisible] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const pan = useRef(new Animated.ValueXY()).current;
 
   useEffect(() => {
     const checkSession = async () => {
@@ -48,25 +61,64 @@ export default function App() {
     };
   }, []);
 
+  const handlePress = () => {
+    setIsChatVisible(true);
+  };
+
+  const panResponder = useRef(
+    PanResponder.create({
+      onMoveShouldSetPanResponder: () => true,
+      onPanResponderGrant: () => {
+        pan.setOffset({
+          x: pan.x._value,
+          y: pan.y._value,
+        });
+      },
+      onPanResponderMove: Animated.event([null, { dx: pan.x, dy: pan.y }], {
+        useNativeDriver: false,
+      }),
+      onPanResponderRelease: (e, gesture) => {
+        pan.flattenOffset();
+        const newX = Math.max(
+          0,
+          Math.min(SCREEN_WIDTH - TOOLTIP_SIZE, pan.x._value)
+        );
+        const newY = Math.max(
+          0,
+          Math.min(SCREEN_HEIGHT - TOOLTIP_SIZE - 80, pan.y._value)
+        ); // Adjust for bottom spacing
+        Animated.spring(pan, {
+          toValue: { x: newX, y: newY },
+          useNativeDriver: false,
+        }).start(() => {
+          if (Math.abs(gesture.dx) < 5 && Math.abs(gesture.dy) < 5) {
+            handlePress();
+          }
+        });
+      },
+    })
+  ).current;
+
   return (
     <Provider store={store}>
       <NavigationContainer>
         <StatusBar style="auto" />
         <Stack.Navigator screenOptions={{ headerShown: false }}>
           {isLoggedIn ? (
-            <Stack.Screen name="Navigator" >
-              {() => (<Navigator setIsLoggedIn={setIsLoggedIn}/>)}
+            <Stack.Screen name="Navigator">
+              {() => <Navigator setIsLoggedIn={setIsLoggedIn} />}
             </Stack.Screen>
-          ) : (isLoading ? (
-            <Stack.Screen name="Loading" component={LoadingScreen}/> ) : (
+          ) : isLoading ? (
+            <Stack.Screen name="Loading" component={LoadingScreen} />
+          ) : (
             <Stack.Screen name="Signup">
-              {() => (<SignupScreen setIsLoggedIn={setIsLoggedIn}/>)}
+              {() => <SignupScreen setIsLoggedIn={setIsLoggedIn} />}
             </Stack.Screen>
-          ))}
+          )}
         </Stack.Navigator>
         {session && (
           <>
-            <Modal
+            {/* <Modal
               isVisible={isChatVisible}
               onBackdropPress={() => setIsChatVisible(false)}
               style={styles.modal}>
@@ -75,17 +127,19 @@ export default function App() {
                   navigation={{ goBack: () => setIsChatVisible(false) }}
                 />
               </View>
-            </Modal>
-            <TouchableOpacity
-              style={styles.tooltipButton}
-              onPress={() => setIsChatVisible(true)}>
-              <View style={styles.tooltipCircle}>
+            </Modal> */}
+            {/* <Animated.View
+              {...panResponder.panHandlers}
+              style={[pan.getLayout(), styles.tooltipButton]}> */}
+            {/* <TouchableOpacity
+                style={styles.tooltipCircle}
+                onPress={handlePress}>
                 <Image
                   source={require('./assets/images/Chatbot.png')}
                   style={styles.tooltipImage}
                 />
-              </View>
-            </TouchableOpacity>
+              </TouchableOpacity> */}
+            {/* </Animated.View> */}
           </>
         )}
       </NavigationContainer>
