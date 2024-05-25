@@ -113,6 +113,60 @@ const ViewHabit = () => {
     RBSDelete.current.open();
   };
 
+  const deletePhoto = async (imageId, imageUrl) => {
+    try {
+      const { error } = await supabase
+        .from('HabitImages')
+        .delete()
+        .eq('habit_image_id', imageId);
+  
+      if (error) {
+        Alert.alert('Error', 'Failed to delete photo from database');
+        return;
+      }
+  
+      const { error: storageError } = await supabase.storage
+        .from('habit')
+        .remove([imageUrl]);
+  
+      if (storageError) {
+        Alert.alert('Error', 'Failed to delete photo from storage');
+        return;
+      }
+  
+      Alert.alert('Success', 'Photo successfully deleted');
+      setHabitImages(habitImages.filter((image) => image.habit_image_id !== imageId));
+      setModalVisible(false);
+    } catch (error) {
+      console.error('Error deleting photo:', error);
+      Alert.alert('Error', 'An error occurred while deleting the photo');
+    }
+  };
+
+  const onToggleHabit = async () => {
+    setLoadingDisable(true);
+
+    const updatedData = {
+      ...habit,
+      enabled: !habit.enabled,
+    };
+
+    const { error } = await supabase
+      .from('Habit')
+      .update(updatedData)
+      .eq('habit_id', habit.habit_id)
+      .select();
+
+    if (error) {
+      Alert.alert('Error updating habit', error.message);
+      setLoadingDisable(false);
+      return;
+    }
+
+    habit.enabled = !habit.enabled;
+    setLoadingDisable(false);
+  };
+  
   const deleteHabit = async () => {
     setLoadingDelete(true);
 
@@ -236,6 +290,11 @@ const ViewHabit = () => {
     if (!result.cancelled) {
       setNewPhoto(result.assets[0]);
     }
+  };
+
+  const cancelImageSelection = () => {
+    setNewPhoto(null);
+    setNewDescription('');
   };
 
   const blobToBase64 = (blob) => {
@@ -619,8 +678,15 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     marginBottom: 16,
   },
-  imageDescription: {
-    color: Colors.white,
+  imageDescriptionInput: {
+    width: '100%',
+    padding: 10,
+    borderRadius: 8,
+    borderColor: '#FFF',
+    borderWidth: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    color: '#FFF', 
+    fontSize: 16,
     marginBottom: 16,
   },
   title: {
@@ -675,10 +741,11 @@ const styles = StyleSheet.create({
     borderColor: Colors.border,
     borderWidth: 1,
     borderRadius: 10,
-    padding: 8,
-    marginVertical: 8,
+    padding: 10,
+    marginVertical: 10,
     width: '100%',
-    color: Colors.white,
+    color: Colors.text,
+    backgroundColor: Colors.background,
   },
   containerButton: {
     marginBottom: 16,
