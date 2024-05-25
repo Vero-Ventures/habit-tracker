@@ -58,6 +58,7 @@ const ViewHabit = () => {
   const [newDescription, setNewDescription] = useState(habit.habit_description);
   const [loadingDisable, setLoadingDisable] = useState(false);
   const [loadingDelete, setLoadingDelete] = useState(false);
+  const [ editedHabit, setEditedHabit ] = useState(habit);
 
   useEffect(() => {
     const fetchHabit = async () => {
@@ -459,7 +460,7 @@ const ViewHabit = () => {
             habit_title: newTitle,
             habit_description: newDescription,
           };
-          setHabit
+          setEditedHabit(updatedHabitData);
         })
         .catch((error) => {
           Alert.alert('Error updating habit', error.message);
@@ -468,6 +469,12 @@ const ViewHabit = () => {
       Alert.alert('Error updating habit', error.message);
     }
   };
+
+  const cancelEdit = () => {
+    setNewTitle(habit.habit_title);
+    setNewDescription(habit.habit_description);
+    setEditable(false);
+  }
 
   return (
     <View style={Default.container}>
@@ -483,7 +490,14 @@ const ViewHabit = () => {
                 backButton
                 customRightIcon={
                   editable ? (
-                    <Button title="Save" onPress={saveChanges} />
+                    <View style={styles.saveCancelButtonsContainer}>
+                      <TouchableOpacity onPress={cancelEdit} style={styles.saveCancelButtons}>
+                        <Text style={styles.saveCancelButtonsText}>Cancel</Text>
+                      </TouchableOpacity>
+                      <TouchableOpacity onPress={saveChanges} style={styles.saveCancelButtons}>
+                        <Text style={styles.saveCancelButtonsText}>Save</Text>
+                      </TouchableOpacity>
+                    </View>
                   ) : (
                     <Icon
                       onPress={toggleEdit}
@@ -537,14 +551,22 @@ const ViewHabit = () => {
                       />
                     ) : (
                       <Text style={styles.textContent}>
-                        {habit?.habit_title || 'N/A'}
+                        {editedHabit?.habit_title || 'N/A'}
                       </Text>
                     )}
 
-                    <Text style={styles.title}>Habit Description</Text>
+                  <Text style={styles.title}>Habit Description</Text>
+                  {editable ? (
+                    <TextInput
+                      style={styles.textInput}
+                      value={newDescription}
+                      onChangeText={setNewDescription}
+                    />
+                  ) : (
                     <Text style={styles.textContent}>
-                      {habit?.habit_description || 'N/A'}
+                      {editedHabit?.habit_description || 'N/A'}
                     </Text>
+                  )}
 
                     <Text style={styles.title}>Quantity</Text>
                     <Text style={styles.textContent}>
@@ -708,6 +730,19 @@ const ViewHabit = () => {
 };
 
 const styles = StyleSheet.create({
+  saveCancelButtonsContainer: {
+    paddingLeft: 30,
+    flexDirection: 'row',
+  },
+  saveCancelButtons: {
+    padding: 10,
+    backgroundColor: '#5c6bc0', 
+    borderRadius: 5,
+    marginHorizontal: 10, 
+  },
+  saveCancelButtonsText: {
+    color: '#fff', 
+  },
   container: {
     width: Dimensions.get("window").width,
     backgroundColor: Colors.primary,
