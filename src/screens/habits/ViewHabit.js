@@ -21,6 +21,7 @@ import Icon from 'react-native-vector-icons/FontAwesome5';
 import { Button } from 'react-native-elements';
 import { supabase } from '../../config/supabaseClient';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
+import { KeyboardAwareFlatList } from 'react-native-keyboard-aware-scroll-view';
 import RBSheet from 'react-native-raw-bottom-sheet';
 import moment from 'moment';
 import store from '../../store/storeConfig';
@@ -165,7 +166,7 @@ const ViewHabit = () => {
     habit.enabled = !habit.enabled;
     setLoadingDisable(false);
   };
-
+  
   const deleteHabit = async () => {
     setLoadingDelete(true);
 
@@ -418,243 +419,226 @@ const ViewHabit = () => {
   };
   return (
     <View style={Default.container}>
-      <KeyboardAwareScrollView extraHeight={120} contentContainerStyle={Default.container}>
-        <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
-          <Header
-            title="Habit Details"
-            navigation={navigation}
-            backButton
-            customRightIcon={
-              <Icon
-                onPress={() => navigation.navigate('EditHabit', { habit_id: habit.habit_id })}
-                size={20}
-                color={Colors.text}
-                name="edit"
-              />
-            }
-          />
-          <View style={styles.gridContainer}>
-            <FlatList
-              data={habitImages}
-              renderItem={renderImageItem}
-              keyExtractor={(item) => item.description}
-              numColumns={3}
-              contentContainerStyle={styles.scrollContainer}
-            />
-          </View>
-          <Modal
-  animationType="slide"
-  transparent={true}
-  visible={modalVisible}
-  onRequestClose={closeModal}
->
-  <View style={styles.modalContainer}>
-    <View style={styles.modalContent}>
-      {selectedImage && (
-        <>
-          <Image source={{ uri: selectedImage.image_photo }} style={styles.fullImage} />
-          <TextInput
-            style={styles.imageDescriptionInput}
-            placeholder="Add a description..."
-            placeholderTextColor='white'
-            value={selectedImage.description}
-            onChangeText={(text) => setSelectedImage({ ...selectedImage, description: text })}
-          />
-          <Button title="Close" onPress={closeModal} />
-          <Button title="Delete Photo" onPress={() => deletePhoto(selectedImage.image_id, selectedImage.image_photo)} />
-        </>
-      )}
-    </View>
-  </View>
-</Modal>
-
-
-
-
-
-          <View style={styles.container}>
-            <View style={styles.card}>
-              <Text style={styles.title}>Habit Title</Text>
-              <Text style={styles.textContent}>
-                {habit?.habit_title || 'N/A'}
-              </Text>
-
-              <Text style={styles.title}>Habit Description</Text>
-              <Text style={styles.textContent}>
-                {habit?.habit_description || 'N/A'}
-              </Text>
-
-              <Text style={styles.title}>Quantity</Text>
-              <Text style={styles.textContent}>
-                {habit?.schedule_quantity || 'N/A'}
-              </Text>
-
-              <Text style={styles.title}>Start Date</Text>
-              <Text style={styles.textContent}>
-                {habit?.schedule_start_date
-                  ? moment(habit.schedule_start_date).format('MMMM Do YYYY')
-                  : 'N/A'}
-              </Text>
-
-              <Text style={styles.title}>End Date</Text>
-              <Text style={styles.textContent}>
-                {habit?.schedule_end_date
-                  ? moment(habit.schedule_end_date).format('MMMM Do YYYY')
-                  : 'N/A'}
-              </Text>
-
-              <Text style={styles.title}>Active Days</Text>
-              <Text style={styles.textContent}>
-                {habit?.schedule_active_days || 'N/A'}
-              </Text>
-
-              <Text style={styles.title}>State</Text>
-              <Text style={styles.textContent}>
-                {habit?.schedule_state || 'N/A'}
-              </Text>
-
-              <Text style={styles.title}>Created At</Text>
-              <Text style={styles.textContent}>
-                {habit?.created_at
-                  ? moment(habit.created_at).format('MMMM Do YYYY, h:mm:ss a')
-                  : 'N/A'}
-              </Text>
-            </View>
-
-            <TouchableOpacity onPress={() => ASPhotoOptions.current.show()} style={styles.pickImageButton}>
-              <Text style={styles.pickImageButtonText}>Pick an image</Text>
-            </TouchableOpacity>
-
-            <ActionSheet
-              ref={ASPhotoOptions}
-              options={['Camera', 'Library', 'Cancel']}
-              cancelButtonIndex={2}
-              destructiveButtonIndex={2}
-              onPress={index => handleActionSheet(index)}
-            />
-
-            {newPhoto && (
-              <View style={styles.newImageContainer}>
-                <Image source={{ uri: newPhoto.uri }} style={styles.newImage} />
-                <TextInput
-  style={styles.newDescriptionInput}
-  placeholder="Add a description"
-  value={newDescription}
-  onChangeText={setNewDescription}
-/>
-
-                <Button title="Add Image" onPress={addImage} />
-                <Button title="Cancel" onPress={cancelImageSelection} style={styles.cancelButton} />
-
-              </View>
-            )}
-
-            <View style={styles.containerButton}>
-              <Button
-                onPress={generateHabitSchedule}
-                title="Generate Habit Schedule"
-                buttonStyle={styles.generateButton}
-              />
-            </View>
-
-            <View style={styles.scheduleDetails}>
-              <Text style={{ ...styles.title, paddingTop: 20, paddingBottom: 20, }}>Your Habit Plan by Your AI Coach:</Text>
-              {isLoading ? (
-                <ActivityIndicator size="small" color={Colors.ActivityIndicator} />
-              ) : generatedSchedule ? (
-                <>
-                  <StepIndicator
-                    customStyles={customStyles}
-                    currentPosition={currentPosition}
-                    stepCount={generatedSchedule[habit.habit_title][0].stages.length}
-                    labels={generatedSchedule[habit.habit_title][0].stages.map((stage) => stage.name)}
+      <KeyboardAwareFlatList
+        extraHeight={120}
+        data={[{ key: 'header' }, { key: 'content' }]}
+        renderItem={({ item }) => {
+          if (item.key === 'header') {
+            return (
+              <Header
+                title="Habit Details"
+                navigation={navigation}
+                backButton
+                customRightIcon={
+                  <Icon
+                    onPress={() => navigation.navigate('EditHabit', { habit_id: habit.habit_id })}
+                    size={20}
+                    color={Colors.text}
+                    name="edit"
                   />
-                  <ScrollView
-                    horizontal
-                    showsHorizontalScrollIndicator={false}
-                    style={styles.stepContentContainer}
-                    onScroll={(e) => {
-                      const contentOffsetX = e.nativeEvent.contentOffset.x;
-                      const screenWidth = Dimensions.get('window').width;
-                      const currentStep = Math.round(contentOffsetX / screenWidth);
-                      setCurrentPosition(currentStep);
-                    }}
-                    scrollEventThrottle={16}
-                  >
-                    {generatedSchedule[habit.habit_title][0].stages.map((stage, index) =>
-                      renderStepContent(stage)
+                }
+              />
+            );
+          } else if (item.key === 'content') {
+            return (
+              <>
+                <View style={styles.gridContainer}>
+                  <FlatList
+                    data={habitImages}
+                    renderItem={renderImageItem}
+                    keyExtractor={(item) => item.description}
+                    numColumns={3}
+                    contentContainerStyle={styles.scrollContainer}
+                  />
+                </View>
+                <Modal
+                  animationType="slide"
+                  transparent={true}
+                  visible={modalVisible}
+                  onRequestClose={closeModal}
+                >
+                  <View style={styles.modalContainer}>
+                    <View style={styles.modalContent}>
+                      {selectedImage && (
+                        <>
+                          <Image source={{ uri: selectedImage.image_photo }} style={styles.fullImage} />
+                          <Text style={styles.imageDescription}>{selectedImage.description}</Text>
+                          <Button title="Close" onPress={closeModal} />
+                        </>
+                      )}
+                    </View>
+                  </View>
+                </Modal>
+
+                <View style={styles.container}>
+                  <View style={styles.card}>
+                    <Text style={styles.title}>Habit Title</Text>
+                    <Text style={styles.textContent}>
+                      {habit?.habit_title || 'N/A'}
+                    </Text>
+
+                    <Text style={styles.title}>Habit Description</Text>
+                    <Text style={styles.textContent}>
+                      {habit?.habit_description || 'N/A'}
+                    </Text>
+
+                    <Text style={styles.title}>Quantity</Text>
+                    <Text style={styles.textContent}>
+                      {habit?.schedule_quantity || 'N/A'}
+                    </Text>
+
+                    <Text style={styles.title}>Start Date</Text>
+                    <Text style={styles.textContent}>
+                      {habit?.schedule_start_date
+                        ? moment(habit.schedule_start_date).format('MMMM Do YYYY')
+                        : 'N/A'}
+                    </Text>
+
+                    <Text style={styles.title}>End Date</Text>
+                    <Text style={styles.textContent}>
+                      {habit?.schedule_end_date
+                        ? moment(habit.schedule_end_date).format('MMMM Do YYYY')
+                        : 'N/A'}
+                    </Text>
+
+                    <Text style={styles.title}>Active Days</Text>
+                    <Text style={styles.textContent}>
+                      {habit?.schedule_active_days || 'N/A'}
+                    </Text>
+
+                    <Text style={styles.title}>State</Text>
+                    <Text style={styles.textContent}>
+                      {habit?.schedule_state || 'N/A'}
+                    </Text>
+
+                    <Text style={styles.title}>Created At</Text>
+                    <Text style={styles.textContent}>
+                      {habit?.created_at
+                        ? moment(habit.created_at).format('MMMM Do YYYY, h:mm:ss a')
+                        : 'N/A'}
+                    </Text>
+                  </View>
+
+                  <TouchableOpacity onPress={() => ASPhotoOptions.current.show()} style={styles.pickImageButton}>
+                    <Text style={styles.pickImageButtonText}>Pick an image</Text>
+                  </TouchableOpacity>
+
+                  <ActionSheet
+                    ref={ASPhotoOptions}
+                    options={['Camera', 'Library', 'Cancel']}
+                    cancelButtonIndex={2}
+                    destructiveButtonIndex={2}
+                    onPress={index => handleActionSheet(index)}
+                  />
+
+                  {newPhoto && (
+                    <View style={styles.newImageContainer}>
+                      <Image source={{ uri: newPhoto.uri }} style={styles.newImage} />
+                      <TextInput
+                        style={styles.newDescriptionInput}
+                        placeholder="Add a description"
+                        value={newDescription}
+                        onChangeText={setNewDescription}
+                      />
+                      <Button title="Add Image" onPress={addImage} />
+                    </View>
+                  )}
+
+                  <View style={styles.containerButton}>
+                    <Button
+                      onPress={generateHabitSchedule}
+                      title="Generate Habit Schedule"
+                      buttonStyle={styles.generateButton}
+                    />
+                  </View>
+
+                  <View style={styles.scheduleDetails}>
+                    <Text style={{ ...styles.title, paddingTop: 20, paddingBottom: 20, }}>Your Habit Plan by Your AI Coach:</Text>
+                    {isLoading ? (
+                      <ActivityIndicator size="small" color={Colors.ActivityIndicator} />
+                    ) : generatedSchedule ? (
+                      <>
+                        <StepIndicator
+                          customStyles={customStyles}
+                          currentPosition={currentPosition}
+                          stepCount={generatedSchedule[habit.habit_title][0].stages.length}
+                          labels={generatedSchedule[habit.habit_title][0].stages.map((stage) => stage.name)}
+                        />
+                        <FlatList
+                          horizontal
+                          data={generatedSchedule[habit.habit_title][0].stages}
+                          renderItem={({ item }) => renderStepContent(item)}
+                          keyExtractor={(item, index) => index.toString()}
+                          contentContainerStyle={styles.stepContentContainer}
+                          onScroll={(e) => {
+                            const contentOffsetX = e.nativeEvent.contentOffset.x;
+                            const screenWidth = Dimensions.get('window').width;
+                            const currentStep = Math.round(contentOffsetX / screenWidth);
+                            setCurrentPosition(currentStep);
+                          }}
+                          scrollEventThrottle={16}
+                        />
+                      </>
+                    ) : (
+                      <Text style={{ ...styles.textContent, paddingTop: 20 }}>No generated plan yet!</Text>
                     )}
-                  </ScrollView>
-                </>
-              ) : (
-                <Text style={{ ...styles.textContent, paddingTop: 20 }}>No generated plan yet!</Text>
-              )}
-            </View>
+                  </View>
 
-            <View style={styles.buttonContainer}>
-              {loadingDisable ? (
-                <ActivityIndicator
-                  style={{ paddingVertical: 16 }}
-                  size="small"
-                  color={Colors.text}
-                />
-              ) : (
-                <TouchableOpacity onPress={onToggleHabit} style={styles.toggleButton}>
-                  <Text style={styles.toggleButtonText}>
-                    {habit?.enabled ? 'DISABLE HABIT' : 'ENABLE HABIT'}
-                  </Text>
-                </TouchableOpacity>
-              )}
+                  <View style={styles.buttonContainer}>
+                    <Button
+                      disabled={loadingDelete}
+                      loading={loadingDelete}
+                      buttonStyle={styles.deleteButton}
+                      titleStyle={styles.deleteButtonTitle}
+                      onPress={onDeleteHabit}
+                      title="DELETE HABIT"
+                    />
+                  </View>
+                </View>
+              </>
+            );
+          }
+        }}
+        keyExtractor={(item) => item.key}
+      />
 
+      <RBSheet
+        ref={RBSDelete}
+        height={Dimensions.get('window').height * 0.12}
+        openDuration={250}
+        customStyles={{
+          container: {
+            justifyContent: 'center',
+            alignItems: 'center',
+            borderRadius: 45,
+            padding: 20,
+            width: Dimensions.get('window').width - 40,
+            marginHorizontal: 20,
+          },
+        }}
+      >
+        <View style={styles.absolute}>
+          <View style={styles.overlay} />
+          <View style={styles.sheetContainer}>
+            <Text style={styles.sheetTitle}>
+              Are you sure you want to delete this habit?
+            </Text>
+
+            <View style={styles.sheetButtonContainer}>
               <Button
-                disabled={loadingDelete}
-                loading={loadingDelete}
-                buttonStyle={styles.deleteButton}
-                titleStyle={styles.deleteButtonTitle}
-                onPress={onDeleteHabit}
-                title="DELETE HABIT"
+                title="Cancel"
+                onPress={() => RBSDelete.current.close()}
+                buttonStyle={styles.sheetCancelButton}
+              />
+              <Button
+                title="Delete"
+                onPress={deleteHabit}
+                buttonStyle={styles.sheetDeleteButton}
               />
             </View>
           </View>
-        </ScrollView>
-
-        <RBSheet
-          ref={RBSDelete}
-          height={Dimensions.get('window').height * 0.12}
-          openDuration={250}
-          customStyles={{
-            container: {
-              justifyContent: 'center',
-              alignItems: 'center',
-              borderRadius: 45,
-              padding: 20,
-              width: Dimensions.get('window').width - 40,
-              marginHorizontal: 20,
-            },
-          }}>
-          <View style={styles.absolute}>
-            <View style={styles.overlay} />
-            <View style={styles.sheetContainer}>
-              <Text style={styles.sheetTitle}>
-                Are you sure you want to delete this habit?
-              </Text>
-
-              <View style={styles.sheetButtonContainer}>
-                <Button
-                  title="Cancel"
-                  onPress={() => RBSDelete.current.close()}
-                  buttonStyle={styles.sheetCancelButton}
-                />
-                <Button
-                  title="Delete"
-                  onPress={deleteHabit}
-                  buttonStyle={styles.sheetDeleteButton}
-                />
-              </View>
-            </View>
-          </View>
-        </RBSheet>
-      </KeyboardAwareScrollView>
+        </View>
+      </RBSheet>
     </View>
   );
 };

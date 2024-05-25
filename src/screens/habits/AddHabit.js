@@ -79,6 +79,8 @@ const AddHabit = props => {
       Alert.alert('Error', 'User not authenticated');
       setSending(false);
       return;
+    } else {
+      Alert.alert('Success', 'Habit created successfully!');
     }
 
     const userId = user.user.id;
