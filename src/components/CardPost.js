@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { StyleSheet, View, Text, TouchableOpacity, Image, Alert, Dimensions, Modal, ActivityIndicator } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
+import { useNavigation } from '@react-navigation/native';
 import moment from 'moment';
 import { useSelector } from 'react-redux';
 import Colors from '../../assets/styles/Colors';
@@ -13,6 +14,7 @@ const CardPost = (props) => {
   const [successDeleting, setSuccessDeleting] = useState(false);
   const user = useSelector(({ user }) => user);
   const isPostFromUserLoggedIn = props.postUser.id === user.id;
+  const navigation = useNavigation();
 
   useEffect(() => {
     if (!showModalCardOptions && successDeleting) {
@@ -22,21 +24,7 @@ const CardPost = (props) => {
   }, [showModalCardOptions, successDeleting]);
 
   const viewUser = () => {
-    if (isPostFromUserLoggedIn) {
-      props.navigation.navigate('Home', {
-        screen: 'Profile',
-        params: { screen: 'ProfileIndex' },
-      });
-      return;
-    }
-
-    props.navigation.push('Home', {
-      screen: 'Profile',
-      params: {
-        screen: 'UserProfile',
-        params: { user: { id_user: props.postUser.id } },
-      },
-    });
+    navigation.navigate('UserProfile', { userId: props.postUser.id })
   };
 
   const renderCardTop = () => (
