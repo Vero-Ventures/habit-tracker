@@ -112,6 +112,36 @@ const ViewHabit = () => {
     RBSDelete.current.open();
   };
 
+  const deletePhoto = async (imageId, imageUrl) => {
+    try {
+      const { error } = await supabase
+        .from('HabitImages')
+        .delete()
+        .eq('habit_image_id', imageId);
+  
+      if (error) {
+        Alert.alert('Error', 'Failed to delete photo from database');
+        return;
+      }
+  
+      const { error: storageError } = await supabase.storage
+        .from('habit')
+        .remove([imageUrl]);
+  
+      if (storageError) {
+        Alert.alert('Error', 'Failed to delete photo from storage');
+        return;
+      }
+  
+      Alert.alert('Success', 'Photo successfully deleted');
+      setHabitImages(habitImages.filter((image) => image.habit_image_id !== imageId));
+      setModalVisible(false);
+    } catch (error) {
+      console.error('Error deleting photo:', error);
+      Alert.alert('Error', 'An error occurred while deleting the photo');
+    }
+  };
+
   const onToggleHabit = async () => {
     setLoadingDisable(true);
 
@@ -261,6 +291,11 @@ const ViewHabit = () => {
     }
   };
 
+  const cancelImageSelection = () => {
+    setNewPhoto(null);
+    setNewDescription('');
+  };
+
   const blobToBase64 = (blob) => {
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
@@ -408,23 +443,34 @@ const ViewHabit = () => {
             />
           </View>
           <Modal
-            animationType="slide"
-            transparent={true}
-            visible={modalVisible}
-            onRequestClose={closeModal}
-          >
-            <View style={styles.modalContainer}>
-              <View style={styles.modalContent}>
-                {selectedImage && (
-                  <>
-                    <Image source={{ uri: selectedImage.image_photo }} style={styles.fullImage} />
-                    <Text style={styles.imageDescription}>{selectedImage.description}</Text>
-                    <Button title="Close" onPress={closeModal} />
-                  </>
-                )}
-              </View>
-            </View>
-          </Modal>
+  animationType="slide"
+  transparent={true}
+  visible={modalVisible}
+  onRequestClose={closeModal}
+>
+  <View style={styles.modalContainer}>
+    <View style={styles.modalContent}>
+      {selectedImage && (
+        <>
+          <Image source={{ uri: selectedImage.image_photo }} style={styles.fullImage} />
+          <TextInput
+            style={styles.imageDescriptionInput}
+            placeholder="Add a description..."
+            placeholderTextColor='white'
+            value={selectedImage.description}
+            onChangeText={(text) => setSelectedImage({ ...selectedImage, description: text })}
+          />
+          <Button title="Close" onPress={closeModal} />
+          <Button title="Delete Photo" onPress={() => deletePhoto(selectedImage.image_id, selectedImage.image_photo)} />
+        </>
+      )}
+    </View>
+  </View>
+</Modal>
+
+
+
+
 
           <View style={styles.container}>
             <View style={styles.card}>
@@ -491,12 +537,15 @@ const ViewHabit = () => {
               <View style={styles.newImageContainer}>
                 <Image source={{ uri: newPhoto.uri }} style={styles.newImage} />
                 <TextInput
-                  style={styles.newDescriptionInput}
-                  placeholder="Add a description"
-                  value={newDescription}
-                  onChangeText={setNewDescription}
-                />
+  style={styles.newDescriptionInput}
+  placeholder="Add a description"
+  value={newDescription}
+  onChangeText={setNewDescription}
+/>
+
                 <Button title="Add Image" onPress={addImage} />
+                <Button title="Cancel" onPress={cancelImageSelection} style={styles.cancelButton} />
+
               </View>
             )}
 
@@ -645,8 +694,15 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     marginBottom: 16,
   },
-  imageDescription: {
-    color: Colors.white,
+  imageDescriptionInput: {
+    width: '100%',
+    padding: 10,
+    borderRadius: 8,
+    borderColor: '#FFF',
+    borderWidth: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    color: '#FFF', 
+    fontSize: 16,
     marginBottom: 16,
   },
   title: {
@@ -701,10 +757,11 @@ const styles = StyleSheet.create({
     borderColor: Colors.border,
     borderWidth: 1,
     borderRadius: 10,
-    padding: 8,
-    marginVertical: 8,
+    padding: 10,
+    marginVertical: 10,
     width: '100%',
-    color: Colors.white,
+    color: Colors.text,
+    backgroundColor: Colors.background,
   },
   containerButton: {
     marginBottom: 16,
