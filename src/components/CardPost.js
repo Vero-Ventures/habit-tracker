@@ -5,6 +5,7 @@ import moment from 'moment';
 import { useSelector } from 'react-redux';
 import Colors from '../../assets/styles/Colors';
 import { likePost, deletePost, savePost } from '../store/ducks/post';
+import PropTypes from 'prop-types';
 
 const CardPost = (props) => {
   const [showModalCardOptions, setShowModalCardOptions] = useState(false);
@@ -144,7 +145,11 @@ const CardPost = (props) => {
   };
 
   const onPressComment = () => {
-    props.navigation.navigate('Comments', { postId: props.postId });
+    console.log('props.postId:', props.postId);
+    var userData = { id: props.postUser.id, name: props.postUser.name, imageUrl: props.postUser.imageUrl };
+    var postData = { description: props.postDescription, id: props.postId};
+    props.navigation.navigate('Comments', { navigation: props.navigation, postId: props.postId,
+      userData, postData});
   };
 
   const toggleModalOptions = () => {
@@ -171,6 +176,18 @@ const CardPost = (props) => {
       {renderCardActions()}
     </TouchableOpacity>
   );
+};
+
+CardPost.proptypes = {
+  postId: PropTypes.number,
+  post: PropTypes.object,
+  postUser: PropTypes.object,
+  createdAt: PropTypes.string,
+  postTitle: PropTypes.string,
+  postDescription: PropTypes.string,
+  postType: PropTypes.string,
+  actions: PropTypes.object,
+  navigation: PropTypes.object,
 };
 
 const styles = StyleSheet.create({

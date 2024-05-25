@@ -35,11 +35,13 @@ import UpdateProfile from '../screens/profile/UpdateProfile';
 import ChatbotScreen from '../screens/ChatbotScreen';
 import UserDataScreen from '../screens/UserDataScreen';
 import ChecklistScreen from '../screens/checklist/Checklist';
+import CommentsScreen from '../screens/timeline/CommentsScreen';
 
 const Tab = createBottomTabNavigator();
 const CommunityStack = createStackNavigator();
 const ProfileStack = createStackNavigator();
 const HabitsStack = createStackNavigator();
+const TimelineStack = createStackNavigator();
 
 const CommunityScreen = () => {
   return (
@@ -92,6 +94,20 @@ const ProfilesScreen = ({ setIsLoggedIn }) => {
         {() => <SettingsScreen setIsLoggedIn={setIsLoggedIn} />}
       </ProfileStack.Screen>
     </ProfileStack.Navigator>
+  );
+};
+
+const TimelineScreen = () => {
+  return (
+    <TimelineStack.Navigator
+      initialRouteName="Timeline"
+      screenOptions={{
+        headerShown: false,
+        cardStyle: { backgroundColor: Colors.navigator },
+      }}>
+      <TimelineStack.Screen name="Timeline" component={Timeline} />
+      <TimelineStack.Screen name="Comments" component={CommentsScreen} />
+    </TimelineStack.Navigator>
   );
 };
 
@@ -148,7 +164,7 @@ export default function Navigator({ setIsLoggedIn }) {
           paddingBottom: 24,
         },
       })}>
-      <Tab.Screen name="Timeline" component={Timeline} />
+      <Tab.Screen name="Timeline" component={TimelineScreen} />
       <Tab.Screen name="Checklist" component={ChecklistScreen} />
       <Tab.Screen name="Habits" component={HabitsScreen} />
       <Tab.Screen name="Profile">
