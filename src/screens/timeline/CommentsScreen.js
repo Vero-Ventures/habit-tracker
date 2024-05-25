@@ -10,7 +10,7 @@ import Colors from '../../../assets/styles/Colors';
 import { Input } from 'react-native-elements';
 import Default from '../../../assets/styles/Default';
 import { TouchableOpacity } from 'react-native-gesture-handler';
-
+import store from '../../store/storeConfig';
 
 export default function CommentsScreen({ route }) {
     const [comments, setComments] = useState(null);
@@ -47,7 +47,7 @@ export default function CommentsScreen({ route }) {
                 const userId = route.params.userData.id;
                 const { data: commentInsertData, error: commentInsertError} = await supabase
                 .from('Comments')
-                .insert([{ user_id: userId, post_id: postId, content: comment }])
+                .insert([{ user_id: store.getState().user.session.user.id, post_id: postId, content: comment }])
                 .select();
 
                 setComment('');
