@@ -285,17 +285,6 @@ export default function Account() {
         </TouchableOpacity>
 
         <View style={styles.containerActionsHeader}>
-          <TouchableOpacity
-            style={styles.editProfile}
-            onPress={() => console.log('Share profile pressed')}>
-            <View style={styles.editProfileButton}>
-              <Image
-                source={require('../../assets/icons/share-profile.png')}
-                style={styles.iconsHeader}
-              />
-              <Text style={styles.editProfileText}>Share My Profile</Text>
-            </View>
-          </TouchableOpacity>
 
           <TouchableOpacity
             style={styles.editProfile}
