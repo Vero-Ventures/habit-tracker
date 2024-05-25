@@ -17,7 +17,7 @@
     "profile": "jest qa-tests/Profile.test.js",
     "signup": "jest qa-tests/Signup.test.js",
     "timeline": "jest qa-tests/Timeline.test.js",
-    "coverage": "nyc --reporter=lcov --reporter=text npm run chatbot"
+    "coverage": "nyc --reporter=lcov --reporter=text npm run test"
   },
   "husky": {
     "hooks": {
