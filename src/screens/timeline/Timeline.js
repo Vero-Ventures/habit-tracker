@@ -31,109 +31,77 @@ const Timeline = () => {
 
   
 
-
   const fetchPosts = async (isInitialFetch = false) => {
     try {
-      if (isInitialFetch) {
-        setLoading(true);
-        setPage(0);
-      } else {
-        setLoading(true);
-      }
+      setLoading(true);
   
       const { data: followingData, error: followingError } = await supabase
         .from('Following')
         .select('following')
         .eq('follower', session?.user.id);
   
-      if (followingError) {
-        throw followingError;
-      }
+      if (followingError) throw followingError;
   
       const followedUserIds = followingData.map(following => following.following);
-  
-      if (followedUserIds.length === 0) {
-        setTimelinePosts([]);
-        setLoadMore(false);
-        setLoading(false);
-        setRefreshing(false);
-        return;
-      }
+      const userIds = [...followedUserIds, session?.user.id]; // includes the user's own ID so u can now see ur own posts
   
       const { data: postData, error: postError } = await supabase
         .from('Post')
         .select('*')
-        .in('user_id', followedUserIds)
-        .order('created_at', { ascending: false })
-        .range(page * 10, (page + 1) * 10 - 1);
+        .in('user_id', userIds) // queried the posts by followed users and the user themselves
+        .order('created_at', { ascending: false });
   
-      if (postError) {
-        throw postError;
-      }
+      if (postError) throw postError;
   
       if (postData.length === 0) {
         setLoadMore(false);
         return;
       }
   
-      const userIds = postData.map(post => post.user_id);
+      const userIdsInPosts = postData.map(post => post.user_id);
       const { data: userData, error: userError } = await supabase
         .from('User')
         .select('user_id, username, profile_image')
-        .in('user_id', userIds);
+        .in('user_id', userIdsInPosts);
   
-      if (userError) {
-        throw userError;
-      }
+      if (userError) throw userError;
   
-      const scheduleIds = postData.map(post => post.schedule_id);
-      const { data: scheduleData, error: scheduleError } = await supabase
-        .from('Schedule')
-        .select('*')
-        .in('schedule_id', scheduleIds);
+      const postIds = postData.map(post => post.post_id);
+      const { data: likeData, error: likeError } = await supabase
+        .from('Like')
+        .select('post_id, user_id')
+        .in('post_id', postIds);
   
-      if (scheduleError) {
-        throw scheduleError;
-      }
+      if (likeError) throw likeError;
   
-      const habitIds = scheduleData.map(schedule => schedule.habit_id);
-      const { data: habitData, error: habitError } = await supabase
-        .from('Habit')
-        .select('*')
-        .in('habit_id', habitIds);
-  
-      if (habitError) {
-        throw habitError;
-      }
-
       const { data: imagePostData, error: imagePostError } = await supabase
         .from('Image')
         .select('*')
-        .in('post_id', postData.map(post => post.post_id));
+        .in('post_id', postIds);
+  
+      if (imagePostError) throw imagePostError;
+  
+      const likesMap = postIds.reduce((acc, postId) => {
+        acc[postId] = likeData.filter(like => like.post_id === postId);
+        return acc;
+      }, {});
   
       const combinedData = postData.map(post => {
-        const schedule = scheduleData.find(s => s.schedule_id === post.schedule_id);
-        const habit = habitData.find(h => h.habit_id === schedule.habit_id);
         const user = userData.find(u => u.user_id === post.user_id);
+        const likes = likesMap[post.post_id] || [];
         const image = imagePostData.find(i => i.post_id === post.post_id);
   
         return {
           ...post,
-          schedule,
-          habit,
           username: user ? user.username : 'Unknown User',
           profile_image: user ? user.profile_image : null,
-          // habit_photo: habit ? habit.habit_photo : null, 
+          likeFromUser: likes.some(like => like.user_id === session.user.id),
+          countLikes: likes.length,
           habit_photo: image ? image.image_photo : null,
         };
       });
   
-      if (isInitialFetch) {
-        setTimelinePosts(combinedData);
-      } else {
-        setTimelinePosts(prevPosts => [...prevPosts, ...combinedData]);
-      }
-  
+      setTimelinePosts(combinedData);
       setPage(prevPage => prevPage + 1);
       setLoadMore(combinedData.length === 10);
     } catch (error) {
@@ -143,6 +111,7 @@ const Timeline = () => {
       setRefreshing(false);
     }
   };
+  
   
 
 
@@ -214,7 +183,7 @@ const Timeline = () => {
   return (
     <View style={styles.container}>
       <Header title="Timeline" />
-      {/* Add a button to navigate to the add post page */}
+      {/* need to add a button to navigate to the add post page */}
       <Button mode="contained" onPress={() => navigation.navigate('AddPost')}>
         Add Post
       </Button>
