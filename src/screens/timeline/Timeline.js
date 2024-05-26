@@ -14,6 +14,7 @@ import Colors from '../../../assets/styles/Colors';
 import Header from '../../components/Header';
 import CardPost from '../../components/CardPost';
 import store from '../../store/storeConfig';
+import { Button } from 'react-native-paper';
 
 const Timeline = () => {
   const navigation = useNavigation();
@@ -177,6 +178,10 @@ const Timeline = () => {
   return (
     <View style={styles.container}>
       <Header title="Timeline" />
+      {/* Add a button to navigate to the add post page */}
+      <Button mode="contained" onPress={() => navigation.navigate('AddPost')}>
+        Add Post
+      </Button>
       <FlatList
         data={timelinePosts}
         keyExtractor={(item, index) => index.toString()}
