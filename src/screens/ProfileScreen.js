@@ -180,34 +180,52 @@ export default function Account() {
       setLoading(true);
       const fileName = `${Date.now()}_${String(image.uri).replace('null', '').split('/').pop()}`;
       console.log('Uploading file:', fileName);
-
+  
       const response = await fetch(image.uri);
       const blob = await response.blob();
-
+  
       const reader = new FileReader();
       reader.onloadend = async () => {
         const base64data = reader.result.split(',')[1];
         const arrayBuffer = base64ToArrayBuffer(base64data);
-
-        const { /*data: uploadData,*/ error: uploadError } = await supabase.storage
+  
+        const { error: uploadError } = await supabase.storage
           .from('profiles')
           .upload(fileName, arrayBuffer, {
             cacheControl: '3600',
             upsert: false,
             contentType: 'image/jpeg',
           });
-
+  
         if (uploadError) {
           console.error('Upload error:', uploadError);
           Alert.alert('Error', uploadError.message);
           setLoading(false);
           return;
         }
-
+  
         const { data } = supabase.storage.from('profiles').getPublicUrl(fileName);
         const publicUrl = data.publicUrl;
         setProfileImage(publicUrl);
-
+  
+        const updates = {
+          user_id: session?.user.id,
+          username: username,
+          bio: bio,
+          profile_image: publicUrl, // used to be profileImage
+        };
+  
+        const { error: updateError } = await supabase
+          .from('User')
+          .upsert(updates, { returning: 'minimal' });
+  
+        if (updateError) {
+          console.error('Update error:', updateError);
+          Alert.alert('Error', updateError.message);
+          setLoading(false);
+          return;
+        }
+  
         Alert.alert('Success', 'Profile image updated successfully!');
       };
       reader.readAsDataURL(blob);
@@ -218,34 +236,7 @@ export default function Account() {
       setLoading(false);
     }
   };
-
-  async function updateProfile() {
-    try {
-      setLoading(true);
-      if (!session?.user) throw new Error('No user on the session!');
-
-      const updates = {
-        user_id: session?.user.id,
-        username: username,
-        bio: bio,
-        profile_image: profileImage,
-      };
-
-      const { error } = await supabase
-        .from('User')
-        .upsert(updates, { returning: 'minimal' });
-
-      if (error) {
-        throw error;
-      }
-
-      Alert.alert('Success', 'Profile updated successfully!');
-    } catch (error) {
-      Alert.alert('Update Error', error.message);
-    } finally {
-      setLoading(false);
-    }
-  }
+  
 
   return (
     <View style={Default.container}>
