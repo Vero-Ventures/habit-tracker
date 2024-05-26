@@ -109,6 +109,7 @@ const TimelineScreen = () => {
       <TimelineStack.Screen name="Timeline" component={Timeline} />
       <TimelineStack.Screen name="Comments" component={CommentsScreen} />
       <TimelineStack.Screen name="AddPost" component={AddPost} />
+      <TimelineStack.Screen name="UserProfile" component={UserProfile} />
     </TimelineStack.Navigator>
   );
 };

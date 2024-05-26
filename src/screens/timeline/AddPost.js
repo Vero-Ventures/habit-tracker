@@ -91,10 +91,14 @@ export default function AddPost({ navigation }) {
                     throw uploadError;
                 }
 
+                console.log('uploadData:', uploadData);
 
                 //   imageUrl = `${supabaseUrl}/storage/v1/object/public/${filePath}`;
                 const publicUrlResponse = supabase.storage.from('habit').getPublicUrl(fileName);
-                const imageUrl = publicUrlResponse.data.publicURL;
+                const imageUrl = publicUrlResponse.data.publicUrl;
+
+                console.log('imageUrl:', imageUrl);
+                console.log('publicUrlResponse:', publicUrlResponse);
 
                 const { data: postImageInsertData, error: postImageInsertError } = await supabase
                     .from('Image')
@@ -104,6 +108,8 @@ export default function AddPost({ navigation }) {
                 if (postImageInsertError) {
                     console.log('error in post image:', postImageInsertError);
                 }
+
+                console.log('postImageInsertData:', postImageInsertData);
 
 
                     setImage(null);

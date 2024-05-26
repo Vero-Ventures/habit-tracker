@@ -132,33 +132,30 @@ const ViewHabit = () => {
     RBSDelete.current.open();
   };
 
-  const deletePhoto = async (imageId, imageUrl) => {
+  const deletePhoto = async (image) => {
     try {
-      const { error } = await supabase
+      const { error: deleteError } = await supabase
         .from('HabitImages')
         .delete()
-        .eq('habit_image_id', imageId);
+        .eq('habit_image_id', image.habit_image_id);
 
-      if (error) {
-        Alert.alert('Error', 'Failed to delete photo from database');
-        return;
+      if (deleteError) {
+        throw deleteError;
       }
 
-      const { error: storageError } = await supabase.storage
+      const { error: bucketError } = await supabase.storage
         .from('habit')
-        .remove([imageUrl]);
+        .remove([image.image_photo.split('/').pop()]);
 
-      if (storageError) {
-        Alert.alert('Error', 'Failed to delete photo from storage');
-        return;
+      if (bucketError) {
+        throw bucketError;
       }
 
-      Alert.alert('Success', 'Photo successfully deleted');
-      setHabitImages(habitImages.filter((image) => image.habit_image_id !== imageId));
-      setModalVisible(false);
+      setHabitImages(habitImages.filter(img => img.habit_image_id!== image.habit_image_id));
+      Alert.alert('Success', 'Photo has been successfully deleted');
+      closeModal();
     } catch (error) {
-      console.error('Error deleting photo:', error);
-      Alert.alert('Error', 'An error occurred while deleting the photo');
+      Alert.alert('Error', error.message);
     }
   };
 
@@ -537,23 +534,26 @@ const ViewHabit = () => {
                   />
                 </View>
                 <Modal
-                  animationType="slide"
-                  transparent={true}
-                  visible={modalVisible}
-                  onRequestClose={closeModal}
-                >
-                  <View style={styles.modalContainer}>
-                    <View style={styles.modalContent}>
-                      {selectedImage && (
-                        <>
-                          <Image source={{ uri: selectedImage.image_photo }} style={styles.fullImage} />
-                          <Text style={styles.imageDescription}>{selectedImage.description}</Text>
-                          <Button title="Close" onPress={closeModal} />
-                        </>
-                      )}
-                    </View>
-                  </View>
-                </Modal>
+  animationType="slide"
+  transparent={true}
+  visible={modalVisible}
+  onRequestClose={closeModal}
+>
+  <View style={styles.modalContainer}>
+    <View style={styles.modalContent}>
+      {selectedImage && (
+        <>
+          <Image source={{ uri: selectedImage.image_photo }} style={styles.fullImage} />
+          <Text style={styles.imageDescription}>{selectedImage.description}</Text>
+          <Button title="Delete Photo" onPress={() => deletePhoto(selectedImage)} />
+          <Button title="Close" onPress={closeModal} />
+        </>
+      )}
+    </View>
+  </View>
+</Modal>
+
+
 
                 <View style={styles.container}>
                   <View style={styles.card}>
@@ -642,6 +642,7 @@ const ViewHabit = () => {
                         onChangeText={setNewDescription}
                       />
                       <Button title="Add Image" onPress={addImage} />
+                      <Button title="Cancel" onPress={cancelImageSelection} />
                     </View>
                   )}
 
@@ -659,26 +660,28 @@ const ViewHabit = () => {
                     ) : generatedSchedule ? (
                       <>
                       <Text style={{ ...styles.title, paddingTop: 20, paddingBottom: 20, }}>Your Habit Plan by Your AI Coach:</Text>
-                        <StepIndicator
-                          customStyles={customStyles}
-                          currentPosition={currentPosition}
-                          stepCount={generatedSchedule[habit.habit_title][0].stages.length}
-                          labels={generatedSchedule[habit.habit_title][0].stages.map((stage) => stage.name)}
-                        />
-                        <FlatList
-                          horizontal
-                          data={generatedSchedule[habit.habit_title][0].stages}
-                          renderItem={({ item }) => renderStepContent(item)}
-                          keyExtractor={(item, index) => index.toString()}
-                          contentContainerStyle={styles.stepContentContainer}
-                          onScroll={(e) => {
-                            const contentOffsetX = e.nativeEvent.contentOffset.x;
-                            const screenWidth = Dimensions.get('window').width;
-                            const currentStep = Math.round(contentOffsetX / screenWidth);
-                            setCurrentPosition(currentStep);
-                          }}
-                          scrollEventThrottle={16}
-                        />
+                      <StepIndicator
+                    customStyles={customStyles}
+                    currentPosition={currentPosition}
+                    stepCount={generatedSchedule[habit.habit_title][0].stages.length}
+                    labels={generatedSchedule[habit.habit_title][0].stages.map((stage) => stage.name)}
+                  />
+                  <ScrollView
+                    horizontal
+                    showsHorizontalScrollIndicator={false}
+                    style={styles.stepContentContainer}
+                    onScroll={(e) => {
+                      const contentOffsetX = e.nativeEvent.contentOffset.x;
+                      const screenWidth = Dimensions.get('window').width;
+                      const currentStep = Math.round(contentOffsetX / screenWidth);
+                      setCurrentPosition(currentStep);
+                    }}
+                    scrollEventThrottle={16}
+                  >
+                    {generatedSchedule[habit.habit_title][0].stages.map((stage, index) =>
+                      renderStepContent(stage)
+                    )}
+                  </ScrollView>
                       </>
                     ) : (
                       <Text style={{ ...styles.textContent, paddingTop: 20 }}>No generated plan yet!</Text>
@@ -765,6 +768,7 @@ const styles = StyleSheet.create({
     padding: 16,
   },
   gridContainer: {
+    marginTop: 20,
     marginBottom: 16,
     flex: 3,
   },
@@ -792,7 +796,7 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     marginBottom: 16,
   },
-  imageDescriptionInput: {
+  imageDescription: {
     width: '100%',
     padding: 10,
     borderRadius: 8,
@@ -803,6 +807,10 @@ const styles = StyleSheet.create({
     fontSize: 16,
     marginBottom: 16,
   },
+  // imageDescription: {
+  //   color: Colors.white,
+  //   marginBottom: 16,
+  // },
   title: {
     fontSize: 16,
     fontWeight: 'bold',
@@ -935,17 +943,16 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
   deleteButton: {
-    flex: 1,
+    flex: 20,
     backgroundColor: '#d9534f',
     padding: 12,
     borderRadius: 45,
-    alignItems: 'left',
-    marginRight: 25,
+    marginLeft: 125,
   },
   deleteButtonTitle: {
     color: Colors.white,
-    fontSize: 16,
-    fontWeight: 'bold',
+    fontSize: 12,
+
   },
   sheetContainer: {
     flex: 1,
