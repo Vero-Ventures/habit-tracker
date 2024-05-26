@@ -36,6 +36,7 @@ import ChatbotScreen from '../screens/ChatbotScreen';
 import UserDataScreen from '../screens/UserDataScreen';
 import ChecklistScreen from '../screens/checklist/Checklist';
 import CommentsScreen from '../screens/timeline/CommentsScreen';
+import AddPost from '../screens/timeline/AddPost';
 
 const Tab = createBottomTabNavigator();
 const CommunityStack = createStackNavigator();
@@ -107,6 +108,7 @@ const TimelineScreen = () => {
       }}>
       <TimelineStack.Screen name="Timeline" component={Timeline} />
       <TimelineStack.Screen name="Comments" component={CommentsScreen} />
+      <TimelineStack.Screen name="AddPost" component={AddPost} />
       <TimelineStack.Screen name="UserProfile" component={UserProfile} />
     </TimelineStack.Navigator>
   );

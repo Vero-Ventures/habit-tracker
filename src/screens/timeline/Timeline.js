@@ -14,6 +14,7 @@ import Colors from '../../../assets/styles/Colors';
 import Header from '../../components/Header';
 import CardPost from '../../components/CardPost';
 import store from '../../store/storeConfig';
+import { Button } from 'react-native-paper';
 
 const Timeline = () => {
   const navigation = useNavigation();
@@ -207,11 +208,17 @@ const Timeline = () => {
       if (habitError) {
         throw habitError;
       }
+
+      const { data: imagePostData, error: imagePostError } = await supabase
+        .from('Image')
+        .select('*')
+        .in('post_id', postData.map(post => post.post_id));
   
       const combinedData = postData.map(post => {
         const schedule = scheduleData.find(s => s.schedule_id === post.schedule_id);
         const habit = habitData.find(h => h.habit_id === schedule.habit_id);
         const user = userData.find(u => u.user_id === post.user_id);
+        const image = imagePostData.find(i => i.post_id === post.post_id);
   
         return {
           ...post,
@@ -219,7 +226,8 @@ const Timeline = () => {
           habit,
           username: user ? user.username : 'Unknown User',
           profile_image: user ? user.profile_image : null,
-          habit_photo: habit ? habit.habit_photo : null,  // Ensure habit_photo is included
+          // habit_photo: habit ? habit.habit_photo : null,  // Ensure habit_photo is included
+          habit_photo: image ? image.image_photo : null,
         };
       });
   
@@ -335,6 +343,10 @@ const Timeline = () => {
   return (
     <View style={styles.container}>
       <Header title="Timeline" />
+      {/* Add a button to navigate to the add post page */}
+      <Button mode="contained" onPress={() => navigation.navigate('AddPost')}>
+        Add Post
+      </Button>
       <FlatList
         data={timelinePosts}
         keyExtractor={(item, index) => index.toString()}

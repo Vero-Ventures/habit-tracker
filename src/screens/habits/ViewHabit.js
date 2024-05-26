@@ -297,14 +297,14 @@ const ViewHabit = () => {
       if (status === 'granted') {
         pickCamera();
       } else {
-        Alert.alert('Ops', 'You need to allow access to the camera first.');
+        Alert.alert('Oops', 'You need to allow access to the camera first.');
       }
     } else if (index === 1) {
       let { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
       if (status === 'granted') {
         pickGallery();
       } else {
-        Alert.alert('Ops', 'You need to allow access to the library first.');
+        Alert.alert('Oops', 'You need to allow access to the library first.');
       }
     }
   };
