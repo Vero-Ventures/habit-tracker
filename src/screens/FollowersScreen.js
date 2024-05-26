@@ -4,19 +4,21 @@ import { useNavigation } from '@react-navigation/native';
 import { supabase } from '../config/supabaseClient';
 import store from '../store/storeConfig';
 import Colors from '../../assets/styles/Colors';
-import Header from '../components/Header'; 
+import Header from '../components/Header';
 
 export default function FollowersScreen() {
   const session = store.getState().user.session;
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState([]);
   const [followersList, setFollowersList] = useState([]);
+  const [followingList, setFollowingList] = useState([]);
   const [loading, setLoading] = useState(true);
   const navigation = useNavigation();
 
   useEffect(() => {
     if (session) {
       fetchFollowers();
+      fetchFollowing();
     }
   }, [session]);
 
@@ -39,6 +41,23 @@ export default function FollowersScreen() {
     }
   };
 
+  const fetchFollowing = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('Following')
+        .select('following')
+        .eq('follower', session?.user.id);
+
+      if (error) {
+        throw error;
+      }
+
+      setFollowingList(data.map(item => item.following));
+    } catch (error) {
+      Alert.alert('Error', error.message);
+    }
+  };
+
   const handleSearch = async () => {
     try {
       if (searchQuery.trim() === '') {
@@ -58,6 +77,7 @@ export default function FollowersScreen() {
       const updatedResults = data.map(user => ({
         ...user,
         isFollower: followersList.some(follower => follower.user_id === user.user_id),
+        isFollowingBack: followingList.includes(user.user_id), // Check if the current user is following back
       }));
 
       setSearchResults(updatedResults);
@@ -80,6 +100,29 @@ export default function FollowersScreen() {
 
       Alert.alert('Success', 'You are now following this user');
       fetchFollowers();
+      fetchFollowing();
+    } catch (error) {
+      Alert.alert('Error', error.message);
+    }
+  };
+
+  const unfollowUser = async (userId) => {
+    try {
+      if (!session?.user) throw new Error('No user on the session!');
+
+      const { error } = await supabase
+        .from('Following')
+        .delete()
+        .eq('follower', session.user.id)
+        .eq('following', userId);
+
+      if (error) {
+        throw error;
+      }
+
+      Alert.alert('Success', 'You have unfollowed this user');
+      fetchFollowers();
+      fetchFollowing();
     } catch (error) {
       Alert.alert('Error', error.message);
     }
@@ -89,8 +132,10 @@ export default function FollowersScreen() {
     <View style={styles.resultItem}>
       <Image source={{ uri: item.profile_image }} style={styles.profileImage} />
       <Text style={styles.username}>{item.username}</Text>
-      {item.isFollower ? (
-        <Text style={styles.alreadyFollowing}>This user follows you</Text>
+      {item.isFollowingBack ? (
+        <TouchableOpacity onPress={() => unfollowUser(item.user_id)}>
+          <Text style={styles.unfollowButton}>Unfollow</Text>
+        </TouchableOpacity>
       ) : (
         <TouchableOpacity onPress={() => followUser(item.user_id)}>
           <Text style={styles.followButton}>Follow</Text>
@@ -106,6 +151,15 @@ export default function FollowersScreen() {
     >
       <Image source={{ uri: item.profile_image }} style={styles.profileImage} />
       <Text style={styles.username}>{item.username}</Text>
+      {followingList.includes(item.user_id) ? (
+        <TouchableOpacity onPress={() => unfollowUser(item.user_id)}>
+          <Text style={styles.unfollowButton}>Unfollow</Text>
+        </TouchableOpacity>
+      ) : (
+        <TouchableOpacity onPress={() => followUser(item.user_id)}>
+          <Text style={styles.followButton}>Follow</Text>
+        </TouchableOpacity>
+      )}
     </TouchableOpacity>
   );
 
@@ -165,7 +219,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     backgroundColor: 'white',
     borderRadius: 45,
-    backgroundColor: 'white',
   },
   followersList: {
     marginBottom: 20,
@@ -190,6 +243,10 @@ const styles = StyleSheet.create({
   },
   followButton: {
     color: Colors.primary8,
+    fontWeight: 'bold',
+  },
+  unfollowButton: {
+    color: Colors.secondary,
     fontWeight: 'bold',
   },
   alreadyFollowing: {
