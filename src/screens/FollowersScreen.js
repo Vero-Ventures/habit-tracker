@@ -1,12 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { StyleSheet, View, Text, TextInput, FlatList, TouchableOpacity, Image, ActivityIndicator, Alert } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useRoute } from '@react-navigation/native';
 import { supabase } from '../config/supabaseClient';
 import store from '../store/storeConfig';
 import Colors from '../../assets/styles/Colors';
 import Header from '../components/Header';
 
 export default function FollowersScreen() {
+  const route = useRoute();
+  const { userId } = route.params;
   const session = store.getState().user.session;
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState([]);
@@ -16,18 +18,18 @@ export default function FollowersScreen() {
   const navigation = useNavigation();
 
   useEffect(() => {
-    if (session) {
+    if (userId) {
       fetchFollowers();
       fetchFollowing();
     }
-  }, [session]);
+  }, [userId]);
 
   const fetchFollowers = async () => {
     try {
       const { data, error } = await supabase
         .from('Following')
         .select('follower(username, user_id, profile_image)')
-        .eq('following', session?.user.id);
+        .eq('following', userId); // Use userId prop instead of session user ID
 
       if (error) {
         throw error;
@@ -46,7 +48,7 @@ export default function FollowersScreen() {
       const { data, error } = await supabase
         .from('Following')
         .select('following')
-        .eq('follower', session?.user.id);
+        .eq('follower', userId); // Use userId prop instead of session user ID
 
       if (error) {
         throw error;
@@ -77,7 +79,7 @@ export default function FollowersScreen() {
       const updatedResults = data.map(user => ({
         ...user,
         isFollower: followersList.some(follower => follower.user_id === user.user_id),
-        isFollowingBack: followingList.includes(user.user_id), // Check if the current user is following back
+        isFollowingBack: followingList.includes(user.user_id),
       }));
 
       setSearchResults(updatedResults);
@@ -166,7 +168,7 @@ export default function FollowersScreen() {
   return (
     <View style={styles.container}>
       <Header
-        title="Users Who Follow You"
+        title="Followers"
         navigation={navigation}
         backButton
       />
