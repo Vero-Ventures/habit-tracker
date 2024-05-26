@@ -48,7 +48,7 @@ const Header = (props) => {
         {props.title ? (
           <TouchableOpacity
             disabled={props.backButton ? false : true}
-            onPress={() => props.navigation.pop()}
+            onPress={() => props.navigation.goBack()}
           >
             <Text style={[styles.title, systemWeights.regular]}>
               {props.title}

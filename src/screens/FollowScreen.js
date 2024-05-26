@@ -1,12 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { StyleSheet, View, Text, TextInput, FlatList, TouchableOpacity, Image, Alert } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useRoute } from '@react-navigation/native';
 import { supabase } from '../config/supabaseClient';
 import store from '../store/storeConfig';
 import Colors from '../../assets/styles/Colors';
 import Header from '../components/Header'; 
 
 export default function FollowScreen() {
+  const route = useRoute();
+  const { userId } = route.params;
   const session = store.getState().user.session;
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState([]);
@@ -14,17 +16,17 @@ export default function FollowScreen() {
   const navigation = useNavigation();
 
   useEffect(() => {
-    if (session) {
+    if (userId) {
       fetchFollowingList();
     }
-  }, [session]);
+  }, [userId]);
 
   const fetchFollowingList = async () => {
     try {
       const { data, error } = await supabase
         .from('Following')
         .select('following(username, user_id, profile_image)')
-        .eq('follower', session?.user.id);
+        .eq('follower', userId);
 
       if (error) {
         throw error;
@@ -103,9 +105,6 @@ export default function FollowScreen() {
     }
   };
 
-
-
-  
   const renderFollowingItem = ({ item }) => {
     return (
       <TouchableOpacity
@@ -120,7 +119,6 @@ export default function FollowScreen() {
       </TouchableOpacity>
     );
   };
-  
 
   const renderSearchResultItem = ({ item }) => {
     return (
@@ -140,12 +138,11 @@ export default function FollowScreen() {
       </TouchableOpacity>
     );
   };
-  
 
   return (
     <View style={styles.container}>
       <Header
-        title="Users You Are Following"
+        title="Following"
         navigation={navigation}
         backButton
       />
@@ -194,7 +191,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     backgroundColor: 'white',
     borderRadius: 45,
-    backgroundColor: 'white',
   },
   followingList: {
     marginBottom: 20,
