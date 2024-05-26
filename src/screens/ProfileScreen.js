@@ -140,11 +140,11 @@ export default function Account() {
   }
 
   const goToFollowersScreen = () => {
-    navigation.navigate('FollowersScreen');
+    navigation.navigate('FollowersScreen', { userId: session.user.id }); // Pass userId as a parameter
   };
 
   const goToFollowScreen = () => {
-    navigation.navigate('FollowScreen');
+    navigation.navigate('FollowScreen', { userId: session.user.id }); // Pass userId as a parameter
   };
 
   const goToSettingsScreen = () => {
