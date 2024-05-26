@@ -479,6 +479,10 @@ const ViewHabit = () => {
     setEditable(!editable);
   };
 
+  const getActiveDay = (index) => {
+    return (habit.schedule_active_days & (1 << index)) !== 0;
+  };
+
   const saveChanges = () => {
     try {
       supabase
@@ -628,10 +632,20 @@ const ViewHabit = () => {
                         : 'N/A'}
                     </Text>
 
-                    <Text style={styles.title}>Active Days</Text>
+                    {/* <Text style={styles.title}>Active Days</Text>
                     <Text style={styles.textContent}>
                       {habit?.schedule_active_days || 'N/A'}
-                    </Text>
+                    </Text> */}
+                    <View style={{ marginBottom: 32 }}>
+                      <Text style={styles.title}>Active Days</Text>
+                      <View style={{ width: Dimensions.get('window').width - 44, flexDirection: 'row', justifyContent: 'space-between' }}>
+                        {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((day, index) => (
+                            <View style={[styles.frequencyDay, getActiveDay(index) ? styles.frequencyDaySelected : null]}>
+                              <Text style={styles.textFrequencyDay}>{day}</Text>
+                            </View>
+                        ))}
+                      </View>
+                    </View>
 
                     <Text style={styles.title}>State</Text>
                     <Text style={styles.textContent}>
@@ -1093,6 +1107,25 @@ const styles = StyleSheet.create({
     borderRadius: 40,
     borderWidth: 1,
     borderColor: 'rgba(255, 255, 255, 0.5)',
+  },
+  frequencyDay: {
+    width: 30,
+    height: 30,
+    borderRadius: 15,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: Colors.primary,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: Colors.text,
+  },
+  frequencyDaySelected: {
+    backgroundColor: Colors.primary4,
+    borderColor: Colors.primary4,
+  },
+  textFrequencyDay: {
+    fontSize: 12,
+    color: Colors.text,
+    fontWeight: 400,
   },
 });
 
