@@ -147,7 +147,7 @@ const Timeline = () => {
           imageUrl: item.profile_image,
         }}
         createdAt={item.created_at}
-        postTitle={item.post_title}
+        // postTitle={item.post_title}
         postDescription={item.post_description}
         postType="new_habit"
         actions={{

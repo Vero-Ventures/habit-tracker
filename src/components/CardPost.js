@@ -144,11 +144,11 @@ const CardPost = (props) => {
 };
 
 CardPost.propTypes = {
-  postId: PropTypes.number.isRequired,
+  postId: PropTypes.string.isRequired,
   post: PropTypes.object.isRequired,
   postUser: PropTypes.object.isRequired,
   createdAt: PropTypes.string.isRequired,
-  postTitle: PropTypes.string.isRequired,
+  // postTitle: PropTypes.string.isRequired,
   postDescription: PropTypes.string.isRequired,
   postType: PropTypes.string.isRequired,
   actions: PropTypes.object.isRequired,

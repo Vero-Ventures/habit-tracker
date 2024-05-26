@@ -17,8 +17,7 @@ import homeSelected from '../../assets/icons/home-selected.png';
 import home from '../../assets/icons/home.png';
 import infoSelected from '../../assets/icons/info-selected.png';
 import info from '../../assets/icons/info.png';
-import stakesSelected from '../../assets/icons/stakes-selected.png';
-import stakes from '../../assets/icons/stakes.png';
+
 import activitySelected from '../../assets/icons/activity-selected.png';
 import activity from '../../assets/icons/activity.png';
 import usersSelected from '../../assets/icons/users-selected.png';
@@ -101,12 +100,12 @@ const ProfilesScreen = ({ setIsLoggedIn }) => {
 const TimelineScreen = () => {
   return (
     <TimelineStack.Navigator
-      initialRouteName="Timeline"
+      initialRouteName="TimelineScreen"
       screenOptions={{
         headerShown: false,
         cardStyle: { backgroundColor: Colors.navigator },
       }}>
-      <TimelineStack.Screen name="Timeline" component={Timeline} />
+      <TimelineStack.Screen name="TimelineScreen" component={Timeline} />
       <TimelineStack.Screen name="Comments" component={CommentsScreen} />
       <TimelineStack.Screen name="AddPost" component={AddPost} />
       <TimelineStack.Screen name="UserProfile" component={UserProfile} />
