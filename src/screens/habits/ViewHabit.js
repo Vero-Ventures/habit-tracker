@@ -59,6 +59,8 @@ const ViewHabit = () => {
   const [loadingDisable, setLoadingDisable] = useState(false);
   const [loadingDelete, setLoadingDelete] = useState(false);
   const [ editedHabit, setEditedHabit ] = useState(habit);
+  const [deleteModalVisible, setDeleteModalVisible] = useState(false);
+
 
   useEffect(() => {
     const fetchHabit = async () => {
@@ -158,6 +160,30 @@ const ViewHabit = () => {
       Alert.alert('Error', error.message);
     }
   };
+
+
+
+  const confirmDeleteHabit = () => {
+    Alert.alert(
+      "Delete Habit",
+      "Are you sure you want to delete this habit?",
+      [
+        {
+          text: "Cancel",
+          onPress: () => setDeleteModalVisible(false),
+          style: "cancel"
+        },
+        {
+          text: "Delete",
+          onPress: () => deleteHabit(),
+          style: "destructive"
+        }
+      ],
+      { cancelable: false }
+    );
+  };
+
+
 
   const onToggleHabit = async () => {
     setLoadingDisable(true);
@@ -689,14 +715,43 @@ const ViewHabit = () => {
                   </View>
 
                   <View style={styles.buttonContainer}>
-                    <Button
-                      disabled={loadingDelete}
-                      loading={loadingDelete}
-                      buttonStyle={styles.deleteButton}
-                      titleStyle={styles.deleteButtonTitle}
-                      onPress={onDeleteHabit}
-                      title="DELETE HABIT"
-                    />
+    <Button
+  disabled={loadingDelete}
+  loading={loadingDelete}
+  buttonStyle={styles.deleteButton}
+  titleStyle={styles.deleteButtonTitle}
+  onPress={() => setDeleteModalVisible(true)}
+  title="DELETE HABIT"
+/>
+
+<Modal
+  visible={deleteModalVisible}
+  transparent={true}
+  animationType="slide"
+  onRequestClose={() => setDeleteModalVisible(false)}
+>
+  <View style={styles.modalOverlay}>
+    <View style={styles.modalContent}>
+      <Text style={styles.modalText}>Are you sure you want to delete this habit?</Text>
+      <View style={styles.modalButtonContainer}>
+        <TouchableOpacity
+          style={styles.modalCancelButton}
+          onPress={() => setDeleteModalVisible(false)}
+        >
+          <Text style={styles.modalButtonText}>Cancel</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={styles.modalDeleteButton}
+          onPress={confirmDeleteHabit}
+        >
+          <Text style={styles.modalButtonText}>Delete</Text>
+        </TouchableOpacity>
+      </View>
+    </View>
+  </View>
+</Modal>
+
+
                   </View>
                 </View>
               </>
@@ -953,6 +1008,48 @@ const styles = StyleSheet.create({
     color: Colors.white,
     fontSize: 12,
 
+  },
+  modalOverlay: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.95)',
+  },
+  modalContent: {
+    width: '80%',
+    backgroundColor: Colors.cardBackground,
+    borderRadius: 10,
+    padding: 20,
+    alignItems: 'center',
+  },
+  modalText: {
+    fontSize: 18,
+    color: Colors.text,
+    marginBottom: 20,
+    textAlign: 'center',
+  },
+  modalButtonContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    width: '100%',  },
+  modalCancelButton: {
+    flex: 1,
+    backgroundColor: Colors.secondary,
+    padding: 12,
+    borderRadius: 5,
+    marginRight: 10,
+    alignItems: 'center',
+  },
+  modalDeleteButton: {
+    flex: 1,
+    backgroundColor: '#d9534f',
+    padding: 12,
+    borderRadius: 5,
+    alignItems: 'center',
+  },
+  modalButtonText: {
+    color: Colors.white,
+    fontSize: 16,
   },
   sheetContainer: {
     flex: 1,
