@@ -265,7 +265,7 @@ const ViewHabit = () => {
           const result = await chat.sendMessage(prompt);
           const response = await result.response;
           const text = await response.text();
-  
+          
           const cleanedText = text.replace(/^```(?:json)?\n/, '').replace(/\n```$/, '').trim();
           const jsonStartIndex = cleanedText.indexOf('{');
           const jsonEndIndex = cleanedText.lastIndexOf('}');
