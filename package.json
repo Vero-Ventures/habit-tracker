@@ -8,7 +8,7 @@
     "ios": "expo start --ios",
     "web": "expo start --web",
     "lint": "prettier --check .",
-    "format": "prettier --write .",
+    "format": "eslint --fix && prettier --write .",
     "prepare": "husky",
     "postinstall": "node --eval \"require('fs').writeFileSync('.husky/pre-commit', 'npx lint-staged .\\n')\""
   },
