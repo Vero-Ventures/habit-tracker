@@ -116,10 +116,54 @@ const ViewHabit = () => {
 
       // console.log("This is the images data: " + JSON.stringify(imagesData));
 
+
+
+      const { data: schedulesData, error: schedulesError } = await supabase
+        .from('Schedule')
+        .select('schedule_id')
+        .eq('habit_id', habit.habit_id);
+
+      if (schedulesError) {
+        throw schedulesError;
+      }
+
+      const scheduleIds = schedulesData.map(schedule => schedule.schedule_id);
+
+      const { data: postsData, error: postsError } = await supabase
+        .from('Post')
+        .select('post_id, post_description')
+        .in('schedule_id', scheduleIds);
+
+      if (postsError) {
+        throw postsError;
+      }
+
+      const postIds = postsData.map(post => post.post_id);
+
+      const { data: postImagesData, error: postImagesError } = await supabase
+        .from('Image')
+        .select('image_photo, post_id')
+        .in('post_id', postIds);
+
+      if (postImagesError) {
+        throw postImagesError;
+      }
+
+
+
+
+
+
+
+
       const combinedImages = [
         ...(habitData?.habit_photo ? [{ image_photo: habitData.habit_photo, id: 'habitPhoto' }] : []),
-        ...imagesData
-      ];
+        ...imagesData,
+        ...postImagesData.map(image => ({
+          ...image,
+          post_description: postsData.find(post => post.post_id === image.post_id)?.post_description
+        }))
+      ].filter(image => image.image_photo !== null);
       // console.log("Setting habit images with: " + JSON.stringify(combinedImages));
       setHabitImages(combinedImages);
       // console.log("Done setting habit images");
@@ -517,13 +561,16 @@ const ViewHabit = () => {
     setModalVisible(false);
     setSelectedImage(null);
   };
-  const renderImageItem = ({ item }) => {
-    return (
-      <TouchableOpacity key={item.id} onPress={() => openModal(item)}>
-        <Image source={{ uri: item.image_photo }} style={styles.gridImage} />
-      </TouchableOpacity>
-    );
-  };
+const renderImageItem = ({ item }) => {
+  return (
+    <TouchableOpacity key={item.id} onPress={() => openModal(item)}>
+      <Image source={{ uri: item.image_photo }} style={styles.gridImage} />
+    </TouchableOpacity>
+  );
+};
+
+  
+  
 
   const toggleEdit = () => {
     setEditable(!editable);
@@ -637,6 +684,9 @@ const ViewHabit = () => {
                         <>
                           <Image source={{ uri: selectedImage.image_photo }} style={styles.fullImage} />
                           <Text style={styles.imageDescription}>{selectedImage.description}</Text>
+                          {selectedImage.post_description && (
+            <Text style={styles.imageDescription}>{selectedImage.post_description}</Text>
+          )}
                           <Button title="Delete Photo" onPress={() => deletePhoto(selectedImage)} />
                           <Button title="Close" onPress={closeModal} />
                         </>
@@ -916,32 +966,37 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: 'rgba(0, 0, 0, 0.8)',
+    backgroundColor: 'rgba(0,0,0,0.95)',
   },
   modalContent: {
     width: '90%',
-    backgroundColor: Colors.cardBackground,
+    backgroundColor: 'white',
+    padding: 20,
     borderRadius: 10,
-    padding: 16,
     alignItems: 'center',
   },
   fullImage: {
     width: '100%',
     height: Dimensions.get('window').width,
-    borderRadius: 10,
-    marginBottom: 16,
+    marginBottom: 5,
+      resizeMode: 'contain',
+
   },
   imageDescription: {
-    width: '100%',
-    padding: 10,
-    borderRadius: 8,
-    borderColor: '#FFF',
-    borderWidth: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    color: '#FFF',
+    marginTop: 10,
+    textAlign: 'center',
+    color: Colors.text,
     fontSize: 16,
-    marginBottom: 16,
+    marginBottom: 40,
   },
+  imageCaption: {
+    textAlign: 'center',
+    marginTop: 5,
+    color: Colors.text,
+    fontSize: 12,
+  },
+  
+  
   // imageDescription: {
   //   color: Colors.white,
   //   marginBottom: 16,
