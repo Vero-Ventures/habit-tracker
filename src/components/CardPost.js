@@ -92,6 +92,8 @@ const CardPost = (props) => {
   };
 
   const renderCardContent = () => (
+    fetchLikeCount(),
+    fetchLikeStatus(),
     <View>
       {props.post.habit_photo && (
         <Image source={{ uri: props.post.habit_photo }} style={styles.habitImage} resizeMode="cover" />
@@ -172,6 +174,36 @@ const CardPost = (props) => {
       props.actions.onLikePostSuccess(props.postId);
     } catch (error) {
       Alert.alert('Error', 'Something went wrong with liking the post');
+    }
+  };
+
+  const fetchLikeCount = async () => {
+    const { data: likeCountData, error: likeCountError } = await supabase
+        .from('Like')
+        .select('*', { count: 'exact' })
+        .eq('post_id', props.postId);
+
+      if (likeCountError) throw likeCountError;
+
+      const updatedLikeCount = likeCountData.length;
+
+      setCountLikes(updatedLikeCount);
+  };
+
+  const fetchLikeStatus = async () => {
+    if (!user || !user.id) return;
+    try {
+      const { data: likeData, error: likeError } = await supabase
+        .from('Like')
+        .select('*')
+        .eq('post_id', props.postId)
+        .eq('user_id', user.id);
+
+      if (likeError) throw likeError;
+
+      setLikeFromUser(likeData.length > 0);
+    } catch (error) {
+      Alert.alert('Error', 'Failed to fetch like status');
     }
   };
 
