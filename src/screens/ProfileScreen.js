@@ -19,6 +19,8 @@ import store from '../store/storeConfig';
 import Default from '../../assets/styles/Default';
 import Colors from '../../assets/styles/Colors';
 import { FlatList } from 'react-native-gesture-handler';
+import { RefreshControl } from 'react-native';
+
 
 const { width } = Dimensions.get('window');
 const imageSize = width / 3;
@@ -36,9 +38,12 @@ export default function Account() {
   const [habitImages, setHabitImages] = useState([]);
   const [selectedImage, setSelectedImage] = useState(null);
   const [modalVisible, setModalVisible] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
+
 
   useEffect(() => {
     if (session) {
+      fetchAllData();
       getProfile();
       getPostsCount();
       getFollowingCount();
@@ -276,6 +281,28 @@ export default function Account() {
     return bytes.buffer;
   };
 
+
+  const onRefresh = () => {
+    setRefreshing(true);
+    fetchAllData();
+  };
+  
+  const fetchAllData = async () => {
+    try {
+      await getProfile();
+      await getPostsCount();
+      await getFollowingCount();
+      await getFollowerCount();
+      await getHabitImages();
+    } catch (error) {
+      Alert.alert('Error', error.message);
+    } finally {
+      setRefreshing(false);
+    }
+  };
+
+  
+
   const uploadProfileImage = async (image) => {
     try {
       setLoading(true);
@@ -453,6 +480,13 @@ export default function Account() {
         data={habitImages}
         renderItem={renderHabitImages}
         keyExtractor={(item, index) => index.toString()}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            colors={[Colors.primary]}
+          />
+        }
       />
   
       <Modal
