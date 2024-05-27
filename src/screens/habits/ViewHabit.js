@@ -620,8 +620,8 @@ const ViewHabit = () => {
 
                     <Text style={styles.title}>Start Date</Text>
                     <Text style={styles.textContent}>
-                      {habit?.schedule_start_date
-                        ? moment(habit.schedule_start_date).format('MMMM Do YYYY')
+                      {habit?.created_at
+                        ? moment(habit.created_at).format('MMMM Do YYYY')
                         : 'N/A'}
                     </Text>
 
@@ -632,10 +632,6 @@ const ViewHabit = () => {
                         : 'N/A'}
                     </Text>
 
-                    {/* <Text style={styles.title}>Active Days</Text>
-                    <Text style={styles.textContent}>
-                      {habit?.schedule_active_days || 'N/A'}
-                    </Text> */}
                     <View style={{ marginBottom: 32 }}>
                       <Text style={styles.title}>Active Days</Text>
                       <View style={{ width: Dimensions.get('window').width - 44, flexDirection: 'row', justifyContent: 'space-between' }}>
