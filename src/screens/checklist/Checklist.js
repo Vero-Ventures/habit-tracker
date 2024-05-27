@@ -18,7 +18,6 @@ import store from '../../store/storeConfig';
 import { supabase } from '../../config/supabaseClient';
 import moment from 'moment';
 import Icon from 'react-native-vector-icons/FontAwesome5';
-import Swipeable from 'react-native-gesture-handler/Swipeable';
 
 const Checklist = () => {
   const session = store.getState().user.session;
@@ -153,14 +152,6 @@ const fetchSchedules = async () => {
   };
 
   const renderSchedule = ({ item }) => (
-    <Swipeable
-      renderLeftActions={() => leftContent}
-      renderRightActions={() => rightContent}
-      onSwipeableLeftOpen={() => handleCrossOff(item.habit_id)}
-      onSwipeableRightOpen={() => handleCrossOff(item.habit_id)}
-      rightThreshold={Dimensions.get('window').width / 3}
-      leftThreshold={Dimensions.get('window').width / 3}
-    >
       <TouchableOpacity
         onPress={() => handleCrossOff(item.habit_id)}
         style={styles.scheduleItem}
@@ -177,7 +168,6 @@ const fetchSchedules = async () => {
           {item.schedule_state === 'Open' ? 'ACTIVE' : 'INACTIVE'}
         </Text>
       </TouchableOpacity>
-    </Swipeable>
   );
 
   const rightContent = (
