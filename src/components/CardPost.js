@@ -59,7 +59,7 @@ const CardPost = (props) => {
       </View>
       {isPostFromUserLoggedIn && (
         <TouchableOpacity onPress={toggleModalOptions}>
-          <Image source={require('../../assets/icons/ellipse-vertical.png')} style={styles.cardPostVerticalEllipsis} />
+          {/* <Image source={require('../../assets/icons/ellipse-vertical.png')} style={styles.cardPostVerticalEllipsis} /> */}
         </TouchableOpacity>
       )}
     </View>
@@ -217,8 +217,8 @@ const CardPost = (props) => {
 
   return (
     <TouchableOpacity
-      onLongPress={toggleModalOptions}
-      onPress={onPressPost}
+      // onLongPress={toggleModalOptions}
+      // onPress={onPressPost}
       style={styles.cardShadow}
     >
       {renderCardTop()}
