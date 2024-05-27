@@ -58,7 +58,7 @@ const ViewHabit = () => {
   const [newDescription, setNewDescription] = useState(habit.habit_description);
   const [loadingDisable, setLoadingDisable] = useState(false);
   const [loadingDelete, setLoadingDelete] = useState(false);
-  const [ editedHabit, setEditedHabit ] = useState(habit);
+  const [editedHabit, setEditedHabit] = useState(habit);
   const [deleteModalVisible, setDeleteModalVisible] = useState(false);
 
 
@@ -153,7 +153,7 @@ const ViewHabit = () => {
         throw bucketError;
       }
 
-      setHabitImages(habitImages.filter(img => img.habit_image_id!== image.habit_image_id));
+      setHabitImages(habitImages.filter(img => img.habit_image_id !== image.habit_image_id));
       Alert.alert('Success', 'Photo has been successfully deleted');
       closeModal();
     } catch (error) {
@@ -228,7 +228,7 @@ const ViewHabit = () => {
   };
 
   const generateHabitSchedule = async () => {
-    const MAX_RETRIES = 5; 
+    const MAX_RETRIES = 5;
     let attempt = 0;
     let success = false;
     
@@ -242,7 +242,7 @@ const ViewHabit = () => {
             role: 'user',
             parts: [
               {
-                text: 'Hello, I would like you to generate a habit plan in strictly correct JSON format for me to follow that will help me reach my goals for my habit of ' + habit.habit_description + '.',
+                text: `Hello, I would like you to generate a habit plan in strictly correct JSON format for me to follow that will help me reach my goals for my habit of ${habit.habit_description}. The JSON should contain exactly 3 stages.`,
               },
             ],
           },
@@ -265,9 +265,41 @@ const ViewHabit = () => {
           {
             "stages": [
               {
-                "name": "<stage name>",
-                "duration_weeks": <stage duration in weeks>,
-                "goals": "<stage goal to reach before proceeding to next stage>",
+                "name": "<stage 1 name>",
+                "duration_weeks": <stage 1 duration in weeks>,
+                "goals": "<stage 1 goal to reach before proceeding to next stage>",
+                "steps": [
+                  {
+                    "description": "<step 1 description>"
+                  },
+                  {
+                    "description": "<step 2 description>"
+                  },
+                  {
+                    "description": "<step 3 description>"
+                  }
+                ]
+              },
+              {
+                "name": "<stage 2 name>",
+                "duration_weeks": <stage 2 duration in weeks>,
+                "goals": "<stage 2 goal to reach before proceeding to next stage>",
+                "steps": [
+                  {
+                    "description": "<step 1 description>"
+                  },
+                  {
+                    "description": "<step 2 description>"
+                  },
+                  {
+                    "description": "<step 3 description>"
+                  }
+                ]
+              },
+              {
+                "name": "<stage 3 name>",
+                "duration_weeks": <stage 3 duration in weeks>,
+                "goals": "<stage 3 goal to reach before proceeding to next stage>",
                 "steps": [
                   {
                     "description": "<step 1 description>"
@@ -283,12 +315,11 @@ const ViewHabit = () => {
             ]
           }
         ]
-      }
-      `;
+      }`;
   
       while (attempt < MAX_RETRIES && !success) {
         try {
-          const result = await chat.sendMessage(prompt);
+          const result = await chat.sendMessage("Generate the plan with with this format: " + prompt);
           const response = await result.response;
           const text = await response.text();
           
@@ -300,7 +331,7 @@ const ViewHabit = () => {
           const parsedSchedule = JSON.parse(validJsonString);
           setGeneratedSchedule(parsedSchedule);
           await updateHabitPlan(validJsonString);
-          success = true; 
+          success = true;
         } catch (parseError) {
           attempt++;
           console.error(`Error parsing JSON on attempt ${attempt}:`, parseError);
@@ -316,6 +347,7 @@ const ViewHabit = () => {
       setIsLoading(false);
     }
   };
+  
 
   const handleActionSheet = async (index) => {
     if (index === 0) {
@@ -564,24 +596,24 @@ const ViewHabit = () => {
                   />
                 </View>
                 <Modal
-  animationType="slide"
-  transparent={true}
-  visible={modalVisible}
-  onRequestClose={closeModal}
->
-  <View style={styles.modalContainer}>
-    <View style={styles.modalContent}>
-      {selectedImage && (
-        <>
-          <Image source={{ uri: selectedImage.image_photo }} style={styles.fullImage} />
-          <Text style={styles.imageDescription}>{selectedImage.description}</Text>
-          <Button title="Delete Photo" onPress={() => deletePhoto(selectedImage)} />
-          <Button title="Close" onPress={closeModal} />
-        </>
-      )}
-    </View>
-  </View>
-</Modal>
+                  animationType="slide"
+                  transparent={true}
+                  visible={modalVisible}
+                  onRequestClose={closeModal}
+                >
+                  <View style={styles.modalContainer}>
+                    <View style={styles.modalContent}>
+                      {selectedImage && (
+                        <>
+                          <Image source={{ uri: selectedImage.image_photo }} style={styles.fullImage} />
+                          <Text style={styles.imageDescription}>{selectedImage.description}</Text>
+                          <Button title="Delete Photo" onPress={() => deletePhoto(selectedImage)} />
+                          <Button title="Close" onPress={closeModal} />
+                        </>
+                      )}
+                    </View>
+                  </View>
+                </Modal>
 
 
 
@@ -600,18 +632,18 @@ const ViewHabit = () => {
                       </Text>
                     )}
 
-                  <Text style={styles.title}>Habit Description</Text>
-                  {editable ? (
-                    <TextInput
-                      style={styles.textInput}
-                      value={newDescription}
-                      onChangeText={setNewDescription}
-                    />
-                  ) : (
-                    <Text style={styles.textContent}>
-                      {editedHabit?.habit_description || 'N/A'}
-                    </Text>
-                  )}
+                    <Text style={styles.title}>Habit Description</Text>
+                    {editable ? (
+                      <TextInput
+                        style={styles.textInput}
+                        value={newDescription}
+                        onChangeText={setNewDescription}
+                      />
+                    ) : (
+                      <Text style={styles.textContent}>
+                        {editedHabit?.habit_description || 'N/A'}
+                      </Text>
+                    )}
 
                     <Text style={styles.title}>Quantity</Text>
                     <Text style={styles.textContent}>
@@ -636,9 +668,9 @@ const ViewHabit = () => {
                       <Text style={styles.title}>Active Days</Text>
                       <View style={{ width: Dimensions.get('window').width - 44, flexDirection: 'row', justifyContent: 'space-between' }}>
                         {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((day, index) => (
-                            <View style={[styles.frequencyDay, getActiveDay(index) ? styles.frequencyDaySelected : null]}>
-                              <Text style={styles.textFrequencyDay}>{day}</Text>
-                            </View>
+                          <View style={[styles.frequencyDay, getActiveDay(index) ? styles.frequencyDaySelected : null]}>
+                            <Text style={styles.textFrequencyDay}>{day}</Text>
+                          </View>
                         ))}
                       </View>
                     </View>
@@ -695,29 +727,29 @@ const ViewHabit = () => {
                       <ActivityIndicator size="small" color={Colors.ActivityIndicator} />
                     ) : generatedSchedule ? (
                       <>
-                      <Text style={{ ...styles.title, paddingTop: 20, paddingBottom: 20, }}>Your Habit Plan by Your AI Coach:</Text>
-                      <StepIndicator
-                    customStyles={customStyles}
-                    currentPosition={currentPosition}
-                    stepCount={generatedSchedule[habit.habit_title][0].stages.length}
-                    labels={generatedSchedule[habit.habit_title][0].stages.map((stage) => stage.name)}
-                  />
-                  <ScrollView
-                    horizontal
-                    showsHorizontalScrollIndicator={false}
-                    style={styles.stepContentContainer}
-                    onScroll={(e) => {
-                      const contentOffsetX = e.nativeEvent.contentOffset.x;
-                      const screenWidth = Dimensions.get('window').width;
-                      const currentStep = Math.round(contentOffsetX / screenWidth);
-                      setCurrentPosition(currentStep);
-                    }}
-                    scrollEventThrottle={16}
-                  >
-                    {generatedSchedule[habit.habit_title][0].stages.map((stage, index) =>
-                      renderStepContent(stage)
-                    )}
-                  </ScrollView>
+                        <Text style={{ ...styles.title, paddingTop: 20, paddingBottom: 20, }}>Your Habit Plan by Your AI Coach:</Text>
+                        <StepIndicator
+                          customStyles={customStyles}
+                          currentPosition={currentPosition}
+                          stepCount={generatedSchedule[habit.habit_title][0].stages.length}
+                          labels={generatedSchedule[habit.habit_title][0].stages.map((stage) => stage.name)}
+                        />
+                        <ScrollView
+                          horizontal
+                          showsHorizontalScrollIndicator={false}
+                          style={styles.stepContentContainer}
+                          onScroll={(e) => {
+                            const contentOffsetX = e.nativeEvent.contentOffset.x;
+                            const screenWidth = Dimensions.get('window').width;
+                            const currentStep = Math.round(contentOffsetX / screenWidth);
+                            setCurrentPosition(currentStep);
+                          }}
+                          scrollEventThrottle={16}
+                        >
+                          {generatedSchedule[habit.habit_title][0].stages.map((stage, index) =>
+                            renderStepContent(stage)
+                          )}
+                        </ScrollView>
                       </>
                     ) : (
                       <Text style={{ ...styles.textContent, paddingTop: 20 }}>No generated plan yet!</Text>
@@ -725,41 +757,41 @@ const ViewHabit = () => {
                   </View>
 
                   <View style={styles.buttonContainer}>
-    <Button
-  disabled={loadingDelete}
-  loading={loadingDelete}
-  buttonStyle={styles.deleteButton}
-  titleStyle={styles.deleteButtonTitle}
-  onPress={() => setDeleteModalVisible(true)}
-  title="DELETE HABIT"
-/>
+                    <Button
+                      disabled={loadingDelete}
+                      loading={loadingDelete}
+                      buttonStyle={styles.deleteButton}
+                      titleStyle={styles.deleteButtonTitle}
+                      onPress={() => setDeleteModalVisible(true)}
+                      title="DELETE HABIT"
+                    />
 
-<Modal
-  visible={deleteModalVisible}
-  transparent={true}
-  animationType="slide"
-  onRequestClose={() => setDeleteModalVisible(false)}
->
-  <View style={styles.modalOverlay}>
-    <View style={styles.modalContent}>
-      <Text style={styles.modalText}>Are you sure you want to delete this habit?</Text>
-      <View style={styles.modalButtonContainer}>
-        <TouchableOpacity
-          style={styles.modalCancelButton}
-          onPress={() => setDeleteModalVisible(false)}
-        >
-          <Text style={styles.modalButtonText}>Cancel</Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={styles.modalDeleteButton}
-          onPress={confirmDeleteHabit}
-        >
-          <Text style={styles.modalButtonText}>Delete</Text>
-        </TouchableOpacity>
-      </View>
-    </View>
-  </View>
-</Modal>
+                    <Modal
+                      visible={deleteModalVisible}
+                      transparent={true}
+                      animationType="slide"
+                      onRequestClose={() => setDeleteModalVisible(false)}
+                    >
+                      <View style={styles.modalOverlay}>
+                        <View style={styles.modalContent}>
+                          <Text style={styles.modalText}>Are you sure you want to delete this habit?</Text>
+                          <View style={styles.modalButtonContainer}>
+                            <TouchableOpacity
+                              style={styles.modalCancelButton}
+                              onPress={() => setDeleteModalVisible(false)}
+                            >
+                              <Text style={styles.modalButtonText}>Cancel</Text>
+                            </TouchableOpacity>
+                            <TouchableOpacity
+                              style={styles.modalDeleteButton}
+                              onPress={confirmDeleteHabit}
+                            >
+                              <Text style={styles.modalButtonText}>Delete</Text>
+                            </TouchableOpacity>
+                          </View>
+                        </View>
+                      </View>
+                    </Modal>
 
 
                   </View>
@@ -819,12 +851,12 @@ const styles = StyleSheet.create({
   },
   saveCancelButtons: {
     padding: 10,
-    backgroundColor: '#5c6bc0', 
+    backgroundColor: '#5c6bc0',
     borderRadius: 5,
-    marginHorizontal: 10, 
+    marginHorizontal: 10,
   },
   saveCancelButtonsText: {
-    color: '#fff', 
+    color: '#fff',
   },
   container: {
     width: Dimensions.get("window").width,
@@ -1041,7 +1073,8 @@ const styles = StyleSheet.create({
   modalButtonContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    width: '100%',  },
+    width: '100%',
+  },
   modalCancelButton: {
     flex: 1,
     backgroundColor: Colors.secondary,
