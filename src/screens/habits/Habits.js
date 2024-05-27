@@ -3,6 +3,7 @@ import {
   View,
   StyleSheet,
   Text,
+  Alert,
   FlatList,
   TouchableOpacity,
   Dimensions,
@@ -31,11 +32,14 @@ const Habits = () => {
   const fetchSchedules = async () => {
     try {
       setLoading(true);
+      // if (!session?.user) throw new Error('No user on the session!');
 
       const { data: scheduleData, error: scheduleError } = await supabase
         .from('Schedule')
-        .select('schedule_id, habit_id, created_at, schedule_end_date, schedule_state')
+        .select('*')
         .eq('user_id', session?.user.id);
+
+      console.log('Fetched schedule data:', scheduleData);
 
       if (scheduleError) {
         throw scheduleError;
@@ -48,41 +52,40 @@ const Habits = () => {
           .select('*')
           .in('habit_id', habitIds);
 
+        console.log('Fetched habit data:', habitData);
+
         if (habitError) {
           throw habitError;
         }
 
         if (habitData) {
           const currentDateTime = new Date();
-          const combinedData = scheduleData.map(schedule => {
+          const combinedData = await Promise.all(scheduleData.map(async schedule => {
             const habit = habitData.find(h => h.habit_id === schedule.habit_id);
             const endDate = new Date(schedule.schedule_end_date);
-            endDate.setHours(23, 59, 59, 999); // set end time to the end of the day
+            endDate.setHours(23, 59, 59, 999); // Set end time to the end of the day
+  
             const isActive = currentDateTime <= endDate;
-
+            const newState = isActive ? 'Open' : 'Closed';
+  
+            if (schedule.schedule_state !== newState) {
+              // Update the state in the database
+              await supabase
+                .from('Schedule')
+                .update({ schedule_state: newState })
+                .eq('schedule_id', schedule.schedule_id);
+            }
+  
             return {
               ...schedule,
               habit_title: habit?.habit_title,
               habit_description: habit?.habit_description,
-              schedule_state: isActive ? 'Open' : 'Closed',
+              schedule_state: newState,
             };
-          });
-
-           // sorted combinedData to move inactive habits to the bottom
+          }));
+  
+          // Sort combinedData to move inactive habits to the bottom
           combinedData.sort((a, b) => (a.schedule_state === 'Closed' ? 1 : -1));
-
-
-          // update schedule state in the database 
-          await Promise.all(
-            combinedData.map(async schedule => {
-              if (schedule.schedule_state !== scheduleData.find(s => s.schedule_id === schedule.schedule_id).schedule_state) {
-                await supabase
-                  .from('Schedule')
-                  .update({ schedule_state: schedule.schedule_state })
-                  .eq('schedule_id', schedule.schedule_id);
-              }
-            })
-          );
   
           setSchedules(combinedData);
           console.log('Combined data:', combinedData);
@@ -90,7 +93,6 @@ const Habits = () => {
       }
     } catch (error) {
       console.error('Error fetching schedules or habits:', error);
-      // Alert.alert('Error fetching schedules or habits', error.message);
     } finally {
       setLoading(false);
     }
@@ -114,7 +116,7 @@ const Habits = () => {
       </Text>
     </TouchableOpacity>
   );
-
+  
   return (
     <View style={styles.container}>
       <Header title="My Habits" />
