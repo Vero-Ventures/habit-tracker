@@ -111,19 +111,22 @@ export default function AddPost({ navigation }) {
           const imageUrl = publicUrlResponse.data.publicUrl;
   
           const { data: postImageInsertData, error: postImageInsertError } = await supabase
-            .from('Image')
-            .insert([{ post_id: postInsertData[0].post_id, image_photo: imageUrl }])
-            .select();
-  
-          if (postImageInsertError) {
-            console.log('error in post image:', postImageInsertError);
-          }
-  
-          setImage(null);
-          setUploading(false);
-        };
-        reader.readAsDataURL(blob);
-      }
+          .from('Image')
+          .insert([{ 
+            post_id: postInsertData[0].post_id, 
+            image_photo: imageUrl 
+          }])
+          .select();
+
+        if (postImageInsertError) {
+          console.log('error in post image:', postImageInsertError);
+        }
+
+        setImage(null);
+        setUploading(false);
+      };
+      reader.readAsDataURL(blob);
+    }
   
       Alert.alert('Success', 'Your post was successfully posted to the timeline!', [
         { text: 'OK', onPress: () => navigation.navigate('TimelineScreen') },
