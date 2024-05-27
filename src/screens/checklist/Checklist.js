@@ -34,56 +34,78 @@ const Checklist = () => {
     }, [currentDay])
   );
 
-  const fetchSchedules = async () => {
-    try {
-      setLoading(true);
-      if (!session?.user) throw new Error('No user on the session!');
 
-      const { data: scheduleData, error: scheduleError } = await supabase
-        .from('Schedule')
-        .select('*')
-        .eq('user_id', session?.user.id);
+  // helper function determine the active day
+const getDayIndex = (day) => {
+  switch (day) {
+    case 'Sunday': return 0;
+    case 'Monday': return 1;
+    case 'Tuesday': return 2;
+    case 'Wednesday': return 3;
+    case 'Thursday': return 4;
+    case 'Friday': return 5;
+    case 'Saturday': return 6;
+    default: return -1;
+  }
+};
 
-      console.log('Fetched schedule data:', scheduleData);
+const fetchSchedules = async () => {
+  try {
+    setLoading(true);
+    if (!session?.user) throw new Error('No user on the session!');
 
-      if (scheduleError) {
-        throw scheduleError;
-      }
+    const { data: scheduleData, error: scheduleError } = await supabase
+      .from('Schedule')
+      .select('*')
+      .eq('user_id', session?.user.id);
 
-      if (scheduleData) {
-        const habitIds = scheduleData.map(schedule => schedule.habit_id);
-        const { data: habitData, error: habitError } = await supabase
-          .from('Habit')
-          .select('*')
-          .in('habit_id', habitIds);
+    console.log('Fetched schedule data:', scheduleData);
 
-        console.log('Fetched habit data:', habitData);
-
-        if (habitError) {
-          throw habitError;
-        }
-
-        if (habitData) {
-          const combinedData = scheduleData.map(schedule => {
-            const habit = habitData.find(h => h.habit_id === schedule.habit_id);
-            return {
-              ...schedule,
-              habit_title: habit?.habit_title,
-              habit_description: habit?.habit_description,
-              habit_photo: habit?.habit_photo,
-            };
-          });
-          setSchedules(combinedData);
-          console.log('Combined data:', combinedData);
-        }
-      }
-    } catch (error) {
-      console.error('Error fetching schedules or habits:', error);
-      Alert.alert('Error fetching schedules or habits', error.message);
-    } finally {
-      setLoading(false);
+    if (scheduleError) {
+      throw scheduleError;
     }
-  };
+
+    if (scheduleData) {
+      const habitIds = scheduleData.map(schedule => schedule.habit_id);
+      const { data: habitData, error: habitError } = await supabase
+        .from('Habit')
+        .select('*')
+        .in('habit_id', habitIds);
+
+      console.log('Fetched habit data:', habitData);
+
+      if (habitError) {
+        throw habitError;
+      }
+
+      if (habitData) {
+        const dayIndex = getDayIndex(moment(currentDay).format('dddd'));
+        const combinedData = scheduleData.map(schedule => {
+          const habit = habitData.find(h => h.habit_id === schedule.habit_id);
+          return {
+            ...schedule,
+            habit_title: habit?.habit_title,
+            habit_description: habit?.habit_description,
+            habit_photo: habit?.habit_photo,
+            is_active_today: (schedule.schedule_active_days & (1 << dayIndex)) !== 0,
+          };
+        }).filter(schedule => schedule.is_active_today);
+        
+        setSchedules(combinedData);
+        console.log('Combined data:', combinedData);
+      }
+    }
+  } catch (error) {
+    console.error('Error fetching schedules or habits:', error);
+    Alert.alert('Error fetching schedules or habits', error.message);
+  } finally {
+    setLoading(false);
+  }
+};
+
+
+
+
 
   const addHabit = () => {
     navigation.navigate('AddHabit');
