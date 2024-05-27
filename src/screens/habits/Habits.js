@@ -63,13 +63,13 @@ const Habits = () => {
           const combinedData = await Promise.all(scheduleData.map(async schedule => {
             const habit = habitData.find(h => h.habit_id === schedule.habit_id);
             const endDate = new Date(schedule.schedule_end_date);
-            endDate.setHours(23, 59, 59, 999); // Set end time to the end of the day
+            endDate.setHours(23, 59, 59, 999); // set end time to the end of the day
   
             const isActive = currentDateTime <= endDate;
             const newState = isActive ? 'Open' : 'Closed';
   
             if (schedule.schedule_state !== newState) {
-              // Update the state in the database
+              // update the state in the database
               await supabase
                 .from('Schedule')
                 .update({ schedule_state: newState })
@@ -84,7 +84,7 @@ const Habits = () => {
             };
           }));
   
-          // Sort combinedData to move inactive habits to the bottom
+          // sort combinedData to move inactive habits to the bottom
           combinedData.sort((a, b) => (a.schedule_state === 'Closed' ? 1 : -1));
   
           setSchedules(combinedData);
