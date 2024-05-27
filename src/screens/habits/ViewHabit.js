@@ -31,7 +31,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { decode } from 'base64-arraybuffer';
 import ActionSheet from 'react-native-actionsheet';
 import { updateHabitDataInSchedules } from './Habits';
-import DateTimePicker from '@react-native-community/datetimepicker';
+import DateTimePickerModal from "react-native-modal-datetime-picker";
 
 const { GoogleGenerativeAI } = require('@google/generative-ai');
 const apikey = process.env.EXPO_PUBLIC_REACT_APP_GEMINI_KEY;
@@ -56,25 +56,54 @@ const ViewHabit = () => {
   const { habit } = route.params;
   const [editable, setEditable] = useState(false);
   const [newTitle, setNewTitle] = useState(habit.habit_title);
-  const [newEndDate, setNewEndDate] = useState(habit?.schedule_end_date ? new Date(habit.schedule_end_date) : new Date());
+  const [newEndDate, setNewEndDate] = useState(new Date());
   const [showEndDatePicker, setShowEndDatePicker] = useState(false);
   const [newDescription, setNewDescription] = useState(habit.habit_description);
   const [loadingDisable, setLoadingDisable] = useState(false);
   const [loadingDelete, setLoadingDelete] = useState(false);
   const [editedHabit, setEditedHabit] = useState(habit);
   const [deleteModalVisible, setDeleteModalVisible] = useState(false);
+  const [activeDays, setActiveDays] = useState(habit.schedule_active_days);
+
+  useEffect(() => {
+    const updatedEndDate = new Date(habit.schedule_end_date);
+    if (habit?.schedule_end_date) {
+      setNewEndDate(updatedEndDate);
+    }
+  }, [editedHabit]);
+
+  const unpackActiveDays = (packedNumber) => {
+    const days = new Array(7).fill(false);
+    for (let i = 0; i < 7; i++) {
+      days[i] = (packedNumber & (1 << i)) !== 0;
+    }
+    return days;
+  };
+
+  const packActiveDays = (days) => {
+    return days.reduce((packedNumber, isActive, index) => {
+      return packedNumber | (isActive ? (1 << index) : 0);
+    }, 0);
+  };
+
+
+  const toggleDay = (index) => {
+    setActiveDays((prevActiveDays) => {
+      return prevActiveDays ^ (1 << index);
+    });
+  };
+
+  const isDayActive = (index) => {
+    return (activeDays & (1 << index)) !== 0;
+  };
+
   const updateHabit = (key, value) => {
     setEditedHabit((prevHabit) => ({
       ...prevHabit,
       [key]: value,
     }));
   };
-  const onChangeEndDate = (event, selectedDate) => {
-    setShowEndDatePicker(false);
-    if (selectedDate) {
-      setNewEndDate(selectedDate);
-    }
-  };
+
   useEffect(() => {
     const fetchHabit = async () => {
       // console.log("Fetching habit");
@@ -171,12 +200,7 @@ const ViewHabit = () => {
 
     fetchHabit();
   }, [habit.habit_id]);
-  useEffect(() => {
-    setNewEndDate(new Date(habit.schedule_end_date));
-  }, [habit.schedule_end_date]);
-  useEffect(() => {
-    updateHabit('schedule_end_date', newEndDate.toISOString());
-  }, [newEndDate]);
+
   const updateHabitPlan = async (habitPlan) => {
     try {
       const { data, error } = await supabase
@@ -582,6 +606,7 @@ const renderImageItem = ({ item }) => {
 
   const saveChanges = async () => {
     try {
+      const packedActiveDays = calculatePackedActiveDays();
       const { data: habitData, error: habitError } = await supabase
         .from('Habit')
         .update({
@@ -590,31 +615,30 @@ const renderImageItem = ({ item }) => {
         })
         .eq('habit_id', habit.habit_id);
 
-      if (habitError) {
-        throw habitError;
-      }
+      const formattedEndDate = newEndDate.toISOString();
 
       const { data: scheduleData, error: scheduleError } = await supabase
         .from('Schedule')
         .update({
-          schedule_end_date: newEndDate,
+          schedule_end_date: formattedEndDate,
+          schedule_active_days: packedActiveDays,
         })
         .eq('habit_id', habit.habit_id);
 
       if (scheduleError) {
         throw scheduleError;
       }
-
-      Alert.alert('Habit updated successfully');
-      setEditable(false);
-
       const updatedHabitData = {
         ...habit,
         habit_title: newTitle,
         habit_description: newDescription,
-        schedule_end_date: newEndDate,
+        schedule_end_date: formattedEndDate,
+        packed_active_days: packedActiveDays,
       };
       setEditedHabit(updatedHabitData);
+
+      Alert.alert('Habit updated successfully');
+      setEditable(false);
     } catch (error) {
       Alert.alert('Error updating habit', error.message);
     }
@@ -624,8 +648,20 @@ const renderImageItem = ({ item }) => {
     setNewTitle(habit.habit_title);
     setNewDescription(habit.habit_description);
     setNewEndDate(habit.schedule_end_date);
+    setActiveDays(habit.schedule_active_days);
     setEditable(false);
   }
+
+  const calculatePackedActiveDays = () => {
+    let packedActiveDays = 0;
+    ['S', 'M', 'T', 'W', 'T', 'F', 'S'].forEach((day, index) => {
+      if (isDayActive(index)) {
+        packedActiveDays |= (1 << index);
+      }
+    });
+
+    return packedActiveDays;
+  };
 
   return (
     <View style={Default.container}>
@@ -732,36 +768,79 @@ const renderImageItem = ({ item }) => {
                         : 'N/A'}
                     </Text>
 
-                    <Text style={styles.title}>End Date</Text>
-                    {editable ? (
-                      <TouchableOpacity onPress={() => setShowEndDatePicker(true)}>
+                    <View>
+                      <Text style={styles.title}>End Date</Text>
+                      {editable ? (
+                        <TouchableOpacity onPress={() => setShowEndDatePicker(true)}>
+                          <Text style={styles.textContent}>
+                            {moment(newEndDate).format('MMMM Do YYYY')}
+                          </Text>
+                        </TouchableOpacity>
+                      ) : (
                         <Text style={styles.textContent}>
-                          {moment(newEndDate).format('MMMM Do YYYY')}
+                          {editedHabit?.schedule_end_date
+                            ? moment(new Date(editedHabit?.schedule_end_date)).format('MMMM Do YYYY')
+                            : 'N/A'}
                         </Text>
-                      </TouchableOpacity>
-                    ) : (
-                      <Text style={styles.textContent}>
-                        {moment(habit.schedule_end_date).format('MMMM Do YYYY')}
-                      </Text>
-                    )}
-                    {showEndDatePicker && (
-                      <DateTimePicker
-                        value={newEndDate}
-                        mode="date"
-                        display="default"
-                        onChange={onChangeEndDate}
-                      />
-                    )}
-                    <View style={{ marginBottom: 32 }}>
-                      <Text style={styles.title}>Active Days</Text>
-                      <View style={{ width: Dimensions.get('window').width - 44, flexDirection: 'row', justifyContent: 'space-between' }}>
-                        {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((day, index) => (
-                          <View style={[styles.frequencyDay, getActiveDay(index) ? styles.frequencyDaySelected : null]}>
-                            <Text style={styles.textFrequencyDay}>{day}</Text>
-                          </View>
-                        ))}
-                      </View>
+                      )}
+                      {showEndDatePicker && (
+                        <View style={styles.dateTimePickerContainer}>
+                          <DateTimePickerModal
+                            isVisible={showEndDatePicker}
+                            mode="date"
+                            date={newEndDate}
+                            onConfirm={date => {
+                              setShowEndDatePicker(false);
+                              setNewEndDate(date);
+                            }}
+                            onCancel={() => setShowEndDatePicker(false)}
+                          />
+                        </View>
+                      )}
+
+                      {showEndDatePicker && (
+                        <View style={styles.dateTimePickerContainer}>
+                          <DateTimePickerModal
+                            isVisible={showEndDatePicker}
+                            mode="date"
+                            date={newEndDate}
+                            onConfirm={date => {
+                              setShowEndDatePicker(false);
+                              setNewEndDate(date);
+                            }}
+                            onCancel={() => setShowEndDatePicker(false)}
+                          />
+                        </View>
+                      )}
                     </View>
+
+                    {editable ? (
+                      <View style={{ marginBottom: 32 }}>
+                        <Text style={styles.title}>Active Days</Text>
+                        <View style={{ width: Dimensions.get('window').width - 44, flexDirection: 'row', justifyContent: 'space-between' }}>
+                          {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((day, index) => (
+                            <TouchableOpacity
+                              key={index}
+                              onPress={() => toggleDay(index)}
+                              style={[styles.frequencyDay, isDayActive(index) ? styles.frequencyDaySelected : null]}
+                            >
+                              <Text style={styles.textFrequencyDay}>{day}</Text>
+                            </TouchableOpacity>
+                          ))}
+                        </View>
+                      </View>
+                    ) : (
+                      <View style={{ marginBottom: 32 }}>
+                        <Text style={styles.title}>Active Days</Text>
+                        <View style={{ width: Dimensions.get('window').width - 44, flexDirection: 'row', justifyContent: 'space-between' }}>
+                          {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((day, index) => (
+                            <View key={index} style={[styles.frequencyDay, isDayActive(index) ? styles.frequencyDaySelected : null]}>
+                              <Text style={styles.textFrequencyDay}>{day}</Text>
+                            </View>
+                          ))}
+                        </View>
+                      </View>
+                    )}
 
                     <Text style={styles.title}>State</Text>
                     <Text style={styles.textContent}>
