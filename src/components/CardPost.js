@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { StyleSheet, View, Text, TouchableOpacity, Image, Alert } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
+import { TapGestureHandler } from 'react-native-gesture-handler';
 import { useNavigation } from '@react-navigation/native';
 import moment from 'moment';
 import { useSelector } from 'react-redux';
@@ -59,7 +60,7 @@ const CardPost = (props) => {
       </View>
       {isPostFromUserLoggedIn && (
         <TouchableOpacity onPress={toggleModalOptions}>
-          <Image source={require('../../assets/icons/ellipse-vertical.png')} style={styles.cardPostVerticalEllipsis} />
+          {/* <Image source={require('../../assets/icons/ellipse-vertical.png')} style={styles.cardPostVerticalEllipsis} /> */}
         </TouchableOpacity>
       )}
     </View>
@@ -215,33 +216,63 @@ const CardPost = (props) => {
     props.navigation.navigate('PostDetails', { postId: props.postId });
   };
 
+  // return (
+  //   <TouchableOpacity
+  //     // onLongPress={toggleModalOptions}
+  //     // onPress={onPressPost}
+  //     style={styles.cardShadow}
+  //   >
+  //     {renderCardTop()}
+  //     {renderCardContent()}
+  //     <View style={styles.containerActions}>
+  //       <TouchableOpacity style={styles.buttonActions} onPress={onPressLike}>
+  //         <Image
+  //           source={
+  //             likeFromUser
+  //               ? require('../../assets/icons/heart-full.png')
+  //               : require('../../assets/icons/heart.png')
+  //           }
+  //           style={styles.icon}
+  //         />
+  //         <Text style={styles.textPostActions}>{countLikes > 0 ? countLikes : null}</Text>
+  //       </TouchableOpacity>
+  //       <TouchableOpacity style={styles.buttonActions} onPress={onPressComment}>
+  //         <Image source={require('../../assets/icons/message-dots.png')} style={styles.icon} />
+  //         <Text style={styles.textPostActions}>{props.actions.countComments > 0 ? props.actions.countComments : null}</Text>
+  //       </TouchableOpacity>
+  //     </View>
+  //   </TouchableOpacity>
+  // );
+
   return (
-    <TouchableOpacity
-      onLongPress={toggleModalOptions}
-      onPress={onPressPost}
-      style={styles.cardShadow}
+    <TapGestureHandler
+      numberOfTaps={2}
+      onActivated={onPressLike}
     >
-      {renderCardTop()}
-      {renderCardContent()}
-      <View style={styles.containerActions}>
-        <TouchableOpacity style={styles.buttonActions} onPress={onPressLike}>
-          <Image
-            source={
-              likeFromUser
-                ? require('../../assets/icons/heart-full.png')
-                : require('../../assets/icons/heart.png')
-            }
-            style={styles.icon}
-          />
-          <Text style={styles.textPostActions}>{countLikes > 0 ? countLikes : null}</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.buttonActions} onPress={onPressComment}>
-          <Image source={require('../../assets/icons/message-dots.png')} style={styles.icon} />
-          <Text style={styles.textPostActions}>{props.actions.countComments > 0 ? props.actions.countComments : null}</Text>
-        </TouchableOpacity>
+      <View style={styles.cardShadow}>
+        {renderCardTop()}
+        {renderCardContent()}
+        <View style={styles.containerActions}>
+          <TouchableOpacity style={styles.buttonActions} onPress={onPressLike}>
+            <Image
+              source={
+                likeFromUser
+                  ? require('../../assets/icons/heart-full.png')
+                  : require('../../assets/icons/heart.png')
+              }
+              style={styles.icon}
+            />
+            <Text style={styles.textPostActions}>{countLikes > 0 ? countLikes : null}</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.buttonActions} onPress={onPressComment}>
+            <Image source={require('../../assets/icons/message-dots.png')} style={styles.icon} />
+            <Text style={styles.textPostActions}>{props.actions.countComments > 0 ? props.actions.countComments : null}</Text>
+          </TouchableOpacity>
+        </View>
       </View>
-    </TouchableOpacity>
+    </TapGestureHandler>
   );
+  
   
 };
 
@@ -320,8 +351,8 @@ const styles = StyleSheet.create({
     color: Colors.text,
   },
   icon: {
-    width: 24,
-    height: 24,
+    width: 29,
+    height: 29,
   },
 });
 
