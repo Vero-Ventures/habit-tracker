@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { StyleSheet, View, Text, TouchableOpacity, Image, Alert } from 'react-native';
+import { StyleSheet, View, Text, TouchableOpacity, Image, Alert, Modal, FlatList } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { TapGestureHandler } from 'react-native-gesture-handler';
 import { useNavigation } from '@react-navigation/native';
@@ -9,11 +9,9 @@ import Colors from '../../assets/styles/Colors';
 import PropTypes from 'prop-types';
 import { supabase } from '../config/supabaseClient';
 
-
 const CardPost = (props) => {
-  // const user = useSelector(({ user }) => user);
   const session = useSelector(({ user }) => user.session);
-  const user = session?.user; // this accesses the nested user object
+  const user = session?.user;
   const [showModalCardOptions, setShowModalCardOptions] = useState(false);
   const [isDeletingPost, setIsDeletingPost] = useState(false);
   const [successDeleting, setSuccessDeleting] = useState(false);
@@ -21,8 +19,8 @@ const CardPost = (props) => {
   const navigation = useNavigation();
   const [likeFromUser, setLikeFromUser] = useState(props.likeFromUser);
   const [countLikes, setCountLikes] = useState(props.countLikes);
-
-
+  const [showLikesModal, setShowLikesModal] = useState(false);
+  const [likedUsers, setLikedUsers] = useState([]);
 
   useEffect(() => {
     if (!showModalCardOptions && successDeleting) {
@@ -30,16 +28,10 @@ const CardPost = (props) => {
       props.actions.onDeletePostSuccess(props.postId);
     }
   }, [showModalCardOptions, successDeleting]);
-  console.log('User:', user);
-
-
 
   const viewUser = () => {
-    navigation.navigate('UserProfile', { userId: props.postUser.id })
+    navigation.navigate('UserProfile', { userId: props.postUser.id });
   };
-
-
-
 
   const renderCardTop = () => (
     <View style={styles.cardPostHeaderContainer}>
@@ -65,8 +57,39 @@ const CardPost = (props) => {
       )}
     </View>
   );
-  
-  
+
+  const fetchLikedUsers = async () => {
+    try {
+      // Get user_ids who liked the post
+      const { data: likeData, error: likeError } = await supabase
+        .from('Like')
+        .select('user_id')
+        .eq('post_id', props.postId);
+
+      if (likeError) throw likeError;
+
+      if (likeData.length === 0) {
+        setLikedUsers([]);
+        setShowLikesModal(true);
+        return;
+      }
+
+      const userIds = likeData.map(like => like.user_id);
+
+      // Get user details from User table
+      const { data: usersData, error: usersError } = await supabase
+        .from('User')
+        .select('user_id, username, profile_image')
+        .in('user_id', userIds);
+
+      if (usersError) throw usersError;
+
+      setLikedUsers(usersData);
+      setShowLikesModal(true);
+    } catch (error) {
+      Alert.alert('Error', 'Failed to fetch users who liked the post');
+    }
+  };
 
   const renderCardContent = () => (
     <View>
@@ -74,29 +97,29 @@ const CardPost = (props) => {
         <Image source={{ uri: props.post.habit_photo }} style={styles.habitImage} resizeMode="cover" />
       )}
       <View style={styles.cardPostDescriptionContainer}>
+        <TouchableOpacity onPress={fetchLikedUsers}>
+          <Text style={styles.textSubtitle}>{countLikes} likes</Text>
+        </TouchableOpacity>
+      </View>
+      <View style={styles.cardPostDescriptionContainer}>
         <Text style={styles.textUserName}>{props.postUser?.name ?? 'Unknown User'} </Text>
         <Text style={styles.postText}>{props.postDescription}</Text>
       </View>
     </View>
   );
-  
-
-  
-
-
 
   const renderCardActions = () => (
     <View style={styles.containerActions}>
       <TouchableOpacity style={styles.buttonActions} onPress={onPressLike}>
         <Image
           source={
-            props.actions?.likeFromUser
+            likeFromUser
               ? require('../../assets/icons/heart-full.png')
               : require('../../assets/icons/heart.png')
           }
           style={styles.icon}
         />
-        <Text style={styles.textPostActions}>{props.actions.countLikes > 0 ? props.actions.countLikes : null}</Text>
+        <Text style={styles.textPostActions}>{countLikes > 0 ? countLikes : null}</Text>
       </TouchableOpacity>
       <TouchableOpacity style={styles.buttonActions} onPress={onPressComment}>
         <Image source={require('../../assets/icons/message-dots.png')} style={styles.icon} />
@@ -105,94 +128,54 @@ const CardPost = (props) => {
     </View>
   );
 
-
-
-  
-
   const onPressLike = async () => {
     try {
-      console.log('User ID:', user?.id);
       if (!user || !user.id) {
-        console.error('User is not defined or does not have an id');
         throw new Error('User is not defined or does not have an id');
       }
-  
-      // check to see if the user already liked the post
+
       const { data: likeData, error: likeError } = await supabase
         .from('Like')
         .select('*')
         .eq('post_id', props.postId)
         .eq('user_id', user.id);
-  
-      if (likeError) {
-        console.error('Error checking like:', likeError);
-        throw likeError;
-      }
-  
+
+      if (likeError) throw likeError;
+
       if (likeData.length > 0) {
-        // when user unlikes the post
-        console.log('Unliking the post');
         const { error: deleteError } = await supabase
           .from('Like')
           .delete()
           .eq('post_id', props.postId)
           .eq('user_id', user.id);
-  
-        if (deleteError) {
-          console.error('Error deleting like:', deleteError);
-          throw deleteError;
-        }
+
+        if (deleteError) throw deleteError;
       } else {
-        // when user likes the post
-        console.log('Liking the post');
         const { error: insertError } = await supabase
           .from('Like')
           .insert([{ post_id: props.postId, user_id: user.id }]);
-  
-        if (insertError) {
-          console.error('Error inserting like:', insertError);
-          throw insertError;
-        }
+
+        if (insertError) throw insertError;
       }
-  
-      // grab updated count of likes
+
       const { data: likeCountData, error: likeCountError } = await supabase
         .from('Like')
         .select('*', { count: 'exact' })
         .eq('post_id', props.postId);
-  
-      if (likeCountError) {
-        console.error('Error getting like count:', likeCountError);
-        throw likeCountError;
-      }
-  
+
+      if (likeCountError) throw likeCountError;
+
       const updatedLikeCount = likeCountData.length;
-      console.log('Updated like count:', updatedLikeCount);
-  
-      // update state with the new like count
+
       setCountLikes(updatedLikeCount);
       setLikeFromUser(likeData.length === 0);
       props.actions.onLikePostSuccess(props.postId);
     } catch (error) {
-      console.error('Something went wrong with liking the post:', error);
       Alert.alert('Error', 'Something went wrong with liking the post');
     }
   };
-  
-  
-  
-  
-  
-  
-
-
-
-
-
-
 
   const onPressComment = () => {
-    console.log('props.postId:', props.postId);
     var userData = { id: props.postUser.id, name: props.postUser.name, imageUrl: props.postUser.imageUrl };
     var postData = { description: props.postDescription, id: props.postId };
     props.navigation.navigate('Comments', {
@@ -216,39 +199,8 @@ const CardPost = (props) => {
     props.navigation.navigate('PostDetails', { postId: props.postId });
   };
 
-  // return (
-  //   <TouchableOpacity
-  //     // onLongPress={toggleModalOptions}
-  //     // onPress={onPressPost}
-  //     style={styles.cardShadow}
-  //   >
-  //     {renderCardTop()}
-  //     {renderCardContent()}
-  //     <View style={styles.containerActions}>
-  //       <TouchableOpacity style={styles.buttonActions} onPress={onPressLike}>
-  //         <Image
-  //           source={
-  //             likeFromUser
-  //               ? require('../../assets/icons/heart-full.png')
-  //               : require('../../assets/icons/heart.png')
-  //           }
-  //           style={styles.icon}
-  //         />
-  //         <Text style={styles.textPostActions}>{countLikes > 0 ? countLikes : null}</Text>
-  //       </TouchableOpacity>
-  //       <TouchableOpacity style={styles.buttonActions} onPress={onPressComment}>
-  //         <Image source={require('../../assets/icons/message-dots.png')} style={styles.icon} />
-  //         <Text style={styles.textPostActions}>{props.actions.countComments > 0 ? props.actions.countComments : null}</Text>
-  //       </TouchableOpacity>
-  //     </View>
-  //   </TouchableOpacity>
-  // );
-
   return (
-    <TapGestureHandler
-      numberOfTaps={2}
-      onActivated={onPressLike}
-    >
+    <TapGestureHandler numberOfTaps={2} onActivated={onPressLike}>
       <View style={styles.cardShadow}>
         {renderCardTop()}
         {renderCardContent()}
@@ -269,11 +221,37 @@ const CardPost = (props) => {
             <Text style={styles.textPostActions}>{props.actions.countComments > 0 ? props.actions.countComments : null}</Text>
           </TouchableOpacity>
         </View>
+
+        <Modal
+          visible={showLikesModal}
+          transparent={true}
+          onRequestClose={() => setShowLikesModal(false)}
+        >
+          <View style={styles.modalContainer}>
+            <View style={styles.modalContent}>
+              <Text style={styles.modalTitle}>Liked by</Text>
+              <FlatList
+                data={likedUsers}
+                keyExtractor={(item) => item.user_id.toString()}
+                renderItem={({ item }) => (
+                  <View style={styles.userContainer}>
+                    <Image
+                      source={item.profile_image ? { uri: item.profile_image } : require('../../assets/images/no-profile.png')}
+                      style={styles.userImage}
+                    />
+                    <Text style={styles.userName}>{item.username}</Text>
+                  </View>
+                )}
+              />
+              <TouchableOpacity onPress={() => setShowLikesModal(false)} style={styles.closeButton}>
+                <Text style={styles.closeButtonText}>Close</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </Modal>
       </View>
     </TapGestureHandler>
   );
-  
-  
 };
 
 CardPost.propTypes = {
@@ -281,7 +259,6 @@ CardPost.propTypes = {
   post: PropTypes.object.isRequired,
   postUser: PropTypes.object.isRequired,
   createdAt: PropTypes.string.isRequired,
-  // postTitle: PropTypes.string.isRequired,
   postDescription: PropTypes.string.isRequired,
   postType: PropTypes.string.isRequired,
   actions: PropTypes.object.isRequired,
@@ -289,12 +266,7 @@ CardPost.propTypes = {
   likeFromUser: PropTypes.bool.isRequired,
   countLikes: PropTypes.number.isRequired,
   user: PropTypes.object.isRequired,
-  countLikes: PropTypes.number.isRequired,
-
 };
-
-
-
 
 const styles = StyleSheet.create({
   cardPostHeaderContainer: {
@@ -317,7 +289,7 @@ const styles = StyleSheet.create({
     color: Colors.text,
   },
   textSubtitle: {
-    color: '#FFFFFF',  
+    color: '#FFFFFF',
   },
   cardPostVerticalEllipsis: {
     width: 24,
@@ -354,8 +326,48 @@ const styles = StyleSheet.create({
     width: 29,
     height: 29,
   },
+  modalContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+  },
+  modalContent: {
+    width: '80%',
+    backgroundColor: 'white',
+    borderRadius: 10,
+    padding: 20,
+    alignItems: 'center',
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 10,
+  },
+  userContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 10,
+  },
+  userImage: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    marginRight: 10,
+  },
+  userName: {
+    fontSize: 16,
+  },
+  closeButton: {
+    marginTop: 20,
+    padding: 10,
+    backgroundColor: Colors.primary,
+    borderRadius: 5,
+  },
+  closeButtonText: {
+    color: 'white',
+    fontWeight: 'bold',
+  },
 });
-
-
 
 export default CardPost;
