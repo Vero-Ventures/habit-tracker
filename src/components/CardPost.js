@@ -5,16 +5,23 @@ import { useNavigation } from '@react-navigation/native';
 import moment from 'moment';
 import { useSelector } from 'react-redux';
 import Colors from '../../assets/styles/Colors';
-import { likePost } from '../store/ducks/post';
 import PropTypes from 'prop-types';
+import { supabase } from '../config/supabaseClient';
+
 
 const CardPost = (props) => {
+  // const user = useSelector(({ user }) => user);
+  const session = useSelector(({ user }) => user.session);
+  const user = session?.user; // this accesses the nested user object
   const [showModalCardOptions, setShowModalCardOptions] = useState(false);
   const [isDeletingPost, setIsDeletingPost] = useState(false);
   const [successDeleting, setSuccessDeleting] = useState(false);
-  const user = useSelector(({ user }) => user);
   const isPostFromUserLoggedIn = props.postUser.id === user.id;
   const navigation = useNavigation();
+  const [likeFromUser, setLikeFromUser] = useState(props.likeFromUser);
+  const [countLikes, setCountLikes] = useState(props.countLikes);
+
+
 
   useEffect(() => {
     if (!showModalCardOptions && successDeleting) {
@@ -22,6 +29,9 @@ const CardPost = (props) => {
       props.actions.onDeletePostSuccess(props.postId);
     }
   }, [showModalCardOptions, successDeleting]);
+  console.log('User:', user);
+
+
 
   const viewUser = () => {
     navigation.navigate('UserProfile', { userId: props.postUser.id })
@@ -94,16 +104,91 @@ const CardPost = (props) => {
     </View>
   );
 
+
+
   
 
   const onPressLike = async () => {
     try {
-      await likePost(props.postId);
+      console.log('User ID:', user?.id);
+      if (!user || !user.id) {
+        console.error('User is not defined or does not have an id');
+        throw new Error('User is not defined or does not have an id');
+      }
+  
+      // check to see if the user already liked the post
+      const { data: likeData, error: likeError } = await supabase
+        .from('Like')
+        .select('*')
+        .eq('post_id', props.postId)
+        .eq('user_id', user.id);
+  
+      if (likeError) {
+        console.error('Error checking like:', likeError);
+        throw likeError;
+      }
+  
+      if (likeData.length > 0) {
+        // when user unlikes the post
+        console.log('Unliking the post');
+        const { error: deleteError } = await supabase
+          .from('Like')
+          .delete()
+          .eq('post_id', props.postId)
+          .eq('user_id', user.id);
+  
+        if (deleteError) {
+          console.error('Error deleting like:', deleteError);
+          throw deleteError;
+        }
+      } else {
+        // when user likes the post
+        console.log('Liking the post');
+        const { error: insertError } = await supabase
+          .from('Like')
+          .insert([{ post_id: props.postId, user_id: user.id }]);
+  
+        if (insertError) {
+          console.error('Error inserting like:', insertError);
+          throw insertError;
+        }
+      }
+  
+      // grab updated count of likes
+      const { data: likeCountData, error: likeCountError } = await supabase
+        .from('Like')
+        .select('*', { count: 'exact' })
+        .eq('post_id', props.postId);
+  
+      if (likeCountError) {
+        console.error('Error getting like count:', likeCountError);
+        throw likeCountError;
+      }
+  
+      const updatedLikeCount = likeCountData.length;
+      console.log('Updated like count:', updatedLikeCount);
+  
+      // update state with the new like count
+      setCountLikes(updatedLikeCount);
+      setLikeFromUser(likeData.length === 0);
       props.actions.onLikePostSuccess(props.postId);
     } catch (error) {
+      console.error('Something went wrong with liking the post:', error);
       Alert.alert('Error', 'Something went wrong with liking the post');
     }
   };
+  
+  
+  
+  
+  
+  
+
+
+
+
+
+
 
   const onPressComment = () => {
     console.log('props.postId:', props.postId);
@@ -138,13 +223,30 @@ const CardPost = (props) => {
     >
       {renderCardTop()}
       {renderCardContent()}
-      {renderCardActions()}
+      <View style={styles.containerActions}>
+        <TouchableOpacity style={styles.buttonActions} onPress={onPressLike}>
+          <Image
+            source={
+              likeFromUser
+                ? require('../../assets/icons/heart-full.png')
+                : require('../../assets/icons/heart.png')
+            }
+            style={styles.icon}
+          />
+          <Text style={styles.textPostActions}>{countLikes > 0 ? countLikes : null}</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.buttonActions} onPress={onPressComment}>
+          <Image source={require('../../assets/icons/message-dots.png')} style={styles.icon} />
+          <Text style={styles.textPostActions}>{props.actions.countComments > 0 ? props.actions.countComments : null}</Text>
+        </TouchableOpacity>
+      </View>
     </TouchableOpacity>
   );
+  
 };
 
 CardPost.propTypes = {
-  postId: PropTypes.number.isRequired,
+  postId: PropTypes.string.isRequired,
   post: PropTypes.object.isRequired,
   postUser: PropTypes.object.isRequired,
   createdAt: PropTypes.string.isRequired,
@@ -153,6 +255,11 @@ CardPost.propTypes = {
   postType: PropTypes.string.isRequired,
   actions: PropTypes.object.isRequired,
   navigation: PropTypes.object.isRequired,
+  likeFromUser: PropTypes.bool.isRequired,
+  countLikes: PropTypes.number.isRequired,
+  user: PropTypes.object.isRequired,
+  countLikes: PropTypes.number.isRequired,
+
 };
 
 
