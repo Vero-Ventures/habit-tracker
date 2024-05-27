@@ -263,6 +263,7 @@ export default function Account() {
               <Image
                 source={require('../../assets/images/no-profile.png')}
                 style={styles.userPhoto}
+                testID="profile"
               />
             )}
           </TouchableOpacity>

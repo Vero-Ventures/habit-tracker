@@ -1,10 +1,12 @@
 import React from 'react';
 import { render, fireEvent, waitFor } from '@testing-library/react-native';
+import { Provider } from 'react-redux';
 import { NavigationContainer } from '@react-navigation/native';
 import Account from '../src/screens/ProfileScreen';
 import SettingsScreen from '../src/screens/SettingsScreen';
 import { Alert } from 'react-native';
 import { supabase } from '../src/config/supabaseClient';
+import store from '../src/store/storeConfig';
 
 const setIsLoggedIn = jest.fn();
 
@@ -74,7 +76,9 @@ describe('Profile Component', () => {
   test('navigates to account page', async () => {
     const { getByText, getByPlaceholderText } = render(
       <NavigationContainer>
-        <Account />
+        <Provider store={store}>
+          <Account />
+        </Provider>
       </NavigationContainer>
     );
 
@@ -90,6 +94,50 @@ describe('Profile Component', () => {
     getByText('Bio');
     getByPlaceholderText('Enter bio');
     getByText('Update Profile');
+  });
+
+  test('loads data from the store', async () => {
+    // Mock supabase response
+    supabase.from.mockImplementationOnce(table => {
+      if (table === 'User') {
+        return {
+          select: jest.fn().mockReturnThis(),
+          eq: jest.fn().mockReturnThis(),
+          single: jest.fn().mockResolvedValue({
+            data: {
+              username: 'testuser',
+              bio: 'Test bio',
+              profile_image: 'https://example.com/test.jpg',
+            },
+            error: null,
+            status: 200,
+          }),
+        };
+      }
+      return {
+        select: jest.fn().mockReturnThis(),
+        eq: jest.fn().mockReturnThis(),
+        single: jest.fn().mockResolvedValue({
+          data: null,
+          error: null,
+          status: 200,
+        }),
+      };
+    });
+
+    const { getByText, getByDisplayValue } = render(
+      <NavigationContainer>
+        <Provider store={store}>
+          <Account />
+        </Provider>
+      </NavigationContainer>
+    );
+
+    await waitFor(() => {
+      getByText('Hi, testuser');
+      getByDisplayValue('testuser');
+      getByDisplayValue('Test bio');
+    });
   });
 
   test('user signs out of their account', async () => {
@@ -151,7 +199,7 @@ describe('CRUD operations on profile', () => {
     jest.clearAllMocks();
   });
 
-  test('user updates their profile & changes persist', async () => {
+  test('user updates their username and bio & changes persist', async () => {
     const { getByText, getByPlaceholderText } = render(
       <NavigationContainer>
         <Account />
@@ -181,6 +229,16 @@ describe('CRUD operations on profile', () => {
         'This is a test bio'
       );
     });
+  });
+
+  test('user updates their profile image', async () => {
+    const { getByTestId } = render(
+      <NavigationContainer>
+        <Account />
+      </NavigationContainer>
+    );
+
+    fireEvent.press(getByTestId('profile'));
   });
 });
 
