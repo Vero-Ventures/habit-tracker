@@ -314,7 +314,7 @@ const ViewHabit = () => {
   };
 
   const generateHabitSchedule = async () => {
-    const MAX_RETRIES = 5;
+    const MAX_RETRIES = 10;
     let attempt = 0;
     let success = false;
 
@@ -328,7 +328,7 @@ const ViewHabit = () => {
             role: 'user',
             parts: [
               {
-                text: `Hello, I would like you to generate a habit plan in strictly correct JSON format for me to follow that will help me reach my goals for my habit of ${habit.habit_description}. The JSON should contain exactly 3 stages.`,
+                text: `Hello, I would like you to generate a habit plan in strictly correct JSON format for me to follow that will help me reach my goals for my habit called ${habit.habit_title} with this description: \"${habit.habit_description}\". The JSON should contain exactly 3 stages.`,
               },
             ],
           },
@@ -345,71 +345,69 @@ const ViewHabit = () => {
           maxOutputTokens: 6000,
         },
       });
-
-      const prompt = `{
-        "${habit.habit_title}": [
-          {
-            "stages": [
-              {
-                "name": "<stage 1 name>",
-                "duration_weeks": <stage 1 duration in weeks>,
-                "goals": "<stage 1 goal to reach before proceeding to next stage>",
-                "steps": [
-                  {
+      
+      const prompt = `{"stages": [
+        {
+            "name": "<stage 1 name>",
+            "duration_weeks": "<stage 1 duration in weeks>",
+            "goals": "<stage 1 goal to reach before proceeding to next stage>",
+            "steps": [
+                {
                     "description": "<step 1 description>"
-                  },
-                  {
+                },
+                {
                     "description": "<step 2 description>"
-                  },
-                  {
+                },
+                {
                     "description": "<step 3 description>"
-                  }
-                ]
-              },
-              {
-                "name": "<stage 2 name>",
-                "duration_weeks": <stage 2 duration in weeks>,
-                "goals": "<stage 2 goal to reach before proceeding to next stage>",
-                "steps": [
-                  {
-                    "description": "<step 1 description>"
-                  },
-                  {
-                    "description": "<step 2 description>"
-                  },
-                  {
-                    "description": "<step 3 description>"
-                  }
-                ]
-              },
-              {
-                "name": "<stage 3 name>",
-                "duration_weeks": <stage 3 duration in weeks>,
-                "goals": "<stage 3 goal to reach before proceeding to next stage>",
-                "steps": [
-                  {
-                    "description": "<step 1 description>"
-                  },
-                  {
-                    "description": "<step 2 description>"
-                  },
-                  {
-                    "description": "<step 3 description>"
-                  }
-                ]
-              }
+                }
             ]
-          }
-        ]
-      }`;
+        },
+        {
+            "name": "<stage 2 name>",
+            "duration_weeks": "<stage 2 duration in weeks>",
+            "goals": "<stage 2 goal to reach before proceeding to next stage>",
+            "steps": [
+                {
+                    "description": "<step 1 description>"
+                },
+                {
+                    "description": "<step 2 description>"
+                },
+                {
+                    "description": "<step 3 description>"
+                }
+            ]
+        },
+        {
+            "name": "<stage 3 name>",
+            "duration_weeks": "<stage 3 duration in weeks>",
+            "goals": "<stage 3 goal to reach before proceeding to next stage>",
+            "steps": [
+                {
+                    "description": "<step 1 description>"
+                },
+                {
+                    "description": "<step 2 description>"
+                },
+                {
+                    "description": "<step 3 description>"
+                }
+            ]
+        }
+    ]
+  }`;
 
       while (attempt < MAX_RETRIES && !success) {
         try {
-          const result = await chat.sendMessage("Generate the plan with with this format: " + prompt);
+          const result = await chat.sendMessage(`Generate the plan with with this format: ${prompt}`);
           const response = await result.response;
           const text = await response.text();
 
-          const cleanedText = text.replace(/^```(?:json)?\n/, '').replace(/\n```$/, '').trim();
+          const cleanedText = text
+            .replace(/^```(?:json)?\n/, '')
+            .replace(/\n```$/, '')
+            .replace(/\n/g, '');
           const jsonStartIndex = cleanedText.indexOf('{');
           const jsonEndIndex = cleanedText.lastIndexOf('}');
           const validJsonString = cleanedText.substring(jsonStartIndex, jsonEndIndex + 1);
@@ -585,16 +583,16 @@ const ViewHabit = () => {
     setModalVisible(false);
     setSelectedImage(null);
   };
-const renderImageItem = ({ item }) => {
-  return (
-    <TouchableOpacity key={item.id} onPress={() => openModal(item)}>
-      <Image source={{ uri: item.image_photo }} style={styles.gridImage} />
-    </TouchableOpacity>
-  );
-};
+  const renderImageItem = ({ item }) => {
+    return (
+      <TouchableOpacity key={item.id} onPress={() => openModal(item)}>
+        <Image source={{ uri: item.image_photo }} style={styles.gridImage} />
+      </TouchableOpacity>
+    );
+  };
 
-  
-  
+
+
 
   const toggleEdit = () => {
     setEditable(!editable);
@@ -721,8 +719,8 @@ const renderImageItem = ({ item }) => {
                           <Image source={{ uri: selectedImage.image_photo }} style={styles.fullImage} />
                           <Text style={styles.imageDescription}>{selectedImage.description}</Text>
                           {selectedImage.post_description && (
-            <Text style={styles.imageDescription}>{selectedImage.post_description}</Text>
-          )}
+                            <Text style={styles.imageDescription}>{selectedImage.post_description}</Text>
+                          )}
                           <Button title="Delete Photo" onPress={() => deletePhoto(selectedImage)} />
                           <Button title="Close" onPress={closeModal} />
                         </>
@@ -786,21 +784,7 @@ const renderImageItem = ({ item }) => {
                       {showEndDatePicker && (
                         <View style={styles.dateTimePickerContainer}>
                           <DateTimePickerModal
-                            isVisible={showEndDatePicker}
-                            mode="date"
-                            date={newEndDate}
-                            onConfirm={date => {
-                              setShowEndDatePicker(false);
-                              setNewEndDate(date);
-                            }}
-                            onCancel={() => setShowEndDatePicker(false)}
-                          />
-                        </View>
-                      )}
-
-                      {showEndDatePicker && (
-                        <View style={styles.dateTimePickerContainer}>
-                          <DateTimePickerModal
+                            themeVariant='light'
                             isVisible={showEndDatePicker}
                             mode="date"
                             date={newEndDate}
@@ -898,8 +882,8 @@ const renderImageItem = ({ item }) => {
                         <StepIndicator
                           customStyles={customStyles}
                           currentPosition={currentPosition}
-                          stepCount={generatedSchedule[habit.habit_title][0].stages.length}
-                          labels={generatedSchedule[habit.habit_title][0].stages.map((stage) => stage.name)}
+                          stepCount={generatedSchedule.stages.length}
+                          labels={generatedSchedule.stages.map((stage) => stage.name)}
                         />
                         <ScrollView
                           horizontal
@@ -913,7 +897,7 @@ const renderImageItem = ({ item }) => {
                           }}
                           scrollEventThrottle={16}
                         >
-                          {generatedSchedule[habit.habit_title][0].stages.map((stage, index) =>
+                          {generatedSchedule.stages.map((stage, index) =>
                             renderStepContent(stage)
                           )}
                         </ScrollView>
@@ -1058,7 +1042,7 @@ const styles = StyleSheet.create({
     width: '100%',
     height: Dimensions.get('window').width,
     marginBottom: 5,
-      resizeMode: 'contain',
+    resizeMode: 'contain',
 
   },
   imageDescription: {
@@ -1074,8 +1058,8 @@ const styles = StyleSheet.create({
     color: Colors.text,
     fontSize: 12,
   },
-  
-  
+
+
   // imageDescription: {
   //   color: Colors.white,
   //   marginBottom: 16,
