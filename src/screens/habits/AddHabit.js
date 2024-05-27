@@ -157,10 +157,11 @@ const AddHabit = props => {
             console.error('Schedule insert error:', scheduleError);
             Alert.alert('Error', scheduleError.message);
           } else {
-            console.log('Schedule Data:', scheduleData);
-            props.navigation.navigate('Habits');
+            Alert.alert('Success', 'You have successfully created a habit!', [
+              { text: 'OK', onPress: () => props.navigation.navigate('HabitsIndex') }
+            ]);
           }
-
+  
           setSending(false);
         };
         reader.readAsDataURL(blob);
