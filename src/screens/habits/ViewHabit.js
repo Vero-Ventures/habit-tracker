@@ -910,7 +910,7 @@ const styles = StyleSheet.create({
   // },
   title: {
     fontSize: 16,
-    fontWeight: 'bold',
+    fontWeight: '400',
     color: Colors.white,
     marginBottom: 8,
   },
@@ -952,7 +952,7 @@ const styles = StyleSheet.create({
   pickImageButtonText: {
     color: Colors.white,
     fontSize: 16,
-    fontWeight: 'bold',
+    fontWeight: '400',
     letterSpacing: 1,
     paddingVertical: 10,
     paddingHorizontal: 20,
@@ -1012,7 +1012,7 @@ const styles = StyleSheet.create({
   },
   stepTitle: {
     fontSize: 18,
-    fontWeight: 'bold',
+    fontWeight: '400',
     color: Colors.white,
     marginBottom: 8,
   },
@@ -1037,7 +1037,7 @@ const styles = StyleSheet.create({
   toggleButtonText: {
     color: Colors.white,
     fontSize: 16,
-    fontWeight: 'bold',
+    fontWeight: '400',
   },
   deleteButton: {
     flex: 20,
@@ -1101,7 +1101,7 @@ const styles = StyleSheet.create({
   },
   sheetTitle: {
     fontSize: 18,
-    fontWeight: 'bold',
+    fontWeight: '400',
     color: Colors.white,
     marginBottom: 16,
   },
@@ -1154,7 +1154,7 @@ const styles = StyleSheet.create({
   textFrequencyDay: {
     fontSize: 12,
     color: Colors.text,
-    fontWeight: 400,
+    fontWeight: '400',
   },
 });
 

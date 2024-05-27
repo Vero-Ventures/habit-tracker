@@ -35,6 +35,7 @@ const AddHabit = props => {
   const [habitPhoto, setHabitPhoto] = useState(null);
   const [activeDays, setActiveDays] = useState(0);
   const [end_date, setEndDate] = useState(new Date());
+  const [showDatePicker, setShowDatePicker] = useState(false);
 
   const ASPhotoOptions = useRef();
 
@@ -118,7 +119,7 @@ const AddHabit = props => {
             return;
           }
 
-          const habitId = uuidv4(); 
+          const habitId = uuidv4();
 
           // insert
           const { data: insertData, error: insertError } = await supabase
@@ -161,7 +162,7 @@ const AddHabit = props => {
               { text: 'OK', onPress: () => props.navigation.navigate('HabitsIndex') }
             ]);
           }
-  
+
           setSending(false);
         };
         reader.readAsDataURL(blob);
@@ -260,7 +261,7 @@ const AddHabit = props => {
   const getActiveDay = index => {
     return (activeDays & (1 << index)) !== 0;
   }
-  
+
   return (
     <View style={Default.container}>
       <Header navigation={props.navigation} backButton title="Create Habit" />
@@ -333,33 +334,58 @@ const AddHabit = props => {
               placeholderTextColor={'#455c8a'}
             />
 
-              <View style={{ marginBottom: 32 }}>
-                <Text style={styles.title}>Scheduled Days</Text>
-                <View style={{ width: Dimensions.get('window').width - 44, flexDirection: 'row', justifyContent: 'space-between' }}>
-                  {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((day, index) => (
-                    <TouchableOpacity key={index} onPress={() => onToggleActiveDay(index)}>
-                      <View style={[styles.frequencyDay, getActiveDay(index) ? styles.frequencyDaySelected : null]}>
-                        <Text style={styles.textFrequencyDay}>{day}</Text>
-                      </View>
-                    </TouchableOpacity>
-                  ))}
-                </View>
+            <View style={{ marginBottom: 32 }}>
+              <Text style={styles.title}>Scheduled Days</Text>
+              <View style={{ width: Dimensions.get('window').width - 44, flexDirection: 'row', justifyContent: 'space-between' }}>
+                {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((day, index) => (
+                  <TouchableOpacity key={index} onPress={() => onToggleActiveDay(index)}>
+                    <View style={[styles.frequencyDay, getActiveDay(index) ? styles.frequencyDaySelected : null]}>
+                      <Text style={styles.textFrequencyDay}>{day}</Text>
+                    </View>
+                  </TouchableOpacity>
+                ))}
               </View>
+            </View>
 
             {/*Create a date picker to select the end date*/}
             <Text style={styles.labelStyle}>End Date</Text>
-            <View style={styles.datePicker}>
-              <DateTimePicker
-                value={end_date}
-                mode='date'
-                display='spinner'
-                onChange={(event, selectedDate) => {
-                  setEndDate(selectedDate);
-                }}
-                textColor={Colors.text}
-                minimumDate={new Date()}
-              />
-            </View>
+
+            {Platform.OS === 'ios' && (
+              <View style={styles.datePicker}>
+                <DateTimePicker
+                  value={end_date}
+                  mode='date'
+                  display='spinner'
+                  onChange={(event, selectedDate) => {
+                    setEndDate(selectedDate);
+                  }}
+                  textColor={Colors.text}
+                  minimumDate={new Date()}
+                  onPressCancel={() => setEndDate(new Date())}
+                />
+              </View>
+            )}
+
+            {Platform.OS === 'android' && (
+              <View style={styles.viewPicker}>
+                <TouchableOpacity style={styles.viewPicker} onPress={() => setShowDatePicker(true)}>
+                  <Text style={styles.textSelectIOS}>{end_date.toDateString()}</Text>
+                </TouchableOpacity>
+                {showDatePicker &&
+                  <DateTimePicker
+                    value={end_date}
+                    mode='date'
+                    display='default'
+                    onChange={(event, selectedDate) => {
+                      setShowDatePicker(false);
+                      setEndDate(selectedDate);
+                    }}
+                    textColor={Colors.text}
+                    minimumDate={new Date()}
+                  />
+                }
+              </View>
+            )}
 
 
             <View style={styles.containerButton}>
