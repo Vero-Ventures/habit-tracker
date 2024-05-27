@@ -31,6 +31,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { decode } from 'base64-arraybuffer';
 import ActionSheet from 'react-native-actionsheet';
 import { updateHabitDataInSchedules } from './Habits';
+import DateTimePicker from '@react-native-community/datetimepicker';
 
 const { GoogleGenerativeAI } = require('@google/generative-ai');
 const apikey = process.env.EXPO_PUBLIC_REACT_APP_GEMINI_KEY;
@@ -55,13 +56,25 @@ const ViewHabit = () => {
   const { habit } = route.params;
   const [editable, setEditable] = useState(false);
   const [newTitle, setNewTitle] = useState(habit.habit_title);
+  const [newEndDate, setNewEndDate] = useState(habit?.schedule_end_date ? new Date(habit.schedule_end_date) : new Date());
+  const [showEndDatePicker, setShowEndDatePicker] = useState(false);
   const [newDescription, setNewDescription] = useState(habit.habit_description);
   const [loadingDisable, setLoadingDisable] = useState(false);
   const [loadingDelete, setLoadingDelete] = useState(false);
   const [editedHabit, setEditedHabit] = useState(habit);
   const [deleteModalVisible, setDeleteModalVisible] = useState(false);
-
-
+  const updateHabit = (key, value) => {
+    setEditedHabit((prevHabit) => ({
+      ...prevHabit,
+      [key]: value,
+    }));
+  };
+  const onChangeEndDate = (event, selectedDate) => {
+    setShowEndDatePicker(false);
+    if (selectedDate) {
+      setNewEndDate(selectedDate);
+    }
+  };
   useEffect(() => {
     const fetchHabit = async () => {
       // console.log("Fetching habit");
@@ -114,7 +127,12 @@ const ViewHabit = () => {
 
     fetchHabit();
   }, [habit.habit_id]);
-
+  useEffect(() => {
+    setNewEndDate(new Date(habit.schedule_end_date));
+  }, [habit.schedule_end_date]);
+  useEffect(() => {
+    updateHabit('schedule_end_date', newEndDate.toISOString());
+  }, [newEndDate]);
   const updateHabitPlan = async (habitPlan) => {
     try {
       const { data, error } = await supabase
@@ -231,11 +249,11 @@ const ViewHabit = () => {
     const MAX_RETRIES = 5;
     let attempt = 0;
     let success = false;
-    
+
     try {
       setIsLoading(true);
       const model = genAI.getGenerativeModel({ model: 'gemini-pro' });
-  
+
       const chat = model.startChat({
         history: [
           {
@@ -259,7 +277,7 @@ const ViewHabit = () => {
           maxOutputTokens: 6000,
         },
       });
-  
+
       const prompt = `{
         "${habit.habit_title}": [
           {
@@ -316,18 +334,18 @@ const ViewHabit = () => {
           }
         ]
       }`;
-  
+
       while (attempt < MAX_RETRIES && !success) {
         try {
           const result = await chat.sendMessage("Generate the plan with with this format: " + prompt);
           const response = await result.response;
           const text = await response.text();
-          
+
           const cleanedText = text.replace(/^```(?:json)?\n/, '').replace(/\n```$/, '').trim();
           const jsonStartIndex = cleanedText.indexOf('{');
           const jsonEndIndex = cleanedText.lastIndexOf('}');
           const validJsonString = cleanedText.substring(jsonStartIndex, jsonEndIndex + 1);
-  
+
           const parsedSchedule = JSON.parse(validJsonString);
           setGeneratedSchedule(parsedSchedule);
           await updateHabitPlan(validJsonString);
@@ -347,7 +365,7 @@ const ViewHabit = () => {
       setIsLoading(false);
     }
   };
-  
+
 
   const handleActionSheet = async (index) => {
     if (index === 0) {
@@ -515,30 +533,41 @@ const ViewHabit = () => {
     return (habit.schedule_active_days & (1 << index)) !== 0;
   };
 
-  const saveChanges = () => {
+  const saveChanges = async () => {
     try {
-      supabase
+      const { data: habitData, error: habitError } = await supabase
         .from('Habit')
-        .update({ habit_title: newTitle, habit_description: newDescription })
-        .eq('habit_id', habit.habit_id)
-        .then(({ data, error }) => {
-          if (error) {
-            throw error;
-          }
-
-          Alert.alert('Habit updated successfully');
-          setEditable(false);
-
-          const updatedHabitData = {
-            ...habit,
-            habit_title: newTitle,
-            habit_description: newDescription,
-          };
-          setEditedHabit(updatedHabitData);
+        .update({
+          habit_title: newTitle,
+          habit_description: newDescription,
         })
-        .catch((error) => {
-          Alert.alert('Error updating habit', error.message);
-        });
+        .eq('habit_id', habit.habit_id);
+
+      if (habitError) {
+        throw habitError;
+      }
+
+      const { data: scheduleData, error: scheduleError } = await supabase
+        .from('Schedule')
+        .update({
+          schedule_end_date: newEndDate,
+        })
+        .eq('habit_id', habit.habit_id);
+
+      if (scheduleError) {
+        throw scheduleError;
+      }
+
+      Alert.alert('Habit updated successfully');
+      setEditable(false);
+
+      const updatedHabitData = {
+        ...habit,
+        habit_title: newTitle,
+        habit_description: newDescription,
+        schedule_end_date: newEndDate,
+      };
+      setEditedHabit(updatedHabitData);
     } catch (error) {
       Alert.alert('Error updating habit', error.message);
     }
@@ -547,6 +576,7 @@ const ViewHabit = () => {
   const cancelEdit = () => {
     setNewTitle(habit.habit_title);
     setNewDescription(habit.habit_description);
+    setNewEndDate(habit.schedule_end_date);
     setEditable(false);
   }
 
@@ -645,11 +675,6 @@ const ViewHabit = () => {
                       </Text>
                     )}
 
-                    <Text style={styles.title}>Quantity</Text>
-                    <Text style={styles.textContent}>
-                      {habit?.schedule_quantity || 'N/A'}
-                    </Text>
-
                     <Text style={styles.title}>Start Date</Text>
                     <Text style={styles.textContent}>
                       {habit?.created_at
@@ -658,12 +683,25 @@ const ViewHabit = () => {
                     </Text>
 
                     <Text style={styles.title}>End Date</Text>
-                    <Text style={styles.textContent}>
-                      {habit?.schedule_end_date
-                        ? moment(habit.schedule_end_date).format('MMMM Do YYYY')
-                        : 'N/A'}
-                    </Text>
-
+                    {editable ? (
+                      <TouchableOpacity onPress={() => setShowEndDatePicker(true)}>
+                        <Text style={styles.textContent}>
+                          {moment(newEndDate).format('MMMM Do YYYY')}
+                        </Text>
+                      </TouchableOpacity>
+                    ) : (
+                      <Text style={styles.textContent}>
+                        {moment(habit.schedule_end_date).format('MMMM Do YYYY')}
+                      </Text>
+                    )}
+                    {showEndDatePicker && (
+                      <DateTimePicker
+                        value={newEndDate}
+                        mode="date"
+                        display="default"
+                        onChange={onChangeEndDate}
+                      />
+                    )}
                     <View style={{ marginBottom: 32 }}>
                       <Text style={styles.title}>Active Days</Text>
                       <View style={{ width: Dimensions.get('window').width - 44, flexDirection: 'row', justifyContent: 'space-between' }}>

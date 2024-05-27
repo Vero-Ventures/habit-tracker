@@ -74,7 +74,6 @@ const Habits = () => {
       }
     } catch (error) {
       console.error('Error fetching schedules or habits:', error);
-      // Alert.alert('Error fetching schedules or habits', error.message);
     } finally {
       setLoading(false);
     }
