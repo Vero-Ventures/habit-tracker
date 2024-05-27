@@ -142,9 +142,17 @@ export default function Account() {
           }))
         ].filter(image => image.image_photo !== null);
   
+        const postTexts = habitPosts
+          .filter(post => !postImagesData.some(image => image.post_id === post.post_id && image.image_photo))
+          .map(post => ({
+            post_description: post.post_description,
+            post_id: post.post_id
+          }));
+  
         return {
           habit_title: habit.habit_title,
-          images: combined
+          images: combined,
+          postTexts: postTexts
         };
       });
   
@@ -155,6 +163,9 @@ export default function Account() {
       setLoading(false);
     }
   };
+
+  
+
   
 
   async function getPostsCount() {
@@ -347,12 +358,23 @@ export default function Account() {
         renderItem={({ item: image }) => (
           <TouchableOpacity onPress={() => openModal(image)}>
             <Image source={{ uri: image.image_photo }} style={styles.gridImage} />
-            {image.post_description && <Text style={styles.imageDescription}>{image.post_description}</Text>}
           </TouchableOpacity>
         )}
       />
+      {item.postTexts.length > 0 && (
+        <View style={styles.textContainer}>
+          {item.postTexts.map((post) => (
+            <View key={post.post_id} style={styles.textPostContainer}>
+              <Text style={styles.textPost}>{post.post_description}</Text>
+            </View>
+          ))}
+        </View>
+      )}
     </View>
   );
+  
+  
+
   
   
 
@@ -453,7 +475,10 @@ export default function Account() {
       </Modal>
     </View>
   );
-}  
+  
+  
+  
+}
 
 const styles = StyleSheet.create({
   scrollViewContent: {
@@ -623,6 +648,21 @@ const styles = StyleSheet.create({
     height: imageSize - 10,
     margin: 5,
   },
+  textContainer: {
+    padding: 10,
+  },
+  textPost: {
+    fontSize: 16,
+    color: 'black',
+  },
+  textPostContainer: {
+    borderWidth: 1,
+    borderColor: Colors.lightGray,
+    borderRadius: 8,
+    padding: 10,
+    marginBottom: 10,
+    backgroundColor: Colors.white,
+  },
   modalContainer: {
     flex: 1,
     justifyContent: 'center',
@@ -647,6 +687,14 @@ const styles = StyleSheet.create({
     marginBottom: 16,
     textAlign: 'center',
     fontSize: 12,
+  },
+  textDescription: {
+    fontSize: 14,
+    color: Colors.text,
+    marginTop: 5,
+    marginBottom: 5,
+    paddingLeft: 10,
+    paddingRight: 10,
   },
 });
 
