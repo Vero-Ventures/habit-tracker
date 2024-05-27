@@ -20,6 +20,12 @@ jest.mock('../src/config/supabaseClient', () => ({
       stopAutoRefresh: jest.fn(),
       signOut: jest.fn(),
     },
+    storage: {
+      from: jest.fn(() => ({
+        upload: jest.fn(),
+        getPublicUrl: jest.fn(),
+      })),
+    },
     rpc: jest.fn().mockResolvedValue({ data: 'data' }),
     from: jest.fn(() => ({
       single: jest.fn().mockResolvedValue({
@@ -29,7 +35,6 @@ jest.mock('../src/config/supabaseClient', () => ({
           profile_image: 'https://example.com/image.jpg',
         },
       }),
-      eq: jest.fn().mockResolvedValue({}),
       single: jest.fn().mockResolvedValue({}),
       upsert: jest.fn().mockResolvedValue({}),
     })),
@@ -127,9 +132,7 @@ describe('Profile Component', () => {
 
     const { getByText, getByDisplayValue } = render(
       <NavigationContainer>
-        <Provider store={store}>
-          <Account />
-        </Provider>
+        <Account />
       </NavigationContainer>
     );
 
@@ -237,8 +240,8 @@ describe('CRUD operations on profile', () => {
         <Account />
       </NavigationContainer>
     );
-
-    fireEvent.press(getByTestId('profile'));
+    // Press on profile image
+    fireEvent.press(getByTestId('profile-img'));
   });
 });
 

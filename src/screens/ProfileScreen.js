@@ -258,12 +258,16 @@ export default function Account() {
             style={styles.containerPhoto}
             onPress={handleImagePicker}>
             {profileImage ? (
-              <Image source={{ uri: profileImage }} style={styles.userPhoto} />
+              <Image
+                source={{ uri: profileImage }}
+                style={styles.userPhoto}
+                testID="profile"
+              />
             ) : (
               <Image
                 source={require('../../assets/images/no-profile.png')}
                 style={styles.userPhoto}
-                testID="profile"
+                testID="profile-img"
               />
             )}
           </TouchableOpacity>
