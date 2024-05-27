@@ -222,30 +222,95 @@ const ViewHabit = () => {
 
   const deletePhoto = async (image) => {
     try {
-      const { error: deleteError } = await supabase
-        .from('HabitImages')
-        .delete()
-        .eq('habit_image_id', image.habit_image_id);
-
-      if (deleteError) {
-        throw deleteError;
+      console.log("Image object:", image);
+  
+      if (!image || !image.image_photo) {
+        throw new Error("Image or image photo is undefined.");
       }
-
+  
+      // determine the source table and ID
+      let sourceTable = null;
+      let sourceId = null;
+      let sourceField = null;
+  
+      if (image.habit_image_id) {
+        sourceTable = 'HabitImages';
+        sourceId = image.habit_image_id;
+        sourceField = 'habit_image_id';
+      } else if (image.post_id) {
+        sourceTable = 'Post';
+        sourceId = image.post_id; // using post_id for deletion from Post table
+        sourceField = 'post_id';
+      } else if (image.id === 'habitPhoto') {
+        sourceTable = 'Habit';
+        sourceId = habit.habit_id;
+        sourceField = 'habit_id';
+      }
+  
+      if (!sourceTable || !sourceId) {
+        throw new Error("Image source or ID is undefined.");
+      }
+  
+      // if the image belongs to a post, delete the corresponding entry from the Post and Image tables
+      if (sourceTable === 'Post') {
+        const { error: deletePostError } = await supabase
+          .from('Post')
+          .delete()
+          .eq('post_id', sourceId);
+  
+        if (deletePostError) {
+          throw deletePostError;
+        }
+  
+        const { error: deleteImageError } = await supabase
+          .from('Image')
+          .delete()
+          .eq('post_id', sourceId);
+  
+        if (deleteImageError) {
+          throw deleteImageError;
+        }
+      } else if (sourceTable === 'HabitImages') {
+        // if the image belongs to the HabitImages table, delete the entry
+        const { error: deleteError } = await supabase
+          .from(sourceTable)
+          .delete()
+          .eq(sourceField, sourceId);
+  
+        if (deleteError) {
+          throw deleteError;
+        }
+      } else if (sourceTable === 'Habit') {
+        // for the Habit table just update the habit_photo to null
+        const { error: updateError } = await supabase
+          .from('Habit')
+          .update({ habit_photo: null })
+          .eq('habit_id', sourceId);
+  
+        if (updateError) {
+          throw updateError;
+        }
+      }
+  
+      // remove the image from storage
+      const imageName = image.image_photo.split('/').pop();
       const { error: bucketError } = await supabase.storage
         .from('habit')
-        .remove([image.image_photo.split('/').pop()]);
-
+        .remove([imageName]);
+  
       if (bucketError) {
         throw bucketError;
       }
-
-      setHabitImages(habitImages.filter(img => img.habit_image_id !== image.habit_image_id));
+  
+      // update the state to remove the deleted image
+      setHabitImages(habitImages.filter(img => img.image_photo !== image.image_photo));
       Alert.alert('Success', 'Photo has been successfully deleted');
       closeModal();
     } catch (error) {
       Alert.alert('Error', error.message);
     }
   };
+  
 
 
 
@@ -577,9 +642,11 @@ const ViewHabit = () => {
   );
 
   const openModal = (image) => {
+    console.log("Opening modal with image:", image);
     setSelectedImage(image);
     setModalVisible(true);
   };
+  
 
   const closeModal = () => {
     setModalVisible(false);
