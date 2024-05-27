@@ -3,7 +3,6 @@ import {
   View,
   StyleSheet,
   Text,
-  Alert,
   FlatList,
   TouchableOpacity,
   Dimensions,
@@ -32,14 +31,11 @@ const Habits = () => {
   const fetchSchedules = async () => {
     try {
       setLoading(true);
-      // if (!session?.user) throw new Error('No user on the session!');
 
       const { data: scheduleData, error: scheduleError } = await supabase
         .from('Schedule')
-        .select('*')
+        .select('schedule_id, habit_id, created_at, schedule_end_date, schedule_state')
         .eq('user_id', session?.user.id);
-
-      console.log('Fetched schedule data:', scheduleData);
 
       if (scheduleError) {
         throw scheduleError;
@@ -52,28 +48,49 @@ const Habits = () => {
           .select('*')
           .in('habit_id', habitIds);
 
-        console.log('Fetched habit data:', habitData);
-
         if (habitError) {
           throw habitError;
         }
 
         if (habitData) {
+          const currentDateTime = new Date();
           const combinedData = scheduleData.map(schedule => {
             const habit = habitData.find(h => h.habit_id === schedule.habit_id);
+            const endDate = new Date(schedule.schedule_end_date);
+            endDate.setHours(23, 59, 59, 999); // set end time to the end of the day
+            const isActive = currentDateTime <= endDate;
+
             return {
               ...schedule,
               habit_title: habit?.habit_title,
               habit_description: habit?.habit_description,
-              habit_id: schedule.habit_id,
+              schedule_state: isActive ? 'Open' : 'Closed',
             };
           });
+
+           // sorted combinedData to move inactive habits to the bottom
+          combinedData.sort((a, b) => (a.schedule_state === 'Closed' ? 1 : -1));
+
+
+          // update schedule state in the database 
+          await Promise.all(
+            combinedData.map(async schedule => {
+              if (schedule.schedule_state !== scheduleData.find(s => s.schedule_id === schedule.schedule_id).schedule_state) {
+                await supabase
+                  .from('Schedule')
+                  .update({ schedule_state: schedule.schedule_state })
+                  .eq('schedule_id', schedule.schedule_id);
+              }
+            })
+          );
+  
           setSchedules(combinedData);
           console.log('Combined data:', combinedData);
         }
       }
     } catch (error) {
       console.error('Error fetching schedules or habits:', error);
+      // Alert.alert('Error fetching schedules or habits', error.message);
     } finally {
       setLoading(false);
     }
@@ -97,7 +114,7 @@ const Habits = () => {
       </Text>
     </TouchableOpacity>
   );
-  
+
   return (
     <View style={styles.container}>
       <Header title="My Habits" />
