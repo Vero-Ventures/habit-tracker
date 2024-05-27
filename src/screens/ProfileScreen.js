@@ -77,42 +77,96 @@ export default function Account() {
     const userId = session?.user.id;
     try {
       setLoading(true);
-
+  
       const { data: scheduleData, error: scheduleError } = await supabase
         .from('Schedule')
-        .select('habit_id')
+        .select('habit_id, schedule_id')
         .eq('user_id', userId);
-
+  
       if (scheduleError) throw scheduleError;
-
+  
       const habitIds = scheduleData.map(schedule => schedule.habit_id);
-
+      const scheduleIds = scheduleData.map(schedule => schedule.schedule_id);
+  
+      if (habitIds.length === 0 || scheduleIds.length === 0) {
+        Alert.alert('Error', 'No habits or schedules found for the user');
+        setLoading(false);
+        return;
+      }
+  
       const { data: habitData, error: habitError } = await supabase
         .from('Habit')
-        .select('habit_id, habit_title')
+        .select('habit_id, habit_title, habit_photo')
         .in('habit_id', habitIds);
-
+  
       if (habitError) throw habitError;
-
+  
       const { data: imagesData, error: imagesError } = await supabase
         .from('HabitImages')
         .select('*')
         .in('habit_id', habitIds);
-
+  
       if (imagesError) throw imagesError;
-
-      const imagesByHabit = habitData.reduce((acc, habit) => {
-        acc[habit.habit_title] = imagesData.filter(image => image.habit_id === habit.habit_id);
-        return acc;
-      }, {});
-
-      setHabitImages(imagesByHabit);
+  
+      const { data: postsData, error: postsError } = await supabase
+        .from('Post')
+        .select('post_id, post_description, schedule_id')
+        .in('schedule_id', scheduleIds);
+  
+      if (postsError) throw postsError;
+  
+      const postIds = postsData.map(post => post.post_id);
+  
+      const { data: postImagesData, error: postImagesError } = await supabase
+        .from('Image')
+        .select('image_photo, post_id')
+        .in('post_id', postIds);
+  
+      if (postImagesError) throw postImagesError;
+  
+      const combinedImages = habitData.map(habit => {
+        const habitImages = imagesData.filter(image => image.habit_id === habit.habit_id);
+        const habitPosts = postsData.filter(post =>
+          scheduleData.find(schedule => schedule.schedule_id === post.schedule_id)?.habit_id === habit.habit_id
+        );
+        const habitPostImages = postImagesData.filter(image =>
+          habitPosts.some(post => post.post_id === image.post_id)
+        );
+  
+        const combined = [
+          ...(habit.habit_photo ? [{ image_photo: habit.habit_photo, id: 'habitPhoto' }] : []),
+          ...habitImages,
+          ...habitPostImages.map(image => ({
+            ...image,
+            post_description: habitPosts.find(post => post.post_id === image.post_id)?.post_description
+          }))
+        ].filter(image => image.image_photo !== null);
+  
+        const postTexts = habitPosts
+          .filter(post => !postImagesData.some(image => image.post_id === post.post_id && image.image_photo))
+          .map(post => ({
+            post_description: post.post_description,
+            post_id: post.post_id
+          }));
+  
+        return {
+          habit_title: habit.habit_title,
+          images: combined,
+          postTexts: postTexts
+        };
+      });
+  
+      setHabitImages(combinedImages);
     } catch (error) {
       Alert.alert('Error fetching habit images', error.message);
     } finally {
       setLoading(false);
     }
   };
+
+  
+
+  
 
   async function getPostsCount() {
     try {
@@ -307,8 +361,22 @@ export default function Account() {
           </TouchableOpacity>
         )}
       />
+      {item.postTexts.length > 0 && (
+        <View style={styles.textContainer}>
+          {item.postTexts.map((post) => (
+            <View key={post.post_id} style={styles.textPostContainer}>
+              <Text style={styles.textPost}>{post.post_description}</Text>
+            </View>
+          ))}
+        </View>
+      )}
     </View>
   );
+  
+  
+
+  
+  
 
   return (
     <View style={Default.container}>
@@ -344,11 +412,11 @@ export default function Account() {
                 </View>
               </View>
             </View>
-
+  
             <TouchableOpacity style={styles.settingsIcon} onPress={goToSettingsScreen}>
               <Image source={require('../../assets/icons/cog.png')} style={styles.iconsHeader} />
             </TouchableOpacity>
-
+  
             <View style={styles.containerActionsHeader}>
               <TouchableOpacity
                 style={styles.editProfile}
@@ -362,7 +430,7 @@ export default function Account() {
                 </View>
               </TouchableOpacity>
             </View>
-
+  
             <View style={styles.buttonWrapper}>
               <Button 
                 title="Find Users"
@@ -371,7 +439,7 @@ export default function Account() {
                 titleStyle={styles.findUserButtonText}
               />
             </View>
-
+  
             <View style={styles.inputWrapper}>
               <Text style={styles.title}>Username</Text>
               <Text style={styles.textContent}>{username}</Text>
@@ -382,14 +450,11 @@ export default function Account() {
             </View>
           </>
         }
-        data={Object.keys(habitImages).map(habitTitle => ({
-          habit_title: habitTitle,
-          images: habitImages[habitTitle],
-        }))}
+        data={habitImages}
         renderItem={renderHabitImages}
         keyExtractor={(item, index) => index.toString()}
       />
-
+  
       <Modal
         animationType="slide"
         transparent={true}
@@ -401,7 +466,7 @@ export default function Account() {
             {selectedImage && (
               <>
                 <Image source={{ uri: selectedImage.image_photo }} style={styles.fullImage} />
-                <Text style={styles.imageDescription}>{selectedImage.description}</Text>
+                <Text style={styles.imageDescription}>{selectedImage.post_description}</Text>
                 <Button title="Close" onPress={closeModal} />
               </>
             )}
@@ -410,6 +475,9 @@ export default function Account() {
       </Modal>
     </View>
   );
+  
+  
+  
 }
 
 const styles = StyleSheet.create({
@@ -580,6 +648,21 @@ const styles = StyleSheet.create({
     height: imageSize - 10,
     margin: 5,
   },
+  textContainer: {
+    padding: 10,
+  },
+  textPost: {
+    fontSize: 16,
+    color: 'black',
+  },
+  textPostContainer: {
+    borderWidth: 1,
+    borderColor: Colors.lightGray,
+    borderRadius: 8,
+    padding: 10,
+    marginBottom: 10,
+    backgroundColor: Colors.white,
+  },
   modalContainer: {
     flex: 1,
     justifyContent: 'center',
@@ -602,6 +685,16 @@ const styles = StyleSheet.create({
   imageDescription: {
     color: Colors.white,
     marginBottom: 16,
+    textAlign: 'center',
+    fontSize: 12,
+  },
+  textDescription: {
+    fontSize: 14,
+    color: Colors.text,
+    marginTop: 5,
+    marginBottom: 5,
+    paddingLeft: 10,
+    paddingRight: 10,
   },
 });
 
