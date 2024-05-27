@@ -29,8 +29,6 @@ const Timeline = () => {
     fetchPosts(true);
   }, []);
 
-  
-
   const fetchPosts = async (isInitialFetch = false) => {
     try {
       setLoading(true);
@@ -112,29 +110,10 @@ const Timeline = () => {
     }
   };
   
-  
-
-
-
-
-
-
-
-  
-
   const onRefresh = () => {
     setRefreshing(true);
     fetchPosts(true);
   };
-
-
-
-
-
-
-
-
-
 
   const renderPost = ({ item }) => {
     return (
@@ -162,13 +141,6 @@ const Timeline = () => {
     );
   };
   
-
-
-
-
-
-
-
   const renderFooter = () => {
     if (!loading) return null;
     return <ActivityIndicator size="large" color={Colors.primary} />;
