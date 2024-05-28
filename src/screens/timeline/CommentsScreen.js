@@ -13,7 +13,7 @@ import { TouchableOpacity } from 'react-native-gesture-handler';
 import store from '../../store/storeConfig';
 
 export default function CommentsScreen({ route }) {
-    const [comments, setComments] = useState(null);
+    const [comments, setComments] = useState([]);
     const [comment, setComment] = useState('');
     const postId = route.params.postId;
     const [isAddingComment, setIsAddingComment] = useState(false);
@@ -34,12 +34,9 @@ export default function CommentsScreen({ route }) {
             } catch (error) {
                 console.log('error', error);
             }
-
-
         }
-
         fetchData();
-    }, []);
+    }, [comments.length]);
 
     const addComment = async () => {
         if (isAddingComment) {
@@ -51,6 +48,7 @@ export default function CommentsScreen({ route }) {
 
                 setComment('');
                 setIsAddingComment(false);
+                setComments([...comments, commentInsertData[0]]);
             } catch (error) {
                 console.log('error:', error);
             }
