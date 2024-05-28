@@ -98,7 +98,6 @@ const CardPost = (props) => {
       )}
       <View style={styles.cardPostDescriptionContainer}>
       {/* <View style={styles.cardPostDescriptionContainer}> */}
-        <Text style={styles.textUserName}>{props.postUser?.name ?? 'Unknown User'} </Text>
         <Text style={styles.postText}>{props.postDescription}</Text>
       </View>
         <TouchableOpacity onPress={fetchLikedUsers}>
