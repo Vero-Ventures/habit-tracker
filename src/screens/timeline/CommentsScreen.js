@@ -53,7 +53,7 @@ export default function CommentsScreen({ route }) {
                 console.log('error:', error);
             }
         } 
-    };
+    };    
 
     const toggleCommenting = () => {
         setComment('');

@@ -7,7 +7,7 @@ import Colors from '../../assets/styles/Colors';
 import { Image } from 'react-native';
 import moment from 'moment';
 
-export default function CommentCard({ commentData }) {
+export default function CommentCard({ commentData}) {
     return (
         <View style={styles.container}>
             <View style={styles.headerContainer}>
@@ -18,7 +18,7 @@ export default function CommentCard({ commentData }) {
                 <View>
                     <Text style={styles.textUserName}>{commentData.user_id.username}</Text>
                     <Text style={styles.textSubtitle}>
-                        {moment(commentData.createdAt).local().startOf('second').fromNow()}
+                        {moment(commentData.created_at).fromNow()}
                     </Text>
                 </View> 
             </View>
