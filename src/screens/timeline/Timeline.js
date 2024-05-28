@@ -41,12 +41,12 @@ const Timeline = () => {
       if (followingError) throw followingError;
   
       const followedUserIds = followingData.map(following => following.following);
-      const userIds = [...followedUserIds, session?.user.id]; // includes the user's own ID so u can now see ur own posts
+      const userIds = [...followedUserIds, session?.user.id];
   
       const { data: postData, error: postError } = await supabase
         .from('Post')
         .select('*')
-        .in('user_id', userIds) // queried the posts by followed users and the user themselves
+        .in('user_id', userIds)
         .order('created_at', { ascending: false });
   
       if (postError) throw postError;
@@ -79,6 +79,18 @@ const Timeline = () => {
   
       if (imagePostError) throw imagePostError;
   
+      const { data: commentData, error: commentError } = await supabase
+        .from('Comments')
+        .select('post_id')
+        .in('post_id', postIds);
+  
+      if (commentError) throw commentError;
+  
+      const commentsMap = commentData.reduce((acc, comment) => {
+        acc[comment.post_id] = acc[comment.post_id] ? acc[comment.post_id] + 1 : 1;
+        return acc;
+      }, {});
+  
       const likesMap = postIds.reduce((acc, postId) => {
         acc[postId] = likeData.filter(like => like.post_id === postId);
         return acc;
@@ -88,6 +100,7 @@ const Timeline = () => {
         const user = userData.find(u => u.user_id === post.user_id);
         const likes = likesMap[post.post_id] || [];
         const image = imagePostData.find(i => i.post_id === post.post_id);
+        const commentsCount = commentsMap[post.post_id] || 0;
   
         return {
           ...post,
@@ -96,6 +109,7 @@ const Timeline = () => {
           likeFromUser: likes.some(like => like.user_id === session.user.id),
           countLikes: likes.length,
           habit_photo: image ? image.image_photo : null,
+          countComments: commentsCount,
         };
       });
   
@@ -109,7 +123,7 @@ const Timeline = () => {
       setRefreshing(false);
     }
   };
-  
+
   const onRefresh = () => {
     setRefreshing(true);
     fetchPosts(true);
@@ -126,21 +140,20 @@ const Timeline = () => {
           imageUrl: item.profile_image,
         }}
         createdAt={item.created_at}
-        // postTitle={item.post_title}
         postDescription={item.post_description}
         postType="new_habit"
         actions={{
           likeFromUser: false,
           countLikes: 0,
           onLikePostSuccess: () => {},
-          countComments: 0,
-          onDeletePostSuccess: () => {},
+          countComments: item.countComments,
+          onDeletePostSuccess: () => { },
         }}
         navigation={navigation}
       />
     );
   };
-  
+
   const renderFooter = () => {
     if (!loading) return null;
     return <ActivityIndicator size="large" color={Colors.primary} />;
@@ -154,9 +167,14 @@ const Timeline = () => {
 
   return (
     <View style={styles.container}>
-      <Header title="Timeline" />
-      {/* need to add a button to navigate to the add post page */}
-      <Button mode="contained" onPress={() => navigation.navigate('AddPost')}>
+      <View style={styles.headerContainer}>
+        <Header title="Timeline" />
+      </View>
+      <Button
+        mode="contained"
+        onPress={() => navigation.navigate('AddPost')}
+        style={styles.addPostButton}
+      >
         Add Post
       </Button>
       <FlatList
@@ -182,12 +200,24 @@ const Timeline = () => {
       />
     </View>
   );
-};
+}  
 
 const styles = StyleSheet.create({
+  addPostButton: {
+    alignSelf: 'center',
+    width: 150,
+    backgroundColor: 'rgba(105, 105, 120, 0.4)',
+    paddingVertical: 5,
+    borderRadius: 45,
+    marginBottom: 30,
+    marginTop: 10,
+  },
   container: {
     flex: 1,
     backgroundColor: Colors.background,
+  },
+  headerContainer: {
+    marginBottom: 20,
   },
   list: {
     padding: 10,
@@ -202,5 +232,6 @@ const styles = StyleSheet.create({
     color: Colors.text,
   },
 });
+
 
 export default Timeline;

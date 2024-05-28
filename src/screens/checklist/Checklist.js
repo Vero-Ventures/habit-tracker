@@ -58,8 +58,6 @@ const fetchSchedules = async () => {
       .select('*')
       .eq('user_id', session?.user.id);
 
-    console.log('Fetched schedule data:', scheduleData);
-
     if (scheduleError) {
       throw scheduleError;
     }
@@ -71,27 +69,30 @@ const fetchSchedules = async () => {
         .select('*')
         .in('habit_id', habitIds);
 
-      console.log('Fetched habit data:', habitData);
-
       if (habitError) {
         throw habitError;
       }
 
       if (habitData) {
+        const currentDateTime = new Date();
         const dayIndex = getDayIndex(moment(currentDay).format('dddd'));
         const combinedData = scheduleData.map(schedule => {
           const habit = habitData.find(h => h.habit_id === schedule.habit_id);
+          const endDate = new Date(schedule.schedule_end_date);
+          endDate.setHours(23, 59, 59, 999); // set end time to the end of the day
+          const isActive = currentDateTime <= endDate;
+          const isActiveToday = (schedule.schedule_active_days & (1 << dayIndex)) !== 0;
+
           return {
             ...schedule,
             habit_title: habit?.habit_title,
             habit_description: habit?.habit_description,
             habit_photo: habit?.habit_photo,
-            is_active_today: (schedule.schedule_active_days & (1 << dayIndex)) !== 0,
+            is_active_today: isActive && isActiveToday,
           };
         }).filter(schedule => schedule.is_active_today);
-        
+
         setSchedules(combinedData);
-        console.log('Combined data:', combinedData);
       }
     }
   } catch (error) {
@@ -101,6 +102,8 @@ const fetchSchedules = async () => {
     setLoading(false);
   }
 };
+
+
 
 
 
@@ -165,7 +168,7 @@ const fetchSchedules = async () => {
             { color: item.schedule_state === 'Open' ? Colors.green : Colors.red },
           ]}
         >
-          {item.schedule_state === 'Open' ? 'ACTIVE' : 'INACTIVE'}
+          {/* {item.schedule_state === 'Open' ? 'ACTIVE' : 'INACTIVE'} */}
         </Text>
       </TouchableOpacity>
   );

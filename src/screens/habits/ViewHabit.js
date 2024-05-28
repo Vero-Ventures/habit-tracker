@@ -64,6 +64,8 @@ const ViewHabit = () => {
   const [editedHabit, setEditedHabit] = useState(habit);
   const [deleteModalVisible, setDeleteModalVisible] = useState(false);
   const [activeDays, setActiveDays] = useState(habit.schedule_active_days);
+  const [textPosts, setTextPosts] = useState([]);
+
 
   useEffect(() => {
     const updatedEndDate = new Date(habit.schedule_end_date);
@@ -193,8 +195,14 @@ const ViewHabit = () => {
           post_description: postsData.find(post => post.post_id === image.post_id)?.post_description
         }))
       ].filter(image => image.image_photo !== null);
+
+      const textOnlyPosts = postsData.filter(post => !postImagesData.some(image => image.post_id === post.post_id));
+
+
       // console.log("Setting habit images with: " + JSON.stringify(combinedImages));
       setHabitImages(combinedImages);
+      setTextPosts(textOnlyPosts);
+
       // console.log("Done setting habit images");
     };
 
@@ -222,30 +230,95 @@ const ViewHabit = () => {
 
   const deletePhoto = async (image) => {
     try {
-      const { error: deleteError } = await supabase
-        .from('HabitImages')
-        .delete()
-        .eq('habit_image_id', image.habit_image_id);
-
-      if (deleteError) {
-        throw deleteError;
+      console.log("Image object:", image);
+  
+      if (!image || !image.image_photo) {
+        throw new Error("Image or image photo is undefined.");
       }
-
+  
+      // determine the source table and ID
+      let sourceTable = null;
+      let sourceId = null;
+      let sourceField = null;
+  
+      if (image.habit_image_id) {
+        sourceTable = 'HabitImages';
+        sourceId = image.habit_image_id;
+        sourceField = 'habit_image_id';
+      } else if (image.post_id) {
+        sourceTable = 'Post';
+        sourceId = image.post_id; // using post_id for deletion from Post table
+        sourceField = 'post_id';
+      } else if (image.id === 'habitPhoto') {
+        sourceTable = 'Habit';
+        sourceId = habit.habit_id;
+        sourceField = 'habit_id';
+      }
+  
+      if (!sourceTable || !sourceId) {
+        throw new Error("Image source or ID is undefined.");
+      }
+  
+      // if the image belongs to a post, delete the corresponding entry from the Post and Image tables
+      if (sourceTable === 'Post') {
+        const { error: deletePostError } = await supabase
+          .from('Post')
+          .delete()
+          .eq('post_id', sourceId);
+  
+        if (deletePostError) {
+          throw deletePostError;
+        }
+  
+        const { error: deleteImageError } = await supabase
+          .from('Image')
+          .delete()
+          .eq('post_id', sourceId);
+  
+        if (deleteImageError) {
+          throw deleteImageError;
+        }
+      } else if (sourceTable === 'HabitImages') {
+        // if the image belongs to the HabitImages table, delete the entry
+        const { error: deleteError } = await supabase
+          .from(sourceTable)
+          .delete()
+          .eq(sourceField, sourceId);
+  
+        if (deleteError) {
+          throw deleteError;
+        }
+      } else if (sourceTable === 'Habit') {
+        // for the Habit table just update the habit_photo to null
+        const { error: updateError } = await supabase
+          .from('Habit')
+          .update({ habit_photo: null })
+          .eq('habit_id', sourceId);
+  
+        if (updateError) {
+          throw updateError;
+        }
+      }
+  
+      // remove the image from storage
+      const imageName = image.image_photo.split('/').pop();
       const { error: bucketError } = await supabase.storage
         .from('habit')
-        .remove([image.image_photo.split('/').pop()]);
-
+        .remove([imageName]);
+  
       if (bucketError) {
         throw bucketError;
       }
-
-      setHabitImages(habitImages.filter(img => img.habit_image_id !== image.habit_image_id));
+  
+      // update the state to remove the deleted image
+      setHabitImages(habitImages.filter(img => img.image_photo !== image.image_photo));
       Alert.alert('Success', 'Photo has been successfully deleted');
       closeModal();
     } catch (error) {
       Alert.alert('Error', error.message);
     }
   };
+  
 
 
 
@@ -540,6 +613,27 @@ const ViewHabit = () => {
     }
   };
 
+
+  const deleteTextPost = async (post_id) => {
+    try {
+      const { error } = await supabase
+        .from('Post')
+        .delete()
+        .eq('post_id', post_id);
+  
+      if (error) {
+        throw error;
+      }
+  
+      // remove deleted post from the state
+      setTextPosts(textPosts.filter(post => post.post_id !== post_id));
+      Alert.alert('Success', 'Post has been successfully deleted');
+    } catch (error) {
+      Alert.alert('Error', error.message);
+    }
+  };
+  
+
   const customStyles = {
     stepIndicatorSize: 25,
     currentStepIndicatorSize: 30,
@@ -575,9 +669,11 @@ const ViewHabit = () => {
   );
 
   const openModal = (image) => {
+    console.log("Opening modal with image:", image);
     setSelectedImage(image);
     setModalVisible(true);
   };
+  
 
   const closeModal = () => {
     setModalVisible(false);
@@ -705,6 +801,21 @@ const ViewHabit = () => {
                     numColumns={3}
                     contentContainerStyle={styles.scrollContainer}
                   />
+<FlatList
+  data={textPosts}
+  renderItem={({ item }) => (
+    <View key={item.post_id} style={styles.textPostContainer}>
+  <Text style={styles.textPost}>{item.post_description}</Text>
+      <TouchableOpacity onPress={() => deleteTextPost(item.post_id)} style={styles.deleteButton}>
+        <Text style={styles.deleteButtonTitle}>Delete Post</Text>
+      </TouchableOpacity>
+    </View>
+  )}
+  keyExtractor={(item) => item.post_id}
+/>
+
+
+
                 </View>
                 <Modal
                   animationType="slide"
@@ -722,7 +833,7 @@ const ViewHabit = () => {
                             <Text style={styles.imageDescription}>{selectedImage.post_description}</Text>
                           )}
                           <Button title="Delete Photo" onPress={() => deletePhoto(selectedImage)} />
-                          <Button title="Close" onPress={closeModal} />
+                          <Button title="Close" onPress={closeModal} style={styles.closeButton} />
                         </>
                       )}
                     </View>
@@ -1311,6 +1422,36 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: Colors.text,
     fontWeight: '400',
+  },
+  textPostContainer: {
+    marginTop: 5,
+    marginBottom: 5,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.6)',    
+    borderRadius: 8,
+    padding: 10,
+    marginBottom: 10,
+    backgroundColor: Colors.cardBackground,
+  },
+  textPost: {
+    fontSize: 16,
+    color: Colors.text,
+    marginLeft: 10,
+    lineHeight: 28,
+  },
+  deleteButton: {
+    backgroundColor: '#d9534f',
+    padding: 4, 
+    borderRadius: 5,
+    marginBottom: 5,
+    alignSelf: 'flex-end', 
+  },
+  deleteButtonTitle: {
+    color: Colors.white,
+    fontSize: 14,
+  },
+  closeButton: {
+    marginTop: 10, 
   },
 });
 

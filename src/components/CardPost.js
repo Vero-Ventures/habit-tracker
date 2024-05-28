@@ -60,7 +60,7 @@ const CardPost = (props) => {
 
   const fetchLikedUsers = async () => {
     try {
-      // Get user_ids who liked the post
+      // grab user_ids who liked the post
       const { data: likeData, error: likeError } = await supabase
         .from('Like')
         .select('user_id')
@@ -76,7 +76,7 @@ const CardPost = (props) => {
 
       const userIds = likeData.map(like => like.user_id);
 
-      // Get user details from User table
+      // grab user details from User table
       const { data: usersData, error: usersError } = await supabase
         .from('User')
         .select('user_id, username, profile_image')
@@ -92,23 +92,22 @@ const CardPost = (props) => {
   };
 
   const renderCardContent = () => (
-    fetchLikeCount(),
-    fetchLikeStatus(),
     <View>
       {props.post.habit_photo && (
         <Image source={{ uri: props.post.habit_photo }} style={styles.habitImage} resizeMode="cover" />
       )}
       <View style={styles.cardPostDescriptionContainer}>
+      {/* <View style={styles.cardPostDescriptionContainer}> */}
+        <Text style={styles.postText}>{props.postDescription}</Text>
+      </View>
         <TouchableOpacity onPress={fetchLikedUsers}>
           <Text style={styles.textSubtitle}>{countLikes} likes</Text>
         </TouchableOpacity>
       </View>
-      <View style={styles.cardPostDescriptionContainer}>
-        <Text style={styles.textUserName}>{props.postUser?.name ?? 'Unknown User'} </Text>
-        <Text style={styles.postText}>{props.postDescription}</Text>
-      </View>
-    </View>
+
+    // </View>
   );
+  
 
   const renderCardActions = () => (
     <View style={styles.containerActions}>
@@ -319,9 +318,12 @@ const styles = StyleSheet.create({
   textUserName: {
     fontWeight: 'bold',
     color: Colors.text,
+    marginLeft: 10,
   },
   textSubtitle: {
     color: '#FFFFFF',
+    marginLeft: 10,
+    marginTop: 5,
   },
   cardPostVerticalEllipsis: {
     width: 24,
@@ -330,14 +332,19 @@ const styles = StyleSheet.create({
   habitImage: {
     width: '100%',
     height: 400,
+    borderRadius: 20,
   },
   cardPostDescriptionContainer: {
-    flexDirection: 'row',
+    flexDirection: 'column', 
     alignItems: 'flex-start',
     padding: 10,
   },
   postText: {
     color: Colors.text,
+    marginLeft: 5, 
+    marginBottom: 10,
+    marginTop: 5,
+    lineHeight: 25,
   },
   containerActions: {
     flexDirection: 'row',
@@ -354,6 +361,13 @@ const styles = StyleSheet.create({
     marginLeft: 5,
     color: Colors.text,
   },
+  cardShadow: {
+    marginBottom: 5, 
+    borderTopWidth: 0.2,
+    // borderBottomWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.6)',    
+    paddingVertical: 5, 
+    },
   icon: {
     width: 29,
     height: 29,
@@ -392,7 +406,7 @@ const styles = StyleSheet.create({
   },
   closeButton: {
     marginTop: 20,
-    padding: 10,
+    padding: 15, 
     backgroundColor: Colors.primary,
     borderRadius: 5,
   },
@@ -401,5 +415,6 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
 });
+
 
 export default CardPost;

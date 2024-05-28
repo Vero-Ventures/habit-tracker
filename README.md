@@ -16,7 +16,7 @@ As of the latest project update (May 27th, 2024), "Live Timeless" has successful
 
 - **Coaching Chatbot:** Fully integrated with Google's gemini pro model, the AI coaching chatbot is operational, offering personalized plans and actionable steps to help users achieve their health goals.
 
-- **User Account Management:**: All user account management features are complete and functioning as intended, making it GDPR (General data protection regulation) compliant. This includes:
+- **User Account Management:** All user account management features are complete and functioning as intended, making it GDPR (General data protection regulation) compliant. This includes:
 
 - Secure registration and login processes.
 - Functionalities to delete accounts and download user data.
