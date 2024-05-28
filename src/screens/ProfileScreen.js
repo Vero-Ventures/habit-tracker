@@ -89,7 +89,6 @@ export default function Account() {
       const scheduleIds = scheduleData.map(schedule => schedule.schedule_id);
   
       if (habitIds.length === 0 || scheduleIds.length === 0) {
-        Alert.alert('Error', 'No habits or schedules found for the user');
         setLoading(false);
         return;
       }
