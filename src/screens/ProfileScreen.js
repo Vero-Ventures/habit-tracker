@@ -590,7 +590,7 @@ export default function Account() {
             {selectedImage && (
               <>
                 <Image source={{ uri: selectedImage.image_photo }} style={styles.fullImage} />
-                <Text style={styles.imageDescription}>{selectedImage.post_description}</Text>
+                <Text style={styles.imageDescriptionInsideModal}>{selectedImage.post_description}</Text>
                 <Button title="Close" onPress={closeModal} />
               </>
             )}
@@ -868,7 +868,7 @@ const styles = StyleSheet.create({
     marginBottom: 5,
   },
   postText: {
-    color: Colors.text,
+    color: 'white',
     marginBottom: 10,
   },
   textSubtitle: {
@@ -918,11 +918,11 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     marginBottom: 16,
   },
-  imageDescription: {
-    color: Colors.white,
+  imageDescriptionInsideModal: {
+    color: 'black',
     marginBottom: 16,
     textAlign: 'center',
-    fontSize: 12,
+    fontSize: 18,
   },
   userContainer: {
     flexDirection: 'row',
