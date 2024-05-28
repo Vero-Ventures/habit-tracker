@@ -1,10 +1,10 @@
 import React from 'react';
 import configureMockStore from 'redux-mock-store';
-import { render, waitFor, screen } from '@testing-library/react-native';
+import { render, waitFor } from '@testing-library/react-native';
 import { Provider } from 'react-redux';
 import Timeline from '../src/screens/timeline/Timeline';
 import { supabase } from '../src/config/supabaseClient';
-import { TextInputBase } from 'react-native';
+import { Alert } from 'react-native';
 
 // Mock necessary modules
 jest.mock('@react-navigation/native', () => ({
@@ -15,6 +15,9 @@ jest.mock('../src/config/supabaseClient', () => ({
     from: jest.fn(),
   },
 }));
+
+jest.spyOn(Alert, 'alert');
+
 const mockStore = configureMockStore();
 const store = mockStore({
   user: {
@@ -137,6 +140,28 @@ describe('Timeline component', () => {
     await waitFor(() => {
       expect(getByText('First Post')).toBeTruthy();
       expect(getByText('This is the first post')).toBeTruthy();
+    });
+  });
+
+  test('handle error when fetching posts', async () => {
+    supabase.from.mockImplementation(() => ({
+      select: jest.fn().mockReturnThis(),
+      in: jest.fn().mockReturnThis(),
+      order: jest.fn().mockReturnThis(),
+      range: jest.fn().mockResolvedValue({
+        data: [],
+        error: new Error('An error occurred'),
+      }),
+    }));
+
+    const { getByText } = render(
+      <Provider store={store}>
+        <Timeline />
+      </Provider>
+    );
+
+    await waitFor(() => {
+      expect(getByText('No posts to show')).toBeTruthy();
     });
   });
 });
