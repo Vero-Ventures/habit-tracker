@@ -59,15 +59,34 @@ const Habits = () => {
         }
 
         if (habitData) {
-          const combinedData = scheduleData.map(schedule => {
+          const currentDateTime = new Date();
+          const combinedData = await Promise.all(scheduleData.map(async schedule => {
             const habit = habitData.find(h => h.habit_id === schedule.habit_id);
+            const endDate = new Date(schedule.schedule_end_date);
+            endDate.setHours(23, 59, 59, 999); // set end time to the end of the day
+  
+            const isActive = currentDateTime <= endDate;
+            const newState = isActive ? 'Open' : 'Closed';
+  
+            if (schedule.schedule_state !== newState) {
+              // update the state in the database
+              await supabase
+                .from('Schedule')
+                .update({ schedule_state: newState })
+                .eq('schedule_id', schedule.schedule_id);
+            }
+  
             return {
               ...schedule,
               habit_title: habit?.habit_title,
               habit_description: habit?.habit_description,
-              habit_id: schedule.habit_id,
+              schedule_state: newState,
             };
-          });
+          }));
+  
+          // sort combinedData to move inactive habits to the bottom
+          combinedData.sort((a, b) => (a.schedule_state === 'Closed' ? 1 : -1));
+  
           setSchedules(combinedData);
           console.log('Combined data:', combinedData);
         }

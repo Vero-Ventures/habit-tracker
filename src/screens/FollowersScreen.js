@@ -248,7 +248,7 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
   unfollowButton: {
-    color: Colors.secondary,
+    color: 'white',
     fontWeight: 'bold',
   },
   alreadyFollowing: {

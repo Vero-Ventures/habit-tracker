@@ -167,9 +167,14 @@ const Timeline = () => {
 
   return (
     <View style={styles.container}>
-      <Header title="Timeline" />
-      {/* need to add a button to navigate to the add post page */}
-      <Button mode="contained" onPress={() => navigation.navigate('AddPost')}>
+      <View style={styles.headerContainer}>
+        <Header title="Timeline" />
+      </View>
+      <Button
+        mode="contained"
+        onPress={() => navigation.navigate('AddPost')}
+        style={styles.addPostButton}
+      >
         Add Post
       </Button>
       <FlatList
@@ -195,12 +200,24 @@ const Timeline = () => {
       />
     </View>
   );
-};
+}  
 
 const styles = StyleSheet.create({
+  addPostButton: {
+    alignSelf: 'center',
+    width: 150,
+    backgroundColor: 'rgba(105, 105, 120, 0.4)',
+    paddingVertical: 5,
+    borderRadius: 45,
+    marginBottom: 30,
+    marginTop: 10,
+  },
   container: {
     flex: 1,
     backgroundColor: Colors.background,
+  },
+  headerContainer: {
+    marginBottom: 20,
   },
   list: {
     padding: 10,
@@ -215,5 +232,6 @@ const styles = StyleSheet.create({
     color: Colors.text,
   },
 });
+
 
 export default Timeline;
