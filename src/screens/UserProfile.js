@@ -463,6 +463,27 @@ const UserProfile = () => {
           </View>
         </View>
       </Modal>
+
+      <Modal
+  animationType="slide"
+  transparent={true}
+  visible={modalVisible}
+  onRequestClose={closeModal}
+>
+  <View style={styles.modalContainer}>
+    <View style={styles.modalContent}>
+      {selectedImage && (
+        <>
+          <Image source={{ uri: selectedImage.image_photo }} style={styles.fullImage} />
+          <Text style={styles.imageDescriptionInsideModal}>{selectedImage.post_description}</Text>
+          <Button title="Close" onPress={closeModal} />
+        </>
+      )}
+    </View>
+  </View>
+</Modal>
+
+
       <Modal
         visible={showCommentsModal}
         transparent={true}
@@ -548,12 +569,11 @@ const styles = StyleSheet.create({
     // marginTop: 10,
   },
   cardContainer: {
-    borderWidth: 1,
-    borderColor: Colors.lightGray,
     borderRadius: 10,
     backgroundColor: Colors.cardBackground,
     marginBottom: 20,
     overflow: 'hidden',
+    padding: 10,
   },
   separator: {
     height: 1,
@@ -594,10 +614,10 @@ const styles = StyleSheet.create({
     color: Colors.text,
     marginBottom: 10,
     marginLeft: 10, 
+    marginTop: 10,
   },
   textSubtitle: {
     color: '#FFFFFF',
-    marginBottom: 10,
     marginLeft: 10,
   },
   containerActions: {
@@ -612,12 +632,13 @@ const styles = StyleSheet.create({
     marginRight: 20,
   },
   textPostActions: {
-    marginLeft: 5,
+    marginRight: 10,
     color: Colors.text,
   },
   icon: {
     width: 29,
     height: 29,
+    margin: 10,
   },
   modalContainer: {
     flex: 1,
@@ -649,6 +670,12 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     fontSize: 20,
   },
+  imageDescriptionInsideModal: {
+    color: 'black',
+    marginBottom: 16,
+    textAlign: 'center',
+    fontSize: 18,
+  },
   userContainer: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -679,23 +706,29 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     marginBottom: 10,
+    width: '100%',
+    marginTop: 10,
   },
   commentText: {
     fontSize: 16,
     color: 'black',
+    flexWrap: 'wrap',
+    flex: 1,
+    maxWidth: 200,
   },
   modalContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
-  },
+    },
   modalContent: {
-    width: '80%',
+    width: '90%',
     backgroundColor: 'white',
     borderRadius: 10,
     padding: 20,
     alignItems: 'center',
+    maxWidth: '100%',
   },
   habitImage: {
     width: '100%',

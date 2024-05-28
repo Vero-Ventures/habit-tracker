@@ -829,12 +829,13 @@ const styles = StyleSheet.create({
     marginLeft: 10,
   },
   cardContainer: {
-    borderWidth: 1,
-    borderColor: Colors.lightGray,
+
     borderRadius: 10,
     backgroundColor: Colors.cardBackground,
     marginBottom: 20,
     overflow: 'hidden',
+    padding: 10,
+
   },
   cardContent: {
     padding: 10,
@@ -868,12 +869,14 @@ const styles = StyleSheet.create({
     marginBottom: 5,
   },
   postText: {
-    color: 'white',
+    color: Colors.text,
     marginBottom: 10,
+    marginLeft: 10, 
+    marginTop: 10,
   },
   textSubtitle: {
     color: '#FFFFFF',
-    marginBottom: 10,
+    marginLeft: 10,
   },
   containerActions: {
     flexDirection: 'row',
@@ -887,12 +890,14 @@ const styles = StyleSheet.create({
     marginRight: 20,
   },
   textPostActions: {
-    marginLeft: 5,
+    marginRight: 10,
+    marginRight: 10,
     color: Colors.text,
   },
   icon: {
     width: 29,
     height: 29,
+    margin: 10,
   },
   modalContainer: {
     flex: 1,
@@ -953,10 +958,15 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     marginBottom: 10,
+    width: '100%',
+    marginTop: 10,
   },
   commentText: {
     fontSize: 16,
     color: 'black',
+    flexWrap: 'wrap',
+    flex: 1,
+    maxWidth: 200,
   },
   modalContainer: {
     flex: 1,
@@ -965,11 +975,12 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
   },
   modalContent: {
-    width: '80%',
+    width: '90%',
     backgroundColor: 'white',
     borderRadius: 10,
     padding: 20,
     alignItems: 'center',
+    maxWidth: '100%',
   },
   habitImage: {
     width: '100%',
