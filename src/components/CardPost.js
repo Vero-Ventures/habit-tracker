@@ -341,7 +341,7 @@ const styles = StyleSheet.create({
   },
   postText: {
     color: Colors.text,
-    marginLeft: 10, 
+    marginLeft: 5, 
     marginBottom: 10,
     marginTop: 5,
     lineHeight: 25,
