@@ -17,6 +17,7 @@
     "profile": "jest qa-tests/Profile.test.js",
     "signup": "jest qa-tests/Signup.test.js",
     "timeline": "jest qa-tests/Timeline.test.js",
+    "follow": "jest qa-tests/Follow.test.js",
     "coverage": "jest --coverage"
   },
   "husky": {

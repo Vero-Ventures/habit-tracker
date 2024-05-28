@@ -1,8 +1,9 @@
 import React from 'react';
 import { render, fireEvent, waitFor } from '@testing-library/react-native';
-import { Provider } from 'react-redux'; // Import Provider
-import store from '../src/store/storeConfig'; // Import your Redux store
+import { Provider } from 'react-redux';
+import store from '../src/store/storeConfig';
 import Habits from '../src/screens/habits/Habits';
+import { supabase } from '../src/config/supabaseClient';
 
 jest.mock('../src/config/supabaseClient', () => ({
   supabase: {
@@ -11,21 +12,19 @@ jest.mock('../src/config/supabaseClient', () => ({
       signUp: jest.fn(),
       startAutoRefresh: jest.fn(),
       stopAutoRefresh: jest.fn(),
+      signOut: jest.fn(),
     },
-    from: () => ({
-      select: () => ({
-        eq: () => ({
-          data: [
-            {
-              habit_id: 'mock_habit_id',
-              habit_title: 'Mock Habit',
-              habit_description: 'Mock Habit Description',
-            },
-          ],
-          error: null,
-        }),
+    from: jest.fn(() => ({
+      single: jest.fn().mockResolvedValue({
+        data: {
+          habit_id: 'test-habit-id',
+          habit_title: 'Mock Habit',
+          habit_description: 'Mock Habit Description',
+        },
       }),
-    }),
+      single: jest.fn().mockResolvedValue({}),
+      upsert: jest.fn().mockResolvedValue({}),
+    })),
   },
 }));
 
@@ -55,34 +54,4 @@ describe('Habits Component', () => {
     getByText('My Habits');
     getByText('ADD HABIT');
   });
-
-  // test('renders loading indicator initially', () => {
-  //   const { getByTestId } = render(
-  //     <Provider store={store}>
-  //       <Habits />
-  //     </Provider>
-  //   );
-  //   expect(getByTestId('loading-indicator')).toBeTruthy();
-  // });
-
-  // test('renders habit items after loading', async () => {
-  //   const { getByText } = render(
-  //     <Provider store={store}>
-  //       <Habits />
-  //     </Provider>
-  //   );
-  //   await waitFor(() => {
-  //     getByText('Mock Habit');
-  //     getByText('Mock Habit Description');
-  //   });
-  // });
-
-  // test('navigates to AddHabit screen on button press', () => {
-  //   const { getByText } = render(
-  //     <Provider store={store}>
-  //       <Habits />
-  //     </Provider>
-  //   );
-  //   fireEvent.press(getByText('ADD HABIT'));
-  // });
 });
