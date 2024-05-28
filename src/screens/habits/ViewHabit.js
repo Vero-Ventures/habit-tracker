@@ -64,6 +64,8 @@ const ViewHabit = () => {
   const [editedHabit, setEditedHabit] = useState(habit);
   const [deleteModalVisible, setDeleteModalVisible] = useState(false);
   const [activeDays, setActiveDays] = useState(habit.schedule_active_days);
+  const [textPosts, setTextPosts] = useState([]);
+
 
   useEffect(() => {
     const updatedEndDate = new Date(habit.schedule_end_date);
@@ -193,8 +195,14 @@ const ViewHabit = () => {
           post_description: postsData.find(post => post.post_id === image.post_id)?.post_description
         }))
       ].filter(image => image.image_photo !== null);
+
+      const textOnlyPosts = postsData.filter(post => !postImagesData.some(image => image.post_id === post.post_id));
+
+
       // console.log("Setting habit images with: " + JSON.stringify(combinedImages));
       setHabitImages(combinedImages);
+      setTextPosts(textOnlyPosts);
+
       // console.log("Done setting habit images");
     };
 
@@ -607,6 +615,27 @@ const ViewHabit = () => {
     }
   };
 
+
+  const deleteTextPost = async (post_id) => {
+    try {
+      const { error } = await supabase
+        .from('Post')
+        .delete()
+        .eq('post_id', post_id);
+  
+      if (error) {
+        throw error;
+      }
+  
+      // remove deleted post from the state
+      setTextPosts(textPosts.filter(post => post.post_id !== post_id));
+      Alert.alert('Success', 'Post has been successfully deleted');
+    } catch (error) {
+      Alert.alert('Error', error.message);
+    }
+  };
+  
+
   const customStyles = {
     stepIndicatorSize: 25,
     currentStepIndicatorSize: 30,
@@ -774,6 +803,21 @@ const renderImageItem = ({ item }) => {
                     numColumns={3}
                     contentContainerStyle={styles.scrollContainer}
                   />
+<FlatList
+  data={textPosts}
+  renderItem={({ item }) => (
+    <View key={item.post_id} style={styles.textPostContainer}>
+  <Text style={styles.textPost}>{item.post_description}</Text>
+      <TouchableOpacity onPress={() => deleteTextPost(item.post_id)} style={styles.deleteButton}>
+        <Text style={styles.deleteButtonTitle}>Delete Post</Text>
+      </TouchableOpacity>
+    </View>
+  )}
+  keyExtractor={(item) => item.post_id}
+/>
+
+
+
                 </View>
                 <Modal
                   animationType="slide"
@@ -791,7 +835,7 @@ const renderImageItem = ({ item }) => {
             <Text style={styles.imageDescription}>{selectedImage.post_description}</Text>
           )}
                           <Button title="Delete Photo" onPress={() => deletePhoto(selectedImage)} />
-                          <Button title="Close" onPress={closeModal} />
+                          <Button title="Close" onPress={closeModal} style={styles.closeButton} />
                         </>
                       )}
                     </View>
@@ -1394,6 +1438,36 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: Colors.text,
     fontWeight: '400',
+  },
+  textPostContainer: {
+    marginTop: 5,
+    marginBottom: 5,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.6)',    
+    borderRadius: 8,
+    padding: 10,
+    marginBottom: 10,
+    backgroundColor: Colors.cardBackground,
+  },
+  textPost: {
+    fontSize: 16,
+    color: Colors.text,
+    marginLeft: 10,
+    lineHeight: 28,
+  },
+  deleteButton: {
+    backgroundColor: '#d9534f',
+    padding: 4, 
+    borderRadius: 5,
+    marginBottom: 5,
+    alignSelf: 'flex-end', 
+  },
+  deleteButtonTitle: {
+    color: Colors.white,
+    fontSize: 14,
+  },
+  closeButton: {
+    marginTop: 10, 
   },
 });
 
