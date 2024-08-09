@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "HabitTracker",
-    "slug": "HabitTracker",
+    "name": "Live Timeless",
+    "slug": "live-timeless-app",
     "version": "2.0.4",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -14,22 +14,24 @@
     "assetBundlePatterns": ["**/*"],
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.live.timeless"
+      "bundleIdentifier": "com.alex.live.timeless"
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "package": "com.live.timeless"
+      "package": "com.alex.live.timeless",
+      "versionCode": 37
     },
     "web": {
       "favicon": "./assets/favicon.png"
     },
     "extra": {
       "eas": {
-        "projectId": "64f71150-163e-4ce6-8ea8-06c95222705c"
+        "projectId": "bcce0143-5443-475c-a2f1-17a28f176ad2"
       }
-    }
+    },
+    "owner": "live-timeless"
   }
 }
